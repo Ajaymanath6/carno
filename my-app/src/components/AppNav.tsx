@@ -1,5 +1,7 @@
+"use client";
+
 import Link from "next/link";
-import { logout } from "@/app/actions/auth";
+import { SignOutButton } from "@clerk/nextjs";
 
 export function AppNav() {
   return (
@@ -16,14 +18,14 @@ export function AppNav() {
             Reports
           </Link>
         </nav>
-        <form action={logout}>
+        <SignOutButton>
           <button
-            type="submit"
+            type="button"
             className="rounded-full border border-[var(--color-border)] px-3 py-1.5 text-sm hover:bg-[var(--color-muted)]"
           >
             Sign out
           </button>
-        </form>
+        </SignOutButton>
       </div>
     </header>
   );

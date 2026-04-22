@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { getOrCreateAppUser } from "@/lib/user";
 import { redirect } from "next/navigation";
 import { shiftLocalDateKey } from "@/lib/date";
 
@@ -30,12 +30,7 @@ export default async function ReportsPage({
 }: {
   searchParams: Promise<{ range?: string; from?: string; to?: string }>;
 }) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    redirect("/login");
-  }
-
-  const user = await prisma.user.findUnique({ where: { id: session.user.id } });
+  const user = await getOrCreateAppUser();
   if (!user) {
     redirect("/login");
   }
@@ -58,7 +53,7 @@ export default async function ReportsPage({
 
   const sessions = await prisma.daySession.findMany({
     where: {
-      userId: session.user.id,
+      userId: user.id,
       localDate: { gte: from, lte: to },
     },
     include: {

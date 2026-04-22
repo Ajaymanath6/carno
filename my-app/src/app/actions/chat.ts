@@ -1,8 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { getOrCreateAppUser } from "@/lib/user";
 import { getOrCreateDaySession } from "@/lib/session";
 import { normalizeFoodLabel } from "@/lib/text";
 import { processDueFollowUpsForSession } from "@/lib/followups";
@@ -18,8 +18,8 @@ export async function sendMealMessage(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const appUser = await getOrCreateAppUser();
+  if (!appUser) {
     return { error: "Not signed in" };
   }
   const text = String(formData.get("message") ?? "").trim();
@@ -27,18 +27,12 @@ export async function sendMealMessage(
     return { error: "Enter what you ate." };
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-  });
-  if (!user) {
-    return { error: "User not found" };
-  }
-
-  const day = await getOrCreateDaySession(user.id, user.timezone);
+  const day = await getOrCreateDaySession(appUser.id, appUser.timezone);
 
   if (day.phase !== ConversationPhase.CHAT) {
     return {
-      error: "Finish your symptom check-in first (sliders below), then log your next meal.",
+      error:
+        "Finish your symptom check-in first (sliders below), then log your next meal.",
     };
   }
 
@@ -70,7 +64,7 @@ export async function sendMealMessage(
           `(around ${followUpDueAt.toLocaleTimeString(undefined, {
             hour: "numeric",
             minute: "2-digit",
-            timeZone: user.timezone,
+            timeZone: appUser.timezone,
           })} your time).`,
       },
     }),
@@ -85,8 +79,8 @@ export async function submitReaction(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const appUser = await getOrCreateAppUser();
+  if (!appUser) {
     return { error: "Not signed in" };
   }
 
@@ -98,7 +92,7 @@ export async function submitReaction(
   const entry = await prisma.foodEntry.findFirst({
     where: {
       id: foodEntryId,
-      session: { userId: session.user.id },
+      session: { userId: appUser.id },
     },
     include: {
       session: {
@@ -126,7 +120,10 @@ export async function submitReaction(
 
   const ateRaw = formData.get("ateYesterdaySame");
   if (ateRaw !== "yes" && ateRaw !== "no") {
-    return { error: 'Please answer whether you ate the same meal yesterday (Yes / No).' };
+    return {
+      error:
+        "Please answer whether you ate the same meal yesterday (Yes / No).",
+    };
   }
   const ateYesterday = ateRaw === "yes";
 
@@ -142,7 +139,8 @@ export async function submitReaction(
         notes: String(formData.get("notes") ?? "").slice(0, 2000) || null,
         ateYesterdaySame: ateYesterday,
         feltDifferentNotes:
-          String(formData.get("feltDifferentNotes") ?? "").slice(0, 2000) || null,
+          String(formData.get("feltDifferentNotes") ?? "").slice(0, 2000) ||
+          null,
         symptomsBetterOrWorse:
           String(formData.get("symptomsBetterOrWorse") ?? "").slice(0, 200) ||
           null,
@@ -200,8 +198,8 @@ export async function generateDailySummary(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const appUser = await getOrCreateAppUser();
+  if (!appUser) {
     return { error: "Not signed in" };
   }
 
@@ -209,7 +207,7 @@ export async function generateDailySummary(
   const survey = String(formData.get("dayOverallSurvey") ?? "").slice(0, 2000);
 
   const day = await prisma.daySession.findFirst({
-    where: { id: sessionId, userId: session.user.id },
+    where: { id: sessionId, userId: appUser.id },
     include: {
       foodEntries: {
         include: { reactions: true },

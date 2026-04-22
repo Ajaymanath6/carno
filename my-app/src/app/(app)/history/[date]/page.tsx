@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { getOrCreateAppUser } from "@/lib/user";
 import { redirect, notFound } from "next/navigation";
 
 export default async function HistoryDayPage({
@@ -9,13 +9,13 @@ export default async function HistoryDayPage({
   params: Promise<{ date: string }>;
 }) {
   const { date } = await params;
-  const session = await auth();
-  if (!session?.user?.id) {
+  const user = await getOrCreateAppUser();
+  if (!user) {
     redirect("/login");
   }
 
   const day = await prisma.daySession.findFirst({
-    where: { userId: session.user.id, localDate: date },
+    where: { userId: user.id, localDate: date },
     include: {
       messages: { orderBy: { createdAt: "asc" } },
       dailySummary: true,

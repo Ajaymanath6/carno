@@ -1,14 +1,14 @@
-import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { AppNav } from "@/components/AppNav";
+import { getOrCreateAppUser } from "@/lib/user";
 
 export default async function AppLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const session = await auth();
-  if (!session?.user) {
+  const user = await getOrCreateAppUser();
+  if (!user) {
     redirect("/login");
   }
 

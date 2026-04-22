@@ -1,19 +1,12 @@
-import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import { prisma } from "@/lib/prisma";
+import { getOrCreateAppUser } from "@/lib/user";
 import { getOrCreateDaySession } from "@/lib/session";
 import { processDueFollowUpsForSession } from "@/lib/followups";
 import { ChatClient } from "@/components/chat/ChatClient";
 
 export default async function ChatPage() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    redirect("/login");
-  }
-
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-  });
+  const user = await getOrCreateAppUser();
   if (!user) {
     redirect("/login");
   }

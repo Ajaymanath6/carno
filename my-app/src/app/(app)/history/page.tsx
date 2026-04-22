@@ -1,16 +1,16 @@
 import Link from "next/link";
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { getOrCreateAppUser } from "@/lib/user";
 import { redirect } from "next/navigation";
 
 export default async function HistoryPage() {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const user = await getOrCreateAppUser();
+  if (!user) {
     redirect("/login");
   }
 
   const days = await prisma.daySession.findMany({
-    where: { userId: session.user.id },
+    where: { userId: user.id },
     orderBy: { localDate: "desc" },
     take: 90,
     include: {
