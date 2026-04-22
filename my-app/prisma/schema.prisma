@@ -1,0 +1,113 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String       @id @default(cuid())
+  email        String       @unique
+  passwordHash String
+  name         String?
+  timezone     String       @default("UTC")
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  daySessions  DaySession[]
+}
+
+model DaySession {
+  id          String           @id @default(cuid())
+  userId      String
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  localDate   String
+  status      SessionStatus    @default(ACTIVE)
+  closedAt    DateTime?
+  phase       ConversationPhase @default(CHAT)
+  pendingFoodEntryId String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  messages    ChatMessage[]
+  foodEntries FoodEntry[]
+  dailySummary DailySummary?
+
+  @@unique([userId, localDate])
+  @@index([userId, localDate])
+}
+
+enum SessionStatus {
+  ACTIVE
+  CLOSED
+}
+
+enum ConversationPhase {
+  CHAT
+  ASK_REACTION
+  ASK_COMPARE_YESTERDAY
+}
+
+model ChatMessage {
+  id        String       @id @default(cuid())
+  sessionId String
+  session   DaySession   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  role      MessageRole
+  body      String       @db.Text
+  metadata  Json?
+  createdAt DateTime     @default(now())
+
+  @@index([sessionId, createdAt])
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+model FoodEntry {
+  id                  String    @id @default(cuid())
+  sessionId           String
+  session             DaySession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  rawText             String     @db.Text
+  foodNameNormalized  String
+  quantity            String?
+  unit                String?
+  loggedAt            DateTime   @default(now())
+  followUpDueAt       DateTime
+  followUpPromptSentAt DateTime?
+  followUpCompletedAt DateTime?
+  followUpNotifiedAt   DateTime?
+  reactions           ReactionEntry[]
+
+  @@index([sessionId])
+  @@index([followUpDueAt])
+}
+
+model ReactionEntry {
+  id                    String    @id @default(cuid())
+  foodEntryId           String
+  foodEntry             FoodEntry @relation(fields: [foodEntryId], references: [id], onDelete: Cascade)
+  collectedAt           DateTime  @default(now())
+  energyLevel           Int?
+  bloating              Int?
+  gas                   Int?
+  stomachDiscomfort     Int?
+  mood                  Int?
+  notes                 String?   @db.Text
+  ateYesterdaySame      Boolean?
+  feltDifferentNotes    String?   @db.Text
+  symptomsBetterOrWorse String?
+
+  @@index([foodEntryId])
+}
+
+model DailySummary {
+  id               String     @id @default(cuid())
+  sessionId        String     @unique
+  session          DaySession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  payload          Json
+  dayOverallSurvey String?    @db.Text
+  generatedAt      DateTime   @default(now())
+}

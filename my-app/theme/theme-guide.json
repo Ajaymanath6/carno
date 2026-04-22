@@ -1,0 +1,37 @@
+{
+  "name": "GutTrack",
+  "description": "Design tokens aligned with Tailwind @theme in src/app/globals.css",
+  "colors": {
+    "primary": {
+      "light": "#0d9488",
+      "dark": "#2dd4bf",
+      "usage": "Primary actions, user chat bubbles"
+    },
+    "surface": {
+      "light": "#ffffff",
+      "dark": "#1e293b",
+      "usage": "Cards, nav, input bars"
+    },
+    "muted": {
+      "light": "#e2e8f0",
+      "dark": "#334155",
+      "usage": "Assistant bubbles, secondary panels"
+    },
+    "foreground": {
+      "light": "#0f172a",
+      "dark": "#f1f5f9",
+      "usage": "Body text"
+    }
+  },
+  "layout": {
+    "maxContentWidth": "48rem",
+    "chatBubbleRadius": "1rem",
+    "minTapHeight": "2.75rem"
+  },
+  "tailwindMapping": {
+    "bg-primary": "--color-primary",
+    "text-primary-foreground": "--color-primary-foreground",
+    "bg-muted": "--color-muted",
+    "border-border": "--color-border"
+  }
+}
