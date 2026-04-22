@@ -2,7 +2,10 @@ import { SignIn } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
-export default async function LoginPage() {
+/**
+ * Catch-all handles `/login`, `/login/sso-callback`, OAuth steps, etc. when using routing="path".
+ */
+export default async function SignInPage() {
   const { userId } = await auth();
   if (userId) {
     redirect("/chat");

@@ -2,7 +2,10 @@ import { SignUp } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
-export default async function RegisterPage() {
+/**
+ * Catch-all handles `/register` and nested Clerk sign-up flows when using routing="path".
+ */
+export default async function SignUpPage() {
   const { userId } = await auth();
   if (userId) {
     redirect("/chat");
