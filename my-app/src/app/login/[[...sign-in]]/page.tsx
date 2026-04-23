@@ -17,6 +17,8 @@ export default async function SignInPage() {
         routing="path"
         path="/login"
         signUpUrl="/register"
+        fallbackRedirectUrl="/chat"
+        signUpFallbackRedirectUrl="/chat"
         appearance={{
           elements: {
             rootBox: "mx-auto",
