@@ -117,7 +117,7 @@
     "sidebarDesktop": {
       "collapsedTop": "Phosphor Sidebar opens rail; hover:bg-brandcolor-fill on control.",
       "expandedTop": "Expanded row: justify-between — logo link left, collapse h-8 w-8 right (Sidebar 20px). Collapsed: h-8 w-8 expand. Mobile header: logo left end, menu + sign-out right. Chat avatar: bg-brandcolor-fill.",
-      "newChatRow": "Plus + label 'New chat' above Chats; Plus sits in a rounded span with group-hover:bg-brandcolor-white; opens NewDayChatDialog.",
+      "newChatRow": "Desktop sidebar: Plus + label 'New chat' above Chats; opens NewDayChatDialog. Mobile: same dialog from drawer first row 'New chat for today' (dialog mounted at AppShell root, not inside hidden aside).",
       "navLabels": "First item label 'Chats' (today); History unchanged for past days.",
       "newDayDialog": "Continue closes; Start fresh submits resetActiveDaySessionForToday (ACTIVE + CHAT only)."
     }

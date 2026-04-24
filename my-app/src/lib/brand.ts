@@ -2,8 +2,8 @@
 export const CARNO_LOGO_CREAM = "/brand/carno-mark-cream.png";
 export const CARNO_LOGO_MARROW_BG = "/brand/carno-mark-marrow-bg.png";
 export const CARNO_LOGO_FLAME_BONE = "/brand/carno-mark-flame-bone.png";
-/** Chat assistant avatar (flame + bone mark). */
-export const CARNO_LOGO_AGENT = "/brand/carno-agent.png";
+/** Chat assistant avatar (flame + bone mark). Bump `v` when replacing the file so browsers reload. */
+export const CARNO_LOGO_AGENT = "/brand/carno-agent.png?v=5";
 
 /** Meal quick-pick row (onboarding). */
 export const MEAL_QUICK_CHICKEN = "/brand/meal-quick-chicken.png";

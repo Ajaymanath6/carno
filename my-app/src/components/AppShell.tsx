@@ -208,7 +208,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </button>
           </SignOutButton>
         </div>
-        <NewDayChatDialog dialogRef={newChatDialogRef} />
       </aside>
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
@@ -286,6 +285,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </button>
             </div>
             <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-2 pt-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setDrawerOpen(false);
+                  queueMicrotask(() => newChatDialogRef.current?.showModal());
+                }}
+                className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-base font-medium text-brandcolor-text-strong hover:bg-brandcolor-fill"
+              >
+                <Plus
+                  className="shrink-0 text-brandcolor-stroke-strong"
+                  size={22}
+                  weight="bold"
+                  aria-hidden
+                />
+                New chat for today
+              </button>
               {APP_NAV_ITEMS.map((item) => (
                 <MobileDrawerLink
                   key={item.href}
@@ -299,6 +314,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </>
       )}
+      <NewDayChatDialog dialogRef={newChatDialogRef} />
     </div>
   );
 }
