@@ -39,7 +39,7 @@ The app does not swap the whole palette for `prefers-color-scheme: dark`.
 
 | File | Use |
 |------|-----|
-| `carno-agent.png` | Assistant avatar; sidebar & mobile header logo (`CARNO_LOGO_AGENT` in `brand.ts`, includes `?v=` cache-bust when the file changes) |
+| `carno-agent.png` | Assistant avatar; sidebar & mobile header logo (`CARNO_LOGO_AGENT` in `brand.ts`). Do not add a `?query` to this path with `next/image` — Next 16 defaults `images.localPatterns` to disallow search strings on local `src`. |
 | `carno-mark-cream.png` | Optional mark |
 | `carno-mark-marrow-bg.png`, `carno-mark-flame-bone.png` | Optional / marketing |
 
