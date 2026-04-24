@@ -119,6 +119,15 @@ export function ChatClient({
     phase === "ASK_REACTION" &&
     !!pendingFoodEntryId;
 
+  /** Fixed bottom dock so the thread can scroll underneath (hidden when EOD panel needs the stack). */
+  const floatingMealDock =
+    canLogMeals &&
+    !showReaction &&
+    !showEodPanel &&
+    (showOnboarding || hasUserMessage);
+  const inlineTranscriptMealWithEod =
+    canLogMeals && hasUserMessage && !showReaction && showEodPanel;
+
   function onMealKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -137,13 +146,20 @@ export function ChatClient({
     mealFormRef.current?.requestSubmit();
   }
 
-  const mealComposer = (maxWidthClass: string) => (
+  const mealComposer = (
+    maxWidthClass: string,
+    options?: { elevated?: boolean },
+  ) => (
     <div className={`mx-auto w-full ${maxWidthClass}`}>
       <form id={MEAL_FORM_ID} ref={mealFormRef} action={mealAction} className="flex w-full">
         <label className="sr-only" htmlFor="meal-message">
           What did you eat?
         </label>
-        <div className="flex min-h-[3rem] w-full items-end rounded-2xl border border-transparent bg-brandcolor-white pl-1 transition-colors hover:border-brandcolor-strokeweak focus-within:border-brandcolor-stroke-strong">
+        <div
+          className={`flex min-h-[3rem] w-full items-end rounded-2xl border border-transparent bg-brandcolor-white pl-1 transition-colors hover:border-brandcolor-strokeweak focus-within:border-brandcolor-stroke-strong ${
+            options?.elevated ? "shadow-lg ring-1 ring-brandcolor-strokeweak/60" : ""
+          }`}
+        >
           <textarea
             id="meal-message"
             name="message"
@@ -178,7 +194,11 @@ export function ChatClient({
           <div className="sticky top-0 z-10 flex justify-center bg-brandcolor-fill/90 px-4 py-2 backdrop-blur-sm">
             <DayDateBadge localDate={localDate} timezone={timezone} />
           </div>
-          <ul className="mx-auto flex max-w-3xl flex-col gap-3 px-4 pb-4 pt-1">
+          <ul
+            className={`mx-auto flex max-w-3xl flex-col gap-3 px-4 pt-1 ${
+              floatingMealDock && hasUserMessage ? "pb-32" : "pb-4"
+            }`}
+          >
             {messages.map((m) => (
               <li
                 key={m.id}
@@ -216,7 +236,11 @@ export function ChatClient({
       )}
 
       {!showReaction && showOnboarding && (
-        <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-5 px-4 py-8">
+        <div
+          className={`flex min-h-0 flex-1 flex-col items-center justify-center gap-5 px-4 py-8 ${
+            floatingMealDock ? "pb-40" : ""
+          }`}
+        >
           <div className="flex w-full max-w-md flex-col items-center gap-4 text-center">
             <DayDateBadge localDate={localDate} timezone={timezone} />
             <h2 className="font-serif text-2xl font-semibold text-brandcolor-text-strong md:text-3xl">
@@ -227,7 +251,7 @@ export function ChatClient({
               shortcut below or describe what you ate.
             </p>
           </div>
-          {mealComposer("max-w-md")}
+          {showEodPanel ? mealComposer("max-w-md") : null}
           <div className="flex w-full max-w-md flex-nowrap items-stretch justify-between gap-1 overflow-x-auto pb-1 sm:gap-1.5">
             {MEAL_QUICK_PICKS.map(({ label, value, imageSrc }) => (
               <button
@@ -369,9 +393,22 @@ export function ChatClient({
         </div>
       )}
 
-      {canLogMeals && hasUserMessage && (
+      {inlineTranscriptMealWithEod && (
         <div className="px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
           {mealComposer("max-w-3xl")}
+        </div>
+      )}
+
+      {floatingMealDock && (
+        <div
+          className="pointer-events-none fixed inset-x-0 bottom-0 z-[35] flex justify-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3"
+          aria-live="polite"
+        >
+          <div
+            className={`pointer-events-auto w-full ${showOnboarding ? "max-w-md" : "max-w-3xl"}`}
+          >
+            {mealComposer(showOnboarding ? "max-w-md" : "max-w-3xl", { elevated: true })}
+          </div>
         </div>
       )}
     </div>

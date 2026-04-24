@@ -106,7 +106,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       >
         <div className="flex flex-1 flex-col pt-3">
           {sidebarExpanded ? (
-            <div className="flex w-full items-center justify-start gap-1 px-2">
+            <div className="flex w-full items-center justify-between gap-2 px-2">
               <Link
                 href="/chat"
                 className="flex h-8 shrink-0 items-center justify-center rounded-lg bg-brandcolor-white p-0.5 transition-opacity hover:opacity-90"
@@ -213,44 +213,44 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <header className="shrink-0 border-b border-brandcolor-strokeweak bg-brandcolor-fill text-brandcolor-text-strong md:hidden">
-          <div className="mx-auto flex max-w-3xl items-center gap-2 px-3 py-2">
-            <button
-              type="button"
-              className="-ml-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-brandcolor-stroke-strong hover:bg-brandcolor-white"
-              aria-expanded={drawerOpen}
-              aria-controls={drawerId}
-              aria-label={drawerOpen ? "Close menu" : "Open menu"}
-              onClick={() => setDrawerOpen((v) => !v)}
+          <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3 px-3 py-2">
+            <Link
+              href="/chat"
+              className="shrink-0 rounded-lg bg-brandcolor-white p-0.5"
+              title="Carno — Chats"
             >
-              {drawerOpen ? (
-                <X size={22} weight="regular" />
-              ) : (
-                <List size={22} weight="regular" />
-              )}
-            </button>
-            <div className="flex min-w-0 flex-1 items-center justify-start">
-              <Link
-                href="/chat"
-                className="rounded-lg bg-brandcolor-white p-0.5"
-                title="Carno — Chats"
-              >
-                <Image
-                  src={CARNO_LOGO_AGENT}
-                  alt="Carno"
-                  width={32}
-                  height={32}
-                  className="h-8 w-8 shrink-0 rounded-md object-contain"
-                />
-              </Link>
-            </div>
-            <SignOutButton redirectUrl="/login">
+              <Image
+                src={CARNO_LOGO_AGENT}
+                alt="Carno"
+                width={32}
+                height={32}
+                className="h-8 w-8 shrink-0 rounded-md object-contain"
+              />
+            </Link>
+            <div className="flex shrink-0 items-center gap-2">
               <button
                 type="button"
-                className="shrink-0 rounded-full border border-brandcolor-strokeweak px-3 py-1.5 text-sm text-brandcolor-text-strong hover:bg-brandcolor-white"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-brandcolor-stroke-strong hover:bg-brandcolor-white"
+                aria-expanded={drawerOpen}
+                aria-controls={drawerId}
+                aria-label={drawerOpen ? "Close menu" : "Open menu"}
+                onClick={() => setDrawerOpen((v) => !v)}
               >
-                Sign out
+                {drawerOpen ? (
+                  <X size={22} weight="regular" />
+                ) : (
+                  <List size={22} weight="regular" />
+                )}
               </button>
-            </SignOutButton>
+              <SignOutButton redirectUrl="/login">
+                <button
+                  type="button"
+                  className="shrink-0 rounded-full border border-brandcolor-strokeweak px-3 py-1.5 text-sm text-brandcolor-text-strong hover:bg-brandcolor-white"
+                >
+                  Sign out
+                </button>
+              </SignOutButton>
+            </div>
           </div>
         </header>
 

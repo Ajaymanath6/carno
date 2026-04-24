@@ -107,7 +107,8 @@
     },
     "mealComposer": {
       "wrapper": "Single rounded-2xl row: white field + inline circular primary control with PaperPlaneRight (arrow send) or CircleNotch while pending; border-transparent → hover:border-brandcolor-strokeweak → focus-within:border-brandcolor-stroke-strong",
-      "sendWhenEmpty": "disabled:opacity-50 disabled:pointer-events-none on send when message is whitespace-only"
+      "sendWhenEmpty": "disabled:opacity-50 disabled:pointer-events-none on send when message is whitespace-only",
+      "floatingDock": "When CHAT logging is allowed, no reaction panel, and EOD summary strip is off: fixed bottom-center (z-[35]), max-w-md onboarding / max-w-3xl transcript, pointer-events-none shell + elevated white pill (shadow-lg ring); transcript ul pb-32; onboarding column pb-40. If EOD strip is on, composer stays inline after that block instead."
     },
     "mealQuickPicks": {
       "styling": "Single nowrap row (overflow-x-auto on xs): flex-1 tiles, image+label; bg-brandcolor-white border-brandcolor-strokeweak; hover:bg-brandcolor-fill; Image mix-blend-multiply",
@@ -115,7 +116,7 @@
     },
     "sidebarDesktop": {
       "collapsedTop": "Phosphor Sidebar opens rail; hover:bg-brandcolor-fill on control.",
-      "expandedTop": "Expanded row: left-aligned logo link (CARNO_LOGO_AGENT on bg-brandcolor-white, h-8 tile) + compact h-8 w-8 collapse (Sidebar 20px). Collapsed: h-8 w-8 expand. Mobile: menu + left-aligned logo. Chat avatar: bg-brandcolor-fill.",
+      "expandedTop": "Expanded row: justify-between — logo link left, collapse h-8 w-8 right (Sidebar 20px). Collapsed: h-8 w-8 expand. Mobile header: logo left end, menu + sign-out right. Chat avatar: bg-brandcolor-fill.",
       "newChatRow": "Plus + label 'New chat' above Chats; Plus sits in a rounded span with group-hover:bg-brandcolor-white; opens NewDayChatDialog.",
       "navLabels": "First item label 'Chats' (today); History unchanged for past days.",
       "newDayDialog": "Continue closes; Start fresh submits resetActiveDaySessionForToday (ACTIVE + CHAT only)."
