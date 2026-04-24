@@ -25,6 +25,10 @@ Loaded in [`src/app/layout.tsx`](../src/app/layout.tsx); font CSS variables are 
 - **Phosphor** (`@phosphor-icons/react`), Regular weight.
 - Default accent on icons in chrome: **Sear** — `text-brandcolor-primary` on the Deep Marrow nav bar.
 
+## Light UI on phones
+
+The app uses the **Salt / cream palette only**. We intentionally **do not** switch the whole UI when the phone’s system theme is dark (`prefers-color-scheme: dark`), so Carno always matches the intended warm light look on mobile and desktop.
+
 ## Tailwind tokens
 
 All app colors are **`brandcolor-*`** utilities from `@theme` in [`src/app/globals.css`](../src/app/globals.css). There is no `tailwind.config.js` in this project.

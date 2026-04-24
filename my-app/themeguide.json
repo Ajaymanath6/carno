@@ -184,7 +184,7 @@
   },
   "aiInstructions": {
     "workflow": [
-      "STEP 1: Read src/app/globals.css — :root, @media (prefers-color-scheme: dark), and @theme inline for available --color-brandcolor-* tokens.",
+      "STEP 1: Read src/app/globals.css — :root and @theme inline for --color-brandcolor-* tokens (light palette only; no system dark theme swap).",
       "STEP 2: Read themeguide.json themeColors and componentGuidelines.",
       "STEP 3: Implement UI using only bg-brandcolor-*, text-brandcolor-*, border-brandcolor-*, font-serif, font-sans.",
       "STEP 4: Verify no hex literals, no Tailwind default palette (gray/zinc/teal/emerald/sky), no inline style colors."

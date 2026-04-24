@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
-/* Carno — runtime palette (light + warm dark). @theme maps these to utilities. */
+/* Carno — light palette only. We do not follow prefers-color-scheme so phones in
+   system “dark mode” still get Salt/cream UI (matches brand; avoids muddy mobile). */
 :root {
   --carn-fill: #f1efe8;
   --carn-surface: #fff9f5;
@@ -25,31 +26,6 @@
   /* Top nav: always Deep Marrow band (same in light and dark system theme). */
   --carn-nav-chrome: #3c1a0a;
   --carn-nav-chrome-fg: #f1efe8;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --carn-fill: #1f120e;
-    --carn-surface: #2a1812;
-    --carn-white: #2a1812;
-    --carn-marrow: #f1efe8;
-    --carn-primary: #e87345;
-    --carn-primary-hover: #f0997b;
-    --carn-primary-foreground: #1f120e;
-    --carn-bone: #3d2b24;
-    --carn-chat-assistant: #3d2b24;
-    --carn-tallow: #f0997b;
-    --carn-text-strong: #f1efe8;
-    --carn-text-weak: #e8c4b8;
-    --carn-stroke-strong: #a68b7e;
-    --carn-strokeweak: #4a332a;
-    --carn-divider: #5c4034;
-    --carn-neutral-hover: #3d2b24;
-    --carn-destructive: #e85d52;
-    --carn-banner-warning-bg: #4a3028;
-    --carn-badge-amber-bg: #3d3220;
-    --carn-badge-amber-text: #f8ecd5;
-  }
 }
 
 @theme inline {
