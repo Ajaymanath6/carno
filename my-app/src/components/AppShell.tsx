@@ -106,29 +106,29 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       >
         <div className="flex flex-1 flex-col pt-3">
           {sidebarExpanded ? (
-            <div className="flex w-full items-center gap-1.5 px-2">
+            <div className="flex w-full items-center justify-start gap-1 px-2">
               <Link
                 href="/chat"
-                className="flex h-11 min-w-0 flex-1 items-center justify-center rounded-xl border border-brandcolor-strokeweak bg-brandcolor-white p-1 hover:border-brandcolor-strokeweak"
+                className="flex h-8 shrink-0 items-center justify-center rounded-lg bg-brandcolor-white p-0.5 transition-opacity hover:opacity-90"
                 title="Carno — Chats"
               >
                 <Image
                   src={CARNO_LOGO_AGENT}
                   alt=""
-                  width={36}
-                  height={36}
-                  className="h-9 w-9 rounded-lg object-cover"
+                  width={32}
+                  height={32}
+                  className="h-8 w-8 rounded-md object-contain"
                   priority
                 />
               </Link>
               <button
                 type="button"
                 onClick={() => setSidebarExpanded(false)}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-brandcolor-strokeweak text-brandcolor-stroke-strong hover:bg-brandcolor-fill"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-brandcolor-strokeweak text-brandcolor-stroke-strong hover:bg-brandcolor-fill"
                 title="Collapse sidebar"
                 aria-label="Collapse sidebar"
               >
-                <Sidebar className="-scale-x-100" size={22} weight="regular" aria-hidden />
+                <Sidebar className="-scale-x-100" size={20} weight="regular" aria-hidden />
               </button>
             </div>
           ) : (
@@ -136,11 +136,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <button
                 type="button"
                 onClick={() => setSidebarExpanded(true)}
-                className="flex h-11 w-11 items-center justify-center rounded-xl border border-brandcolor-strokeweak text-brandcolor-stroke-strong hover:bg-brandcolor-fill"
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-brandcolor-strokeweak text-brandcolor-stroke-strong hover:bg-brandcolor-fill"
                 title="Expand sidebar"
                 aria-label="Expand sidebar"
               >
-                <Sidebar size={22} weight="regular" aria-hidden />
+                <Sidebar size={20} weight="regular" aria-hidden />
               </button>
             </div>
           )}
@@ -213,29 +213,35 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <header className="shrink-0 border-b border-brandcolor-strokeweak bg-brandcolor-fill text-brandcolor-text-strong md:hidden">
-          <div className="mx-auto flex max-w-3xl items-center gap-3 px-4 py-3">
+          <div className="mx-auto flex max-w-3xl items-center gap-2 px-3 py-2">
             <button
               type="button"
-              className="-ml-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-brandcolor-stroke-strong hover:bg-brandcolor-white"
+              className="-ml-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-brandcolor-stroke-strong hover:bg-brandcolor-white"
               aria-expanded={drawerOpen}
               aria-controls={drawerId}
               aria-label={drawerOpen ? "Close menu" : "Open menu"}
               onClick={() => setDrawerOpen((v) => !v)}
             >
               {drawerOpen ? (
-                <X size={26} weight="regular" />
+                <X size={22} weight="regular" />
               ) : (
-                <List size={26} weight="regular" />
+                <List size={22} weight="regular" />
               )}
             </button>
-            <div className="flex min-w-0 flex-1 items-center justify-center">
-              <Image
-                src={CARNO_LOGO_AGENT}
-                alt="Carno"
-                width={36}
-                height={36}
-                className="h-9 w-9 shrink-0 rounded-lg object-cover"
-              />
+            <div className="flex min-w-0 flex-1 items-center justify-start">
+              <Link
+                href="/chat"
+                className="rounded-lg bg-brandcolor-white p-0.5"
+                title="Carno — Chats"
+              >
+                <Image
+                  src={CARNO_LOGO_AGENT}
+                  alt="Carno"
+                  width={32}
+                  height={32}
+                  className="h-8 w-8 shrink-0 rounded-md object-contain"
+                />
+              </Link>
             </div>
             <SignOutButton redirectUrl="/login">
               <button

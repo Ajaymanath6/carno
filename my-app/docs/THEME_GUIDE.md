@@ -39,23 +39,23 @@ The app does not swap the whole palette for `prefers-color-scheme: dark`.
 
 | File | Use |
 |------|-----|
-| `carno-agent.png` | Assistant avatar in chat |
-| `carno-mark-cream.png` | Sidebar / mobile header mark |
+| `carno-agent.png` | Assistant avatar; sidebar & mobile header logo (`CARNO_LOGO_AGENT`) |
+| `carno-mark-cream.png` | Optional mark |
 | `carno-mark-marrow-bg.png`, `carno-mark-flame-bone.png` | Optional / marketing |
 
 Paths: [`src/lib/brand.ts`](../src/lib/brand.ts).
 
 ## App chrome (`AppShell`)
 
-- **Desktop:** Collapsible sidebar on **`bg-brandcolor-fill`**, border **`brandcolor-strokeweak`**. Expand preference: `localStorage` key `carno-sidebar-expanded`. When **collapsed**, the top slot is **Phosphor `Sidebar`** (expand). When **expanded**, the top row is **logo** (link to Chats) **+** **collapse** (`Sidebar` with horizontal flip). **Plus** / “New chat” sits **above** the **Chats** nav row with **`hover:bg-brandcolor-fill`**. Nav label **Chats** (today’s thread); **History** stays past days only.
-- **Mobile:** Top bar on **`bg-brandcolor-fill`**; drawer **`bg-brandcolor-white`**; backdrop **`bg-brandcolor-text-strong/40`**.
+- **Desktop:** Collapsible sidebar on **`bg-brandcolor-fill`**, border **`brandcolor-strokeweak`**. Expand preference: `localStorage` key `carno-sidebar-expanded`. When **collapsed**, the top slot is **Phosphor `Sidebar`** (compact **8×8** control). When **expanded**, the top row is **left-aligned** **logo** (link to Chats): **`CARNO_LOGO_AGENT`** on **`bg-brandcolor-white`**, no border, **`object-contain`**, then **collapse** (`Sidebar` flipped, **8×8**, **20px** icon). **Plus** / “New chat” sits **above** the **Chats** nav row. Nav label **Chats** (today’s thread); **History** stays past days only.
+- **Mobile:** Top bar on **`bg-brandcolor-fill`**; **menu** then **`CARNO_LOGO_AGENT`** **left-aligned** on **`bg-brandcolor-white`** (link to Chats), no border; drawer **`bg-brandcolor-white`**; backdrop **`bg-brandcolor-text-strong/40`**.
 
 ## Chat
 
 - **Day badge:** Weekday (e.g. Monday) · Today · `YYYY-MM-DD` in a pill: **`bg-brandcolor-fill`**, **`border-brandcolor-strokeweak`**, small sans text — first row on new-day onboarding (above the greeting), and sticky atop the message list after the first log.
 - **Meal quick-picks:** Raster art under `public/brand/meal-quick-*.png` (chicken, mutton, paneer, red meat, brown eggs); five shortcuts on **one horizontal row** (scroll on very narrow widths). Tiles default **`bg-brandcolor-white`** + weak stroke; **hover** **`bg-brandcolor-fill`**. Image + label same line; **`mix-blend-multiply`** on the art.
 - **Start fresh today:** Server action [`src/app/actions/day-session.ts`](../src/app/actions/day-session.ts) clears messages, food entries (reactions cascade), and daily summary for **today’s** session when **`ACTIVE`** and **`CHAT`** only; then re-inserts the welcome line from **`DAY_CHAT_WELCOME_BODY`** in [`src/lib/session.ts`](../src/lib/session.ts).
-- Assistant rows: avatar `CARNO_LOGO_AGENT` on **`bg-brandcolor-fill`**, bubble **`bg-brandcolor-white`** + weak border.
+- Assistant rows: avatar `CARNO_LOGO_AGENT` on **`bg-brandcolor-fill`**, no border on the avatar plate; bubble **`bg-brandcolor-white`** + weak border.
 - User bubbles: **`bg-brandcolor-white text-brandcolor-text-strong`** (no border).
 - Before the first USER message of the day: centered greeting (time-based + display name), meal field with **inline arrow send** (no “Send” label), and stroke-weak quick-picks; transcript hidden so the DB seed welcome stays out of view until then.
 - Meal composer: one white pill; **`border-transparent`** → hover **`border-brandcolor-strokeweak`** → focus **`border-brandcolor-stroke-strong`**; primary circle with **PaperPlaneRight**; disabled at **50% opacity** when draft is empty; **Enter** submits (Shift+Enter newline).

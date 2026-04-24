@@ -186,7 +186,7 @@ export function ChatClient({
               >
                 {m.role !== "USER" && (
                   <div
-                    className={`relative shrink-0 rounded-full border border-brandcolor-strokeweak bg-brandcolor-fill p-0.5 shadow-sm ${
+                    className={`relative shrink-0 rounded-full bg-brandcolor-fill p-0.5 shadow-sm ${
                       agentBusy ? "animate-carno-speak" : ""
                     }`}
                   >
@@ -195,7 +195,7 @@ export function ChatClient({
                       alt="Carno"
                       width={32}
                       height={32}
-                      className="h-8 w-8 rounded-full object-cover"
+                      className="h-8 w-8 rounded-full object-contain"
                     />
                   </div>
                 )}
