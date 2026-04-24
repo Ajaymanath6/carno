@@ -68,6 +68,20 @@ export async function getOrCreateAppUser(): Promise<User | null> {
     return existing;
   }
 
+  // Same email, new Clerk user id (new dev instance, deleted Clerk user, etc.)
+  const rowForEmail = await prisma.user.findUnique({
+    where: { email },
+  });
+  if (rowForEmail && rowForEmail.clerkUserId !== userId) {
+    return prisma.user.update({
+      where: { id: rowForEmail.id },
+      data: { clerkUserId: userId, name },
+    });
+  }
+  if (rowForEmail) {
+    return rowForEmail;
+  }
+
   try {
     return await prisma.user.create({
       data: {
@@ -82,9 +96,20 @@ export async function getOrCreateAppUser(): Promise<User | null> {
         ? String((e as { code?: string }).code)
         : "";
     if (code === "P2002") {
-      return prisma.user.findUnique({
+      const byClerk = await prisma.user.findUnique({
         where: { clerkUserId: userId },
       });
+      if (byClerk) {
+        return byClerk;
+      }
+      const byEmail = await prisma.user.findUnique({ where: { email } });
+      if (byEmail) {
+        return prisma.user.update({
+          where: { id: byEmail.id },
+          data: { clerkUserId: userId, name },
+        });
+      }
+      return null;
     }
     console.error("[getOrCreateAppUser] prisma.user.create failed:", e);
     throw e;

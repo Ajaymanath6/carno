@@ -20,7 +20,7 @@ export function AccountSetupError() {
           configured (e.g. on Vercel). You can sign out and try again.
         </p>
       </div>
-      <SignOutButton>
+      <SignOutButton redirectUrl="/login">
         <button
           type="button"
           className="rounded-full bg-zinc-900 px-5 py-2 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
