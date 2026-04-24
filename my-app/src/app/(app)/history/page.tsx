@@ -32,7 +32,7 @@ export default async function HistoryPage() {
           <li key={d.id}>
             <Link
               href={`/history/${d.localDate}`}
-              className="flex items-center justify-between rounded-2xl border border-brandcolor-strokeweak bg-brandcolor-surface px-4 py-3 text-sm text-brandcolor-text-strong hover:bg-brandcolor-bone"
+              className="flex items-center justify-between rounded-2xl border border-brandcolor-strokeweak bg-brandcolor-white px-4 py-3 text-sm text-brandcolor-text-strong hover:bg-brandcolor-fill"
             >
               <span className="font-medium">{d.localDate}</span>
               <span className="text-brandcolor-text-weak">

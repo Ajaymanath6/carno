@@ -19,15 +19,15 @@ export default function AppRouteError({
           Project → Deployments → [failed deployment] → Logs / Functions
         </strong>{" "}
         and confirm{" "}
-        <code className="rounded bg-brandcolor-bone px-1 py-0.5 text-xs text-brandcolor-text-strong">
+        <code className="rounded bg-brandcolor-fill px-1 py-0.5 text-xs text-brandcolor-text-strong">
           DATABASE_URL
         </code>
         ,{" "}
-        <code className="rounded bg-brandcolor-bone px-1 py-0.5 text-xs text-brandcolor-text-strong">
+        <code className="rounded bg-brandcolor-fill px-1 py-0.5 text-xs text-brandcolor-text-strong">
           AUTH_SECRET
         </code>
         , and{" "}
-        <code className="rounded bg-brandcolor-bone px-1 py-0.5 text-xs text-brandcolor-text-strong">
+        <code className="rounded bg-brandcolor-fill px-1 py-0.5 text-xs text-brandcolor-text-strong">
           NEXTAUTH_URL
         </code>{" "}
         match your production URL.
@@ -38,7 +38,7 @@ export default function AppRouteError({
       <button
         type="button"
         onClick={() => reset()}
-        className="mx-auto rounded-full bg-brandcolor-primary px-4 py-2 text-sm font-medium text-brandcolor-primary-foreground hover:bg-brandcolor-primary-hover"
+        className="mx-auto rounded-full bg-brandcolor-primary px-4 py-2 text-sm font-medium text-brandcolor-white hover:bg-brandcolor-primary-hover"
       >
         Try again
       </button>

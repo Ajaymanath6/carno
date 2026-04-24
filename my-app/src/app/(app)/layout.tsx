@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { AccountSetupError } from "@/components/AccountSetupError";
-import { AppNav } from "@/components/AppNav";
+import { AppShell } from "@/components/AppShell";
 import { getOrCreateAppUser } from "@/lib/user";
 
 export default async function AppLayout({
@@ -20,9 +20,8 @@ export default async function AppLayout({
   }
 
   return (
-    <>
-      <AppNav />
-      <div className="flex flex-1 flex-col">{children}</div>
-    </>
+    <div className="flex min-h-0 flex-1 flex-col">
+      <AppShell>{children}</AppShell>
+    </div>
   );
 }

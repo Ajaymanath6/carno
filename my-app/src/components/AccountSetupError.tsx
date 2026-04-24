@@ -23,7 +23,7 @@ export function AccountSetupError() {
       <SignOutButton redirectUrl="/login">
         <button
           type="button"
-          className="rounded-full bg-brandcolor-primary px-5 py-2 text-sm font-medium text-brandcolor-primary-foreground hover:bg-brandcolor-primary-hover"
+          className="rounded-full bg-brandcolor-primary px-5 py-2 text-sm font-medium text-brandcolor-white hover:bg-brandcolor-primary-hover"
         >
           Sign out
         </button>

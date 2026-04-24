@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+import type { KeyboardEvent } from "react";
 import { useActionState, useEffect, useRef, useState } from "react";
 import type { ChatMessage, ConversationPhase } from "@prisma/client";
 import {
@@ -9,6 +11,7 @@ import {
   type ActionState,
 } from "@/app/actions/chat";
 import { EOD_PANEL_START_HOUR, getLocalHourInTimeZone } from "@/lib/date";
+import { CARNO_LOGO_AGENT } from "@/lib/brand";
 
 type Props = {
   messages: Pick<ChatMessage, "id" | "role" | "body" | "createdAt">[];
@@ -30,6 +33,8 @@ export function ChatClient({
   timezone,
 }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
+  const mealFormRef = useRef<HTMLFormElement>(null);
+  const [mealDraft, setMealDraft] = useState("");
   const [showEodPanel, setShowEodPanel] = useState(
     () => getLocalHourInTimeZone(timezone) >= EOD_PANEL_START_HOUR,
   );
@@ -47,6 +52,9 @@ export function ChatClient({
     initialActionState,
   );
 
+  const agentBusy = mealPending || reactionPending || summaryPending;
+  const mealSendDisabled = mealPending || !mealDraft.trim();
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.length, phase, mealState.ok, reactionState.ok]);
@@ -60,11 +68,27 @@ export function ChatClient({
     return () => clearInterval(id);
   }, [timezone]);
 
+  useEffect(() => {
+    if (mealState.ok) {
+      queueMicrotask(() => setMealDraft(""));
+    }
+  }, [mealState.ok]);
+
   const canLogMeals = sessionStatus === "ACTIVE" && phase === "CHAT";
   const showReaction =
     sessionStatus === "ACTIVE" &&
     phase === "ASK_REACTION" &&
     !!pendingFoodEntryId;
+
+  function onMealKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      if (mealSendDisabled) {
+        return;
+      }
+      mealFormRef.current?.requestSubmit();
+    }
+  }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-brandcolor-fill">
@@ -73,13 +97,28 @@ export function ChatClient({
           {messages.map((m) => (
             <li
               key={m.id}
-              className={`flex ${m.role === "USER" ? "justify-end" : "justify-start"}`}
+              className={`flex gap-2 ${m.role === "USER" ? "justify-end" : "items-end justify-start"}`}
             >
+              {m.role !== "USER" && (
+                <div
+                  className={`relative shrink-0 rounded-full border border-brandcolor-stroke-strong bg-brandcolor-white p-0.5 shadow-sm ${
+                    agentBusy ? "animate-carno-speak" : ""
+                  }`}
+                >
+                  <Image
+                    src={CARNO_LOGO_AGENT}
+                    alt="Carno"
+                    width={32}
+                    height={32}
+                    className="h-8 w-8 rounded-full object-cover"
+                  />
+                </div>
+              )}
               <div
-                className={`max-w-[85%] rounded-2xl px-4 py-2 text-sm leading-relaxed whitespace-pre-wrap ${
+                className={`max-w-[min(85%,calc(100%-2.75rem))] rounded-2xl px-4 py-2 text-sm leading-relaxed whitespace-pre-wrap ${
                   m.role === "USER"
-                    ? "bg-brandcolor-primary text-brandcolor-primary-foreground"
-                    : "bg-brandcolor-chat-assistant text-brandcolor-text-strong"
+                    ? "bg-brandcolor-primary text-brandcolor-white"
+                    : "border border-brandcolor-strokeweak bg-brandcolor-white text-brandcolor-text-strong"
                 }`}
               >
                 {m.body}
@@ -98,23 +137,23 @@ export function ChatClient({
       )}
 
       {mealState.error && (
-        <p className="mx-auto max-w-3xl px-4 pb-2 text-center text-sm text-brandcolor-destructive">
+        <p className="mx-auto max-w-3xl px-4 pb-2 text-center text-sm font-medium text-brandcolor-primary">
           {mealState.error}
         </p>
       )}
       {reactionState.error && (
-        <p className="mx-auto max-w-3xl px-4 pb-2 text-center text-sm text-brandcolor-destructive">
+        <p className="mx-auto max-w-3xl px-4 pb-2 text-center text-sm font-medium text-brandcolor-primary">
           {reactionState.error}
         </p>
       )}
       {summaryState.error && (
-        <p className="mx-auto max-w-3xl px-4 pb-2 text-center text-sm text-brandcolor-destructive">
+        <p className="mx-auto max-w-3xl px-4 pb-2 text-center text-sm font-medium text-brandcolor-primary">
           {summaryState.error}
         </p>
       )}
 
       {sessionStatus === "ACTIVE" && !showReaction && showEodPanel && (
-        <div className="border-t border-brandcolor-strokeweak bg-brandcolor-bone px-4 py-3">
+        <div className="border-t border-brandcolor-strokeweak bg-brandcolor-fill px-4 py-3">
           <form action={summaryAction} className="mx-auto max-w-3xl space-y-2">
             <input type="hidden" name="sessionId" value={sessionId} />
             <label className="block text-sm font-medium text-brandcolor-text-strong">
@@ -122,14 +161,14 @@ export function ChatClient({
               <textarea
                 name="dayOverallSurvey"
                 rows={2}
-                className="mt-1 w-full rounded-xl border border-brandcolor-strokeweak bg-brandcolor-surface px-3 py-2 text-sm text-brandcolor-text-strong"
+                className="mt-1 w-full rounded-xl border border-brandcolor-strokeweak bg-brandcolor-white px-3 py-2 text-sm text-brandcolor-text-strong"
                 placeholder="Optional reflection before we save today’s summary"
               />
             </label>
             <button
               type="submit"
               disabled={summaryPending}
-              className="rounded-full border border-brandcolor-strokeweak bg-brandcolor-surface px-4 py-2 text-sm font-medium text-brandcolor-text-strong hover:bg-brandcolor-neutralhover disabled:opacity-60"
+              className="rounded-full border border-brandcolor-strokeweak bg-brandcolor-white px-4 py-2 text-sm font-medium text-brandcolor-text-strong hover:bg-brandcolor-fill disabled:opacity-60"
             >
               {summaryPending ? "Saving summary…" : "Save daily summary & close day"}
             </button>
@@ -141,7 +180,7 @@ export function ChatClient({
       )}
 
       {showReaction && pendingFoodEntryId && (
-        <div className="border-t border-brandcolor-strokeweak bg-brandcolor-surface p-4 shadow-sm">
+        <div className="border-t border-brandcolor-strokeweak bg-brandcolor-white p-4 shadow-sm">
           <form action={reactionAction} className="mx-auto max-w-3xl space-y-3">
             <input name="foodEntryId" type="hidden" value={pendingFoodEntryId} />
             <p className="text-sm font-medium text-brandcolor-text-strong">
@@ -198,7 +237,7 @@ export function ChatClient({
             <button
               type="submit"
               disabled={reactionPending}
-              className="flex min-h-11 w-full items-center justify-center rounded-full bg-brandcolor-primary px-4 py-2 text-sm font-semibold text-brandcolor-primary-foreground hover:bg-brandcolor-primary-hover disabled:opacity-60"
+              className="flex min-h-11 w-full items-center justify-center rounded-full bg-brandcolor-primary px-4 py-2 text-sm font-semibold text-brandcolor-white hover:bg-brandcolor-primary-hover disabled:opacity-60"
             >
               {reactionPending ? "Saving…" : "Save check-in"}
             </button>
@@ -207,23 +246,31 @@ export function ChatClient({
       )}
 
       {canLogMeals && (
-        <div className="border-t border-brandcolor-strokeweak bg-brandcolor-surface p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-          <form action={mealAction} className="mx-auto flex max-w-3xl gap-2">
+        <div className="px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
+          <form
+            ref={mealFormRef}
+            action={mealAction}
+            className="mx-auto flex max-w-3xl items-end gap-2"
+          >
             <label className="sr-only" htmlFor="meal-message">
               What did you eat?
             </label>
-            <textarea
-              id="meal-message"
-              name="message"
-              rows={2}
-              required
-              placeholder='e.g. "600g chicken and rice"'
-              className="min-h-[2.75rem] flex-1 resize-none rounded-2xl border border-brandcolor-strokeweak bg-brandcolor-fill px-4 py-3 text-base text-brandcolor-text-strong"
-            />
+            <div className="min-h-0 flex-1 rounded-2xl border border-transparent bg-brandcolor-white transition-colors hover:border-brandcolor-strokeweak focus-within:border-brandcolor-stroke-strong">
+              <textarea
+                id="meal-message"
+                name="message"
+                rows={2}
+                value={mealDraft}
+                onChange={(e) => setMealDraft(e.target.value)}
+                onKeyDown={onMealKeyDown}
+                placeholder='e.g. "600g chicken and rice"'
+                className="min-h-[2.75rem] w-full resize-none rounded-2xl border-0 bg-transparent px-4 py-3 text-base text-brandcolor-text-strong outline-none focus:ring-0"
+              />
+            </div>
             <button
               type="submit"
-              disabled={mealPending}
-              className="min-h-[2.75rem] shrink-0 self-end rounded-full bg-brandcolor-primary px-5 text-sm font-semibold text-brandcolor-primary-foreground hover:bg-brandcolor-primary-hover disabled:opacity-60"
+              disabled={mealSendDisabled}
+              className="min-h-[2.75rem] shrink-0 rounded-full bg-brandcolor-primary px-5 text-sm font-semibold text-brandcolor-white hover:bg-brandcolor-primary-hover disabled:pointer-events-none disabled:opacity-50"
             >
               {mealPending ? "…" : "Send"}
             </button>
@@ -261,7 +308,7 @@ function Chip({
   label: string;
 }) {
   return (
-    <label className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-brandcolor-strokeweak bg-brandcolor-fill px-3 py-2 text-sm text-brandcolor-text-strong has-[:checked]:border-brandcolor-primary has-[:checked]:bg-brandcolor-bone">
+    <label className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-brandcolor-strokeweak bg-brandcolor-fill px-3 py-2 text-sm text-brandcolor-text-strong has-[:checked]:border-brandcolor-primary has-[:checked]:bg-brandcolor-white">
       <input
         type="radio"
         name={name}

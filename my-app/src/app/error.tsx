@@ -18,19 +18,19 @@ export default function RootError({
           Vercel → Deployments → [latest] → Runtime / Function Logs
         </strong>
         . Common fixes: set{" "}
-        <code className="rounded bg-brandcolor-bone px-1 py-0.5 text-xs text-brandcolor-text-strong">
+        <code className="rounded bg-brandcolor-fill px-1 py-0.5 text-xs text-brandcolor-text-strong">
           DATABASE_URL
         </code>
         ,{" "}
-        <code className="rounded bg-brandcolor-bone px-1 py-0.5 text-xs text-brandcolor-text-strong">
+        <code className="rounded bg-brandcolor-fill px-1 py-0.5 text-xs text-brandcolor-text-strong">
           NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
         </code>
         ,{" "}
-        <code className="rounded bg-brandcolor-bone px-1 py-0.5 text-xs text-brandcolor-text-strong">
+        <code className="rounded bg-brandcolor-fill px-1 py-0.5 text-xs text-brandcolor-text-strong">
           CLERK_SECRET_KEY
         </code>
         , then <strong className="text-brandcolor-text-strong">Redeploy</strong>. Run{" "}
-        <code className="rounded bg-brandcolor-bone px-1 py-0.5 text-xs text-brandcolor-text-strong">
+        <code className="rounded bg-brandcolor-fill px-1 py-0.5 text-xs text-brandcolor-text-strong">
           npx prisma migrate deploy
         </code>{" "}
         against Neon if the DB schema is behind.
@@ -41,7 +41,7 @@ export default function RootError({
       <button
         type="button"
         onClick={() => reset()}
-        className="mx-auto rounded-full bg-brandcolor-primary px-4 py-2 text-sm font-medium text-brandcolor-primary-foreground hover:bg-brandcolor-primary-hover"
+        className="mx-auto rounded-full bg-brandcolor-primary px-4 py-2 text-sm font-medium text-brandcolor-white hover:bg-brandcolor-primary-hover"
       >
         Try again
       </button>

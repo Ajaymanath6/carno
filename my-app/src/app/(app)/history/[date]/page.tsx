@@ -53,7 +53,7 @@ export default async function HistoryDayPage({
       </div>
 
       {day.dailySummary && (
-        <section className="rounded-2xl border border-brandcolor-strokeweak bg-brandcolor-bone p-4">
+        <section className="rounded-2xl border border-brandcolor-strokeweak bg-brandcolor-white p-4">
           <h2 className="font-medium text-brandcolor-text-strong">Daily summary</h2>
           {day.dailySummary.dayOverallSurvey && (
             <p className="mt-2 text-sm">{day.dailySummary.dayOverallSurvey}</p>
@@ -70,7 +70,7 @@ export default async function HistoryDayPage({
           {day.foodEntries.map((f) => (
             <li
               key={f.id}
-              className="rounded-2xl border border-brandcolor-strokeweak bg-brandcolor-surface p-3 text-sm"
+              className="rounded-2xl border border-brandcolor-strokeweak bg-brandcolor-white p-3 text-sm"
             >
               <p className="font-medium text-brandcolor-text-strong">{f.rawText}</p>
               <p className="text-xs text-brandcolor-text-weak">

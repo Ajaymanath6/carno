@@ -29,8 +29,8 @@ export default async function ChatPage() {
   }
 
   return (
-    <main className="flex min-h-0 flex-1 flex-col md:min-h-[calc(100dvh-52px)]">
-      <div className="border-b border-brandcolor-strokeweak bg-brandcolor-surface px-4 py-3">
+    <main className="flex min-h-0 flex-1 flex-col md:min-h-0">
+      <div className="border-b border-brandcolor-strokeweak bg-brandcolor-white px-4 py-3">
         <h1 className="font-serif text-lg font-semibold text-brandcolor-text-strong">
           Today · {refreshed.localDate}
         </h1>

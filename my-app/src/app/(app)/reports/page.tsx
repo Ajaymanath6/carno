@@ -124,8 +124,8 @@ export default async function ReportsPage({
           href="/reports?range=week"
           className={`rounded-full px-4 py-2 text-sm font-medium ${
             range === "week"
-              ? "bg-brandcolor-primary text-brandcolor-primary-foreground"
-              : "border border-brandcolor-strokeweak bg-brandcolor-surface text-brandcolor-text-strong hover:bg-brandcolor-bone"
+              ? "bg-brandcolor-primary text-brandcolor-white"
+              : "border border-brandcolor-strokeweak bg-brandcolor-white text-brandcolor-text-strong hover:bg-brandcolor-fill"
           }`}
         >
           Last 7 days
@@ -134,8 +134,8 @@ export default async function ReportsPage({
           href="/reports?range=month"
           className={`rounded-full px-4 py-2 text-sm font-medium ${
             range === "month"
-              ? "bg-brandcolor-primary text-brandcolor-primary-foreground"
-              : "border border-brandcolor-strokeweak bg-brandcolor-surface text-brandcolor-text-strong hover:bg-brandcolor-bone"
+              ? "bg-brandcolor-primary text-brandcolor-white"
+              : "border border-brandcolor-strokeweak bg-brandcolor-white text-brandcolor-text-strong hover:bg-brandcolor-fill"
           }`}
         >
           Last 30 days
@@ -146,7 +146,7 @@ export default async function ReportsPage({
       </div>
 
       <form
-        className="flex flex-wrap items-end gap-3 rounded-2xl border border-brandcolor-strokeweak bg-brandcolor-surface p-4"
+        className="flex flex-wrap items-end gap-3 rounded-2xl border border-brandcolor-strokeweak bg-brandcolor-white p-4"
         action="/reports"
         method="get"
       >
@@ -171,13 +171,13 @@ export default async function ReportsPage({
         </label>
         <button
           type="submit"
-          className="rounded-full bg-brandcolor-primary px-4 py-2 text-sm font-semibold text-brandcolor-primary-foreground hover:bg-brandcolor-primary-hover"
+          className="rounded-full bg-brandcolor-primary px-4 py-2 text-sm font-semibold text-brandcolor-white hover:bg-brandcolor-primary-hover"
         >
           Apply
         </button>
       </form>
 
-      <section className="rounded-2xl border border-brandcolor-strokeweak bg-brandcolor-bone p-4">
+      <section className="rounded-2xl border border-brandcolor-strokeweak bg-brandcolor-white p-4">
         <h2 className="font-medium text-brandcolor-text-strong">Totals</h2>
         <dl className="mt-2 grid gap-2 text-sm sm:grid-cols-3">
           <div>
@@ -202,7 +202,7 @@ export default async function ReportsPage({
         </p>
         <div className="mt-3 overflow-x-auto rounded-2xl border border-brandcolor-strokeweak">
           <table className="w-full min-w-[32rem] text-left text-sm">
-            <thead className="bg-brandcolor-surface text-xs uppercase text-brandcolor-text-weak">
+            <thead className="bg-brandcolor-fill text-xs uppercase text-brandcolor-text-weak">
               <tr>
                 <th className="px-3 py-2">Food (normalized)</th>
                 <th className="px-3 py-2">Times logged</th>

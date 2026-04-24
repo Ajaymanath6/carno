@@ -1,61 +1,43 @@
 @import "tailwindcss";
 
-/* Carno — light palette only. We do not follow prefers-color-scheme so phones in
-   system “dark mode” still get Salt/cream UI (matches brand; avoids muddy mobile). */
+@keyframes carno-speak {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+/* Carno — minimal tokens only (see docs/THEME_GUIDE.md, themeguide.json). */
 :root {
   --carn-fill: #f1efe8;
-  --carn-surface: #fff9f5;
   --carn-white: #ffffff;
-  --carn-marrow: #3c1a0a;
   --carn-primary: #d85a30;
   --carn-primary-hover: #b84a26;
-  --carn-primary-foreground: #f1efe8;
-  --carn-bone: #f5c4b3;
-  --carn-chat-assistant: #f5c4b3;
-  --carn-tallow: #f0997b;
   --carn-text-strong: #3c1a0a;
   --carn-text-weak: #6b4a3e;
   --carn-stroke-strong: #5c4034;
   --carn-strokeweak: #d4c4bc;
-  --carn-divider: #c9b8ae;
-  --carn-neutral-hover: #ede8e0;
-  --carn-destructive: #9f2d24;
-  --carn-banner-warning-bg: #f5e0d6;
-  --carn-badge-amber-bg: #f8ecd5;
-  --carn-badge-amber-text: #7a4e12;
-  /* Top nav: always Deep Marrow band (same in light and dark system theme). */
-  --carn-nav-chrome: #3c1a0a;
-  --carn-nav-chrome-fg: #f1efe8;
 }
 
 @theme inline {
   --color-brandcolor-fill: var(--carn-fill);
-  --color-brandcolor-surface: var(--carn-surface);
   --color-brandcolor-white: var(--carn-white);
-  --color-brandcolor-marrow: var(--carn-marrow);
   --color-brandcolor-primary: var(--carn-primary);
   --color-brandcolor-primary-hover: var(--carn-primary-hover);
-  --color-brandcolor-primary-foreground: var(--carn-primary-foreground);
-  --color-brandcolor-bone: var(--carn-bone);
-  --color-brandcolor-chat-assistant: var(--carn-chat-assistant);
-  --color-brandcolor-tallow: var(--carn-tallow);
   --color-brandcolor-text-strong: var(--carn-text-strong);
   --color-brandcolor-text-weak: var(--carn-text-weak);
   --color-brandcolor-stroke-strong: var(--carn-stroke-strong);
   --color-brandcolor-strokeweak: var(--carn-strokeweak);
-  --color-brandcolor-divider: var(--carn-divider);
-  --color-brandcolor-neutralhover: var(--carn-neutral-hover);
-  --color-brandcolor-destructive: var(--carn-destructive);
-  --color-brandcolor-banner-warning-bg: var(--carn-banner-warning-bg);
-  --color-brandcolor-badge-amber-bg: var(--carn-badge-amber-bg);
-  --color-brandcolor-badge-amber-text: var(--carn-badge-amber-text);
-  --color-brandcolor-nav-chrome: var(--carn-nav-chrome);
-  --color-brandcolor-nav-chrome-fg: var(--carn-nav-chrome-fg);
 
   --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-dm-serif-display), ui-serif, Georgia, "Times New Roman",
     serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  --animate-carno-speak: carno-speak 1.15s ease-in-out infinite;
 }
 
 body {
