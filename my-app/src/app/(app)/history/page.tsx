@@ -22,8 +22,8 @@ export default async function HistoryPage() {
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-8">
       <div>
-        <h1 className="text-xl font-semibold">History</h1>
-        <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
+        <h1 className="font-serif text-xl font-semibold text-brandcolor-text-strong">History</h1>
+        <p className="mt-1 text-sm text-brandcolor-text-weak">
           Recent days (newest first). Closed days include a saved summary.
         </p>
       </div>
@@ -32,10 +32,10 @@ export default async function HistoryPage() {
           <li key={d.id}>
             <Link
               href={`/history/${d.localDate}`}
-              className="flex items-center justify-between rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm hover:bg-[var(--color-muted)]"
+              className="flex items-center justify-between rounded-2xl border border-brandcolor-strokeweak bg-brandcolor-surface px-4 py-3 text-sm text-brandcolor-text-strong hover:bg-brandcolor-bone"
             >
               <span className="font-medium">{d.localDate}</span>
-              <span className="text-[var(--color-muted-foreground)]">
+              <span className="text-brandcolor-text-weak">
                 {d.status === "CLOSED" ? "Closed" : "Active"} · {d.foodEntries.length}{" "}
                 meal(s)
                 {d.dailySummary ? " · summary" : ""}
@@ -45,8 +45,12 @@ export default async function HistoryPage() {
         ))}
       </ul>
       {days.length === 0 && (
-        <p className="text-sm text-[var(--color-muted-foreground)]">
-          No days yet. Start logging from <Link href="/chat">Chat</Link>.
+        <p className="text-sm text-brandcolor-text-weak">
+          No days yet. Start logging from{" "}
+          <Link className="text-brandcolor-primary hover:underline" href="/chat">
+            Chat
+          </Link>
+          .
         </p>
       )}
     </main>

@@ -111,8 +111,10 @@ export default async function ReportsPage({
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8">
       <div>
-        <h1 className="text-xl font-semibold">Reports</h1>
-        <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
+        <h1 className="font-serif text-xl font-semibold text-brandcolor-text-strong">
+          Reports
+        </h1>
+        <p className="mt-1 text-sm text-brandcolor-text-weak">
           Range {from} → {to} ({user.timezone}).
         </p>
       </div>
@@ -122,8 +124,8 @@ export default async function ReportsPage({
           href="/reports?range=week"
           className={`rounded-full px-4 py-2 text-sm font-medium ${
             range === "week"
-              ? "bg-[var(--color-primary)] text-[var(--color-primary-foreground)]"
-              : "border border-[var(--color-border)] bg-[var(--color-surface)]"
+              ? "bg-brandcolor-primary text-brandcolor-primary-foreground"
+              : "border border-brandcolor-strokeweak bg-brandcolor-surface text-brandcolor-text-strong hover:bg-brandcolor-bone"
           }`}
         >
           Last 7 days
@@ -132,75 +134,75 @@ export default async function ReportsPage({
           href="/reports?range=month"
           className={`rounded-full px-4 py-2 text-sm font-medium ${
             range === "month"
-              ? "bg-[var(--color-primary)] text-[var(--color-primary-foreground)]"
-              : "border border-[var(--color-border)] bg-[var(--color-surface)]"
+              ? "bg-brandcolor-primary text-brandcolor-primary-foreground"
+              : "border border-brandcolor-strokeweak bg-brandcolor-surface text-brandcolor-text-strong hover:bg-brandcolor-bone"
           }`}
         >
           Last 30 days
         </Link>
-        <span className="rounded-full border border-[var(--color-border)] px-4 py-2 text-sm text-[var(--color-muted-foreground)]">
+        <span className="rounded-full border border-brandcolor-strokeweak px-4 py-2 text-sm text-brandcolor-text-weak">
           Custom: use form below
         </span>
       </div>
 
       <form
-        className="flex flex-wrap items-end gap-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4"
+        className="flex flex-wrap items-end gap-3 rounded-2xl border border-brandcolor-strokeweak bg-brandcolor-surface p-4"
         action="/reports"
         method="get"
       >
         <input type="hidden" name="range" value="custom" />
-        <label className="flex flex-col text-sm">
+        <label className="flex flex-col text-sm text-brandcolor-text-strong">
           From
           <input
             type="date"
             name="from"
             defaultValue={from}
-            className="mt-1 rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2"
+            className="mt-1 rounded-xl border border-brandcolor-strokeweak bg-brandcolor-fill px-3 py-2 text-brandcolor-text-strong"
           />
         </label>
-        <label className="flex flex-col text-sm">
+        <label className="flex flex-col text-sm text-brandcolor-text-strong">
           To
           <input
             type="date"
             name="to"
             defaultValue={to}
-            className="mt-1 rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2"
+            className="mt-1 rounded-xl border border-brandcolor-strokeweak bg-brandcolor-fill px-3 py-2 text-brandcolor-text-strong"
           />
         </label>
         <button
           type="submit"
-          className="rounded-full bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-[var(--color-primary-foreground)]"
+          className="rounded-full bg-brandcolor-primary px-4 py-2 text-sm font-semibold text-brandcolor-primary-foreground hover:bg-brandcolor-primary-hover"
         >
           Apply
         </button>
       </form>
 
-      <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-muted)] p-4">
-        <h2 className="font-medium">Totals</h2>
+      <section className="rounded-2xl border border-brandcolor-strokeweak bg-brandcolor-bone p-4">
+        <h2 className="font-medium text-brandcolor-text-strong">Totals</h2>
         <dl className="mt-2 grid gap-2 text-sm sm:grid-cols-3">
           <div>
-            <dt className="text-[var(--color-muted-foreground)]">Days in range</dt>
-            <dd className="font-semibold">{sessions.length}</dd>
+            <dt className="text-brandcolor-text-weak">Days in range</dt>
+            <dd className="font-semibold text-brandcolor-text-strong">{sessions.length}</dd>
           </div>
           <div>
-            <dt className="text-[var(--color-muted-foreground)]">Meals logged</dt>
-            <dd className="font-semibold">{totalMeals}</dd>
+            <dt className="text-brandcolor-text-weak">Meals logged</dt>
+            <dd className="font-semibold text-brandcolor-text-strong">{totalMeals}</dd>
           </div>
           <div>
-            <dt className="text-[var(--color-muted-foreground)]">Reactions logged</dt>
-            <dd className="font-semibold">{totalReactions}</dd>
+            <dt className="text-brandcolor-text-weak">Reactions logged</dt>
+            <dd className="font-semibold text-brandcolor-text-strong">{totalReactions}</dd>
           </div>
         </dl>
       </section>
 
       <section>
-        <h2 className="font-medium">Foods & average symptoms</h2>
-        <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">
+        <h2 className="font-medium text-brandcolor-text-strong">Foods & average symptoms</h2>
+        <p className="mt-1 text-xs text-brandcolor-text-weak">
           Scales are 1–5 (higher bloating / discomfort = more reported intensity).
         </p>
-        <div className="mt-3 overflow-x-auto rounded-2xl border border-[var(--color-border)]">
+        <div className="mt-3 overflow-x-auto rounded-2xl border border-brandcolor-strokeweak">
           <table className="w-full min-w-[32rem] text-left text-sm">
-            <thead className="bg-[var(--color-surface)] text-xs uppercase text-[var(--color-muted-foreground)]">
+            <thead className="bg-brandcolor-surface text-xs uppercase text-brandcolor-text-weak">
               <tr>
                 <th className="px-3 py-2">Food (normalized)</th>
                 <th className="px-3 py-2">Times logged</th>
@@ -208,9 +210,9 @@ export default async function ReportsPage({
                 <th className="px-3 py-2">Avg stomach</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="text-brandcolor-text-strong">
               {rankedFoods.map(([name, agg]) => (
-                <tr key={name} className="border-t border-[var(--color-border)]">
+                <tr key={name} className="border-t border-brandcolor-strokeweak">
                   <td className="px-3 py-2">{name}</td>
                   <td className="px-3 py-2">{agg.count}</td>
                   <td className="px-3 py-2">
@@ -227,7 +229,7 @@ export default async function ReportsPage({
               ))}
               {rankedFoods.length === 0 && (
                 <tr>
-                  <td className="px-3 py-6 text-[var(--color-muted-foreground)]" colSpan={4}>
+                  <td className="px-3 py-6 text-brandcolor-text-weak" colSpan={4}>
                     No meals in this range yet.
                   </td>
                 </tr>
@@ -237,7 +239,7 @@ export default async function ReportsPage({
         </div>
       </section>
 
-      <p className="text-xs text-[var(--color-muted-foreground)]">
+      <p className="text-xs text-brandcolor-text-weak">
         Share this view with a clinician by exporting your history (screenshot or copy).
         PDF export can be added later.
       </p>

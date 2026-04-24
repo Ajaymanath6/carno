@@ -1,22 +1,24 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
-import { Geist, Geist_Mono } from "next/font/google";
+import { DM_Sans, DM_Serif_Display } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const dmSans = DM_Sans({
+  variable: "--font-dm-sans",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const dmSerifDisplay = DM_Serif_Display({
+  variable: "--font-dm-serif-display",
   subsets: ["latin"],
+  weight: "400",
 });
 
 export const metadata: Metadata = {
-  title: "GutTrack — food & symptom diary",
+  title: "Carno — track what fuels you",
   description:
-    "Log meals and delayed digestive reactions in a simple chat. Daily summaries and reports.",
+    "A gut health diary for carnivore-style eating: log meals, timed check-ins, and how you feel — direct, no fluff.",
 };
 
 export default function RootLayout({
@@ -30,9 +32,11 @@ export default function RootLayout({
     <ClerkProvider publishableKey={publishableKey} afterSignOutUrl="/login">
       <html
         lang="en"
-        className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+        className={`${dmSans.variable} ${dmSerifDisplay.variable} h-full antialiased`}
       >
-        <body className="flex min-h-full flex-col">{children}</body>
+        <body className="flex min-h-full flex-col bg-brandcolor-fill text-brandcolor-text-strong">
+          {children}
+        </body>
       </html>
     </ClerkProvider>
   );

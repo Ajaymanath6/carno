@@ -30,9 +30,11 @@ export default async function ChatPage() {
 
   return (
     <main className="flex min-h-0 flex-1 flex-col md:min-h-[calc(100dvh-52px)]">
-      <div className="border-b border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3">
-        <h1 className="text-lg font-semibold">Today · {refreshed.localDate}</h1>
-        <p className="text-sm text-[var(--color-muted-foreground)]">
+      <div className="border-b border-brandcolor-strokeweak bg-brandcolor-surface px-4 py-3">
+        <h1 className="font-serif text-lg font-semibold text-brandcolor-text-strong">
+          Today · {refreshed.localDate}
+        </h1>
+        <p className="text-sm text-brandcolor-text-weak">
           Log meals anytime. After ~3 hours you’ll get a symptom check-in for that meal.
         </p>
       </div>

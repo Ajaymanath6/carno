@@ -1,0 +1,207 @@
+{
+  "name": "Carno Theme Guide",
+  "version": "1.0",
+  "sourceOfTruth": "src/app/globals.css (:root + @theme inline). No tailwind.config.js.",
+  "themeColors": {
+    "brandcolor-fill": {
+      "hex": "#F1EFE8",
+      "usage": "Page / layout background (Salt).",
+      "utilityClasses": {
+        "background": "bg-brandcolor-fill",
+        "text": "text-brandcolor-fill"
+      },
+      "whenToUse": ["Root layout body background", "Chat scroll area when matching page"],
+      "examples": ["<body class=\"... bg-brandcolor-fill text-brandcolor-text-strong\">"]
+    },
+    "brandcolor-surface": {
+      "hex": "#FFF9F5",
+      "usage": "Raised cards, sticky footers, header strips on content.",
+      "utilityClasses": { "background": "bg-brandcolor-surface" },
+      "whenToUse": ["Chat page title bar", "Reaction panel", "History row cards"],
+      "examples": ["bg-brandcolor-surface border-brandcolor-strokeweak"]
+    },
+    "brandcolor-white": {
+      "hex": "#FFFFFF (light) / matches surface in dark",
+      "usage": "Pure card fill when needed.",
+      "utilityClasses": { "background": "bg-brandcolor-white", "text": "text-brandcolor-white" },
+      "whenToUse": ["Reserved for modals / high-contrast chips if added later"]
+    },
+    "brandcolor-marrow": {
+      "hex": "#3C1A0A",
+      "usage": "Deep Marrow — brand ink (not used for top nav chrome; see nav-chrome).",
+      "utilityClasses": { "text": "text-brandcolor-marrow", "background": "bg-brandcolor-marrow" },
+      "whenToUse": ["Strong text on warm backgrounds when you need explicit marrow"],
+      "examples": ["text-brandcolor-marrow on bone panel"]
+    },
+    "brandcolor-nav-chrome": {
+      "hex": "#3C1A0A",
+      "usage": "App header background — constant in light and dark OS preference.",
+      "utilityClasses": { "background": "bg-brandcolor-nav-chrome" },
+      "whenToUse": ["AppNav header only"],
+      "importantNote": "Keeps Deep Marrow bar even when dark theme flips other tokens."
+    },
+    "brandcolor-nav-chrome-fg": {
+      "hex": "#F1EFE8",
+      "usage": "Text and controls on the marrow nav bar.",
+      "utilityClasses": { "text": "text-brandcolor-nav-chrome-fg" },
+      "whenToUse": ["Nav links default", "Sign out label on nav"]
+    },
+    "brandcolor-primary": {
+      "hex": "#D85A30",
+      "usage": "Sear — primary CTA, active nav link, sliders, send buttons.",
+      "utilityClasses": {
+        "background": "bg-brandcolor-primary",
+        "text": "text-brandcolor-primary",
+        "border": "border-brandcolor-primary"
+      },
+      "whenToUse": ["Submit buttons", "Active navigation state", "Accent on Phosphor icons in nav"],
+      "examples": [
+        "bg-brandcolor-primary text-brandcolor-primary-foreground hover:bg-brandcolor-primary-hover rounded-full px-5 py-2"
+      ]
+    },
+    "brandcolor-primary-hover": {
+      "hex": "#B84A26",
+      "usage": "Darker Sear for hover on primary buttons.",
+      "utilityClasses": { "background": "hover:bg-brandcolor-primary-hover" },
+      "whenToUse": ["Any control using bg-brandcolor-primary"],
+      "logic": "Pair every bg-brandcolor-primary interactive control with hover:bg-brandcolor-primary-hover."
+    },
+    "brandcolor-primary-foreground": {
+      "hex": "#F1EFE8",
+      "usage": "Text on Sear buttons and user chat bubbles.",
+      "utilityClasses": { "text": "text-brandcolor-primary-foreground" },
+      "whenToUse": ["Labels on bg-brandcolor-primary"]
+    },
+    "brandcolor-bone": {
+      "hex": "#F5C4B3",
+      "usage": "Bone — soft fills, EOD panel, totals panels, code chips on errors.",
+      "utilityClasses": { "background": "bg-brandcolor-bone" },
+      "whenToUse": ["End-of-day summary strip", "Muted sections", "Inline code backgrounds"],
+      "examples": ["Assistant bubble uses brandcolor-chat-assistant (same family in light mode)"]
+    },
+    "brandcolor-chat-assistant": {
+      "hex": "#F5C4B3 (light); darker warm brown in dark",
+      "usage": "Assistant message bubbles only.",
+      "utilityClasses": { "background": "bg-brandcolor-chat-assistant" },
+      "whenToUse": ["Non-USER roles in chat transcript"]
+    },
+    "brandcolor-tallow": {
+      "hex": "#F0997B",
+      "usage": "Tallow — hover on nav links, secondary emphasis.",
+      "utilityClasses": { "text": "text-brandcolor-tallow" },
+      "whenToUse": ["Nav link hover on marrow bar"]
+    },
+    "brandcolor-text-strong": {
+      "hex": "Contextual (marrow in light, salt in dark)",
+      "usage": "Primary text / headings body color.",
+      "utilityClasses": { "text": "text-brandcolor-text-strong" },
+      "whenToUse": ["Headings", "Form labels", "Table body text"]
+    },
+    "brandcolor-text-weak": {
+      "hex": "Warm brown / adjusted in dark",
+      "usage": "Secondary descriptions, captions, table header labels.",
+      "utilityClasses": { "text": "text-brandcolor-text-weak" },
+      "whenToUse": ["Helper text", "Muted metadata"]
+    },
+    "brandcolor-stroke-strong": {
+      "hex": "#5C4034",
+      "usage": "Strong borders (inputs if you need more weight later).",
+      "utilityClasses": { "border": "border-brandcolor-stroke-strong" },
+      "whenToUse": ["Optional emphasis borders — app mostly uses strokeweak"]
+    },
+    "brandcolor-strokeweak": {
+      "hex": "#D4C4BC",
+      "usage": "Default card/input/divider borders.",
+      "utilityClasses": { "border": "border-brandcolor-strokeweak" },
+      "whenToUse": ["Cards", "Tables", "Textareas", "Dividers"],
+      "importantNote": "Prefer this over gray Tailwind palette for all borders."
+    },
+    "brandcolor-divider": {
+      "hex": "#C9B8AE",
+      "usage": "Reserved for section dividers if needed.",
+      "utilityClasses": { "border": "border-brandcolor-divider" }
+    },
+    "brandcolor-neutralhover": {
+      "hex": "#EDE8E0",
+      "usage": "Hover on neutral filled buttons (e.g. EOD secondary button).",
+      "utilityClasses": { "background": "hover:bg-brandcolor-neutralhover" }
+    },
+    "brandcolor-destructive": {
+      "hex": "#9F2D24",
+      "usage": "Errors and destructive emphasis (warm red).",
+      "utilityClasses": { "text": "text-brandcolor-destructive", "background": "bg-brandcolor-destructive" },
+      "whenToUse": ["Inline form errors", "Rare destructive actions"]
+    },
+    "brandcolor-banner-warning-bg": {
+      "hex": "#F5E0D6",
+      "usage": "Warm warning strip backgrounds (no cool blue).",
+      "utilityClasses": { "background": "bg-brandcolor-banner-warning-bg" }
+    },
+    "brandcolor-badge-amber-bg": {
+      "hex": "#F8ECD5",
+      "usage": "Warm status chip background.",
+      "utilityClasses": { "background": "bg-brandcolor-badge-amber-bg" }
+    },
+    "brandcolor-badge-amber-text": {
+      "hex": "#7A4E12",
+      "usage": "Warm status chip text.",
+      "utilityClasses": { "text": "text-brandcolor-badge-amber-text" }
+    }
+  },
+  "typography": {
+    "display": {
+      "font": "DM Serif Display",
+      "tailwind": "font-serif",
+      "whenToUse": ["Page h1 / product titles"]
+    },
+    "sans": {
+      "font": "DM Sans",
+      "tailwind": "font-sans",
+      "whenToUse": ["Body", "UI controls", "Chat copy"]
+    }
+  },
+  "componentGuidelines": {
+    "button": {
+      "primary": {
+        "completeClasses": "rounded-full bg-brandcolor-primary px-4 py-2 text-sm font-semibold text-brandcolor-primary-foreground hover:bg-brandcolor-primary-hover disabled:opacity-60",
+        "whenToUse": "Main submit actions (Send, Save check-in, Apply, Try again)."
+      },
+      "ghostOnNav": {
+        "completeClasses": "rounded-full border border-white/25 px-3 py-1.5 text-sm text-brandcolor-nav-chrome-fg hover:bg-white/10",
+        "whenToUse": "Sign out on marrow header."
+      }
+    },
+    "card": {
+      "styling": "rounded-2xl border border-brandcolor-strokeweak bg-brandcolor-surface",
+      "whenToUse": "History rows, report filters, meal cards."
+    },
+    "heading": {
+      "h1": { "classes": "font-serif text-xl font-semibold text-brandcolor-text-strong" }
+    },
+    "input": {
+      "classes": "rounded-xl border border-brandcolor-strokeweak bg-brandcolor-fill px-3 py-2 text-sm text-brandcolor-text-strong"
+    }
+  },
+  "aiInstructions": {
+    "workflow": [
+      "STEP 1: Read src/app/globals.css — :root, @media (prefers-color-scheme: dark), and @theme inline for available --color-brandcolor-* tokens.",
+      "STEP 2: Read themeguide.json themeColors and componentGuidelines.",
+      "STEP 3: Implement UI using only bg-brandcolor-*, text-brandcolor-*, border-brandcolor-*, font-serif, font-sans.",
+      "STEP 4: Verify no hex literals, no Tailwind default palette (gray/zinc/teal/emerald/sky), no inline style colors."
+    ],
+    "criticalRules": {
+      "noHexInComponents": {
+        "rule": "Do not paste hex colors into JSX class strings; use theme tokens.",
+        "severity": "CRITICAL"
+      },
+      "noCoolDefaultPalette": {
+        "rule": "Do not use bg-gray-*, text-zinc-*, bg-teal-*, etc.",
+        "severity": "CRITICAL"
+      },
+      "noTailwindConfigJs": {
+        "rule": "Theme extension is only in globals.css for this repo.",
+        "severity": "INFO"
+      }
+    }
+  }
+}

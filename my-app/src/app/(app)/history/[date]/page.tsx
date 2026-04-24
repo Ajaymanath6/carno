@@ -40,44 +40,46 @@ export default async function HistoryDayPage({
       <div>
         <Link
           href="/history"
-          className="text-sm text-[var(--color-primary)] hover:underline"
+          className="text-sm text-brandcolor-primary hover:underline"
         >
           ← Back
         </Link>
-        <h1 className="mt-2 text-xl font-semibold">{day.localDate}</h1>
-        <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
+        <h1 className="mt-2 font-serif text-xl font-semibold text-brandcolor-text-strong">
+          {day.localDate}
+        </h1>
+        <p className="mt-1 text-sm text-brandcolor-text-weak">
           Status: {day.status}
         </p>
       </div>
 
       {day.dailySummary && (
-        <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-muted)] p-4">
-          <h2 className="font-medium">Daily summary</h2>
+        <section className="rounded-2xl border border-brandcolor-strokeweak bg-brandcolor-bone p-4">
+          <h2 className="font-medium text-brandcolor-text-strong">Daily summary</h2>
           {day.dailySummary.dayOverallSurvey && (
             <p className="mt-2 text-sm">{day.dailySummary.dayOverallSurvey}</p>
           )}
-          <pre className="mt-3 overflow-x-auto text-xs text-[var(--color-muted-foreground)]">
+          <pre className="mt-3 overflow-x-auto text-xs text-brandcolor-text-weak">
             {JSON.stringify(payload, null, 2)}
           </pre>
         </section>
       )}
 
       <section>
-        <h2 className="font-medium">Meals & reactions</h2>
+        <h2 className="font-medium text-brandcolor-text-strong">Meals & reactions</h2>
         <ul className="mt-2 flex flex-col gap-3">
           {day.foodEntries.map((f) => (
             <li
               key={f.id}
-              className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-sm"
+              className="rounded-2xl border border-brandcolor-strokeweak bg-brandcolor-surface p-3 text-sm"
             >
-              <p className="font-medium">{f.rawText}</p>
-              <p className="text-xs text-[var(--color-muted-foreground)]">
+              <p className="font-medium text-brandcolor-text-strong">{f.rawText}</p>
+              <p className="text-xs text-brandcolor-text-weak">
                 Logged {f.loggedAt.toISOString()}
               </p>
               {f.reactions.map((r) => (
                 <div
                   key={r.id}
-                  className="mt-2 grid gap-1 border-t border-[var(--color-border)] pt-2 text-xs sm:grid-cols-2"
+                  className="mt-2 grid gap-1 border-t border-brandcolor-strokeweak pt-2 text-xs text-brandcolor-text-weak sm:grid-cols-2"
                 >
                   <span>Energy {r.energyLevel ?? "—"}</span>
                   <span>Bloating {r.bloating ?? "—"}</span>
@@ -100,10 +102,10 @@ export default async function HistoryDayPage({
       </section>
 
       <section>
-        <h2 className="font-medium">Chat transcript</h2>
+        <h2 className="font-medium text-brandcolor-text-strong">Chat transcript</h2>
         <ul className="mt-2 flex flex-col gap-2">
           {day.messages.map((m) => (
-            <li key={m.id} className="text-sm">
+            <li key={m.id} className="text-sm text-brandcolor-text-strong">
               <span className="font-semibold">{m.role}:</span>{" "}
               <span className="whitespace-pre-wrap">{m.body}</span>
             </li>
