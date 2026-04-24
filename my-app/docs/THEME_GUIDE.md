@@ -52,8 +52,9 @@ Paths: [`src/lib/brand.ts`](../src/lib/brand.ts).
 
 ## Chat
 
-- Assistant rows: avatar `CARNO_LOGO_AGENT`, bubble **`bg-brandcolor-white`** + weak border.
-- User bubbles: **`bg-brandcolor-primary text-brandcolor-white`**.
+- Assistant rows: avatar `CARNO_LOGO_AGENT` on **`bg-brandcolor-fill`**, bubble **`bg-brandcolor-white`** + weak border.
+- User bubbles: **`bg-brandcolor-white text-brandcolor-text-strong`** (no border).
+- Before the first USER message of the day: centered greeting (time-based + display name), same meal field + Send, and stroke-weak quick-picks; transcript hidden so the DB seed welcome stays out of view until then.
 - Meal composer: white field; **`border-transparent`** → hover **`border-brandcolor-strokeweak`** → focus **`border-brandcolor-stroke-strong`**; Send disabled at **50% opacity** when draft is empty; **Enter** submits (Shift+Enter newline).
 
 ## Agent animation

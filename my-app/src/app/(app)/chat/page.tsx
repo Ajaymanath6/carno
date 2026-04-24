@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { displayNameFromUser } from "@/lib/display-name";
 import { getOrCreateAppUser } from "@/lib/user";
 import { getOrCreateDaySession } from "@/lib/session";
 import { processDueFollowUpsForSession } from "@/lib/followups";
@@ -28,6 +29,11 @@ export default async function ChatPage() {
     redirect("/chat");
   }
 
+  const displayName = displayNameFromUser({
+    name: user.name,
+    email: user.email,
+  });
+
   return (
     <main className="flex min-h-0 flex-1 flex-col md:min-h-0">
       <div className="border-b border-brandcolor-strokeweak bg-brandcolor-white px-4 py-3">
@@ -45,6 +51,7 @@ export default async function ChatPage() {
         sessionStatus={refreshed.status}
         pendingFoodEntryId={refreshed.pendingFoodEntryId}
         timezone={user.timezone}
+        displayName={displayName}
       />
     </main>
   );

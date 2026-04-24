@@ -3,7 +3,9 @@
 import Image from "next/image";
 import type { KeyboardEvent } from "react";
 import { useActionState, useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import type { ChatMessage, ConversationPhase } from "@prisma/client";
+import { Bird, Cow, Cube, Egg, ForkKnife } from "@phosphor-icons/react";
 import {
   generateDailySummary,
   sendMealMessage,
@@ -13,6 +15,18 @@ import {
 import { EOD_PANEL_START_HOUR, getLocalHourInTimeZone } from "@/lib/date";
 import { CARNO_LOGO_AGENT } from "@/lib/brand";
 
+const MEAL_FORM_ID = "carno-meal-form";
+
+const MEAL_QUICK_PICKS = [
+  { label: "Chicken", value: "Chicken", Icon: Bird },
+  { label: "Mutton", value: "Mutton", Icon: Cow },
+  { label: "Paneer", value: "Paneer", Icon: Cube },
+  { label: "Red meat", value: "Red meat", Icon: ForkKnife },
+  { label: "Eggs", value: "Eggs", Icon: Egg },
+  { label: "White eggs", value: "White eggs", Icon: Egg },
+  { label: "Brown eggs", value: "Brown eggs", Icon: Egg },
+] as const;
+
 type Props = {
   messages: Pick<ChatMessage, "id" | "role" | "body" | "createdAt">[];
   sessionId: string;
@@ -20,9 +34,21 @@ type Props = {
   sessionStatus: "ACTIVE" | "CLOSED";
   pendingFoodEntryId: string | null;
   timezone: string;
+  displayName: string;
 };
 
 const initialActionState: ActionState = {};
+
+function salutationForHour(timezone: string): string {
+  const h = getLocalHourInTimeZone(timezone);
+  if (h < 12) {
+    return "Good morning";
+  }
+  if (h < 17) {
+    return "Good afternoon";
+  }
+  return "Good evening";
+}
 
 export function ChatClient({
   messages,
@@ -31,6 +57,7 @@ export function ChatClient({
   sessionStatus,
   pendingFoodEntryId,
   timezone,
+  displayName,
 }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const mealFormRef = useRef<HTMLFormElement>(null);
@@ -54,10 +81,16 @@ export function ChatClient({
 
   const agentBusy = mealPending || reactionPending || summaryPending;
   const mealSendDisabled = mealPending || !mealDraft.trim();
+  const hasUserMessage = messages.some((m) => m.role === "USER");
+  const canLogMeals = sessionStatus === "ACTIVE" && phase === "CHAT";
+  const showOnboarding = canLogMeals && !hasUserMessage;
+  const salutation = salutationForHour(timezone);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages.length, phase, mealState.ok, reactionState.ok]);
+    if (hasUserMessage) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages.length, phase, mealState.ok, reactionState.ok, hasUserMessage]);
 
   useEffect(() => {
     function tick() {
@@ -74,7 +107,6 @@ export function ChatClient({
     }
   }, [mealState.ok]);
 
-  const canLogMeals = sessionStatus === "ACTIVE" && phase === "CHAT";
   const showReaction =
     sessionStatus === "ACTIVE" &&
     phase === "ASK_REACTION" &&
@@ -90,44 +122,115 @@ export function ChatClient({
     }
   }
 
+  function submitQuickPick(value: string) {
+    if (mealPending) {
+      return;
+    }
+    flushSync(() => setMealDraft(value));
+    mealFormRef.current?.requestSubmit();
+  }
+
+  const mealForm = (
+    <form
+      id={MEAL_FORM_ID}
+      ref={mealFormRef}
+      action={mealAction}
+      className="flex w-full max-w-md items-end gap-2"
+    >
+      <label className="sr-only" htmlFor="meal-message">
+        What did you eat?
+      </label>
+      <div className="min-h-0 flex-1 rounded-2xl border border-transparent bg-brandcolor-white transition-colors hover:border-brandcolor-strokeweak focus-within:border-brandcolor-stroke-strong">
+        <textarea
+          id="meal-message"
+          name="message"
+          rows={2}
+          value={mealDraft}
+          onChange={(e) => setMealDraft(e.target.value)}
+          onKeyDown={onMealKeyDown}
+          placeholder="How can we help you today? Try weight + food — e.g. 600g chicken and rice."
+          className="min-h-[2.75rem] w-full resize-none rounded-2xl border-0 bg-transparent px-4 py-3 text-base text-brandcolor-text-strong outline-none focus:ring-0"
+        />
+      </div>
+      <button
+        type="submit"
+        disabled={mealSendDisabled}
+        className="min-h-[2.75rem] shrink-0 rounded-full bg-brandcolor-primary px-5 text-sm font-semibold text-brandcolor-white hover:bg-brandcolor-primary-hover disabled:pointer-events-none disabled:opacity-50"
+      >
+        {mealPending ? "…" : "Send"}
+      </button>
+    </form>
+  );
+
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-brandcolor-fill">
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        <ul className="mx-auto flex max-w-3xl flex-col gap-3 px-4 py-4">
-          {messages.map((m) => (
-            <li
-              key={m.id}
-              className={`flex gap-2 ${m.role === "USER" ? "justify-end" : "items-end justify-start"}`}
-            >
-              {m.role !== "USER" && (
+      {!showReaction && !showOnboarding && (
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <ul className="mx-auto flex max-w-3xl flex-col gap-3 px-4 py-4">
+            {messages.map((m) => (
+              <li
+                key={m.id}
+                className={`flex gap-2 ${m.role === "USER" ? "justify-end" : "items-end justify-start"}`}
+              >
+                {m.role !== "USER" && (
+                  <div
+                    className={`relative shrink-0 rounded-full border border-brandcolor-strokeweak bg-brandcolor-fill p-0.5 shadow-sm ${
+                      agentBusy ? "animate-carno-speak" : ""
+                    }`}
+                  >
+                    <Image
+                      src={CARNO_LOGO_AGENT}
+                      alt="Carno"
+                      width={32}
+                      height={32}
+                      className="h-8 w-8 rounded-full object-cover"
+                    />
+                  </div>
+                )}
                 <div
-                  className={`relative shrink-0 rounded-full border border-brandcolor-stroke-strong bg-brandcolor-white p-0.5 shadow-sm ${
-                    agentBusy ? "animate-carno-speak" : ""
+                  className={`max-w-[min(85%,calc(100%-2.75rem))] rounded-2xl px-4 py-2 text-sm leading-relaxed whitespace-pre-wrap ${
+                    m.role === "USER"
+                      ? "bg-brandcolor-white text-brandcolor-text-strong"
+                      : "border border-brandcolor-strokeweak bg-brandcolor-white text-brandcolor-text-strong"
                   }`}
                 >
-                  <Image
-                    src={CARNO_LOGO_AGENT}
-                    alt="Carno"
-                    width={32}
-                    height={32}
-                    className="h-8 w-8 rounded-full object-cover"
-                  />
+                  {m.body}
                 </div>
-              )}
-              <div
-                className={`max-w-[min(85%,calc(100%-2.75rem))] rounded-2xl px-4 py-2 text-sm leading-relaxed whitespace-pre-wrap ${
-                  m.role === "USER"
-                    ? "bg-brandcolor-primary text-brandcolor-white"
-                    : "border border-brandcolor-strokeweak bg-brandcolor-white text-brandcolor-text-strong"
-                }`}
+              </li>
+            ))}
+            <div ref={bottomRef} />
+          </ul>
+        </div>
+      )}
+
+      {!showReaction && showOnboarding && (
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-6 px-4 py-8">
+          <div className="max-w-md text-center">
+            <h2 className="font-serif text-2xl font-semibold text-brandcolor-text-strong md:text-3xl">
+              {salutation}, {displayName}
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-brandcolor-text-weak">
+              Start logging your meals to build a clearer picture of what works for you. Tap a
+              shortcut below or describe what you ate.
+            </p>
+          </div>
+          {mealForm}
+          <div className="grid w-full max-w-md grid-cols-2 gap-2 sm:grid-cols-3">
+            {MEAL_QUICK_PICKS.map(({ label, value, Icon }) => (
+              <button
+                key={value}
+                type="button"
+                disabled={mealPending}
+                onClick={() => submitQuickPick(value)}
+                className="flex items-center justify-center gap-2 rounded-xl border border-brandcolor-strokeweak bg-brandcolor-white px-3 py-3 text-sm font-medium text-brandcolor-text-strong hover:bg-brandcolor-fill disabled:opacity-50"
               >
-                {m.body}
-              </div>
-            </li>
-          ))}
-          <div ref={bottomRef} />
-        </ul>
-      </div>
+                <Icon className="shrink-0 text-brandcolor-stroke-strong" size={22} aria-hidden />
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {sessionStatus === "CLOSED" && (
         <p className="mx-auto max-w-3xl px-4 pb-4 text-center text-sm text-brandcolor-text-weak">
@@ -207,8 +310,8 @@ export function ChatClient({
                 Did you eat the same meal yesterday?
               </legend>
               <div className="flex flex-wrap gap-2">
-                <Chip name="ateYesterdaySame" value="yes" label="Yes" />
-                <Chip name="ateYesterdaySame" value="no" label="No" />
+                <ReactionChip name="ateYesterdaySame" value="yes" label="Yes" />
+                <ReactionChip name="ateYesterdaySame" value="no" label="No" />
               </div>
             </fieldset>
             <label className="block text-sm">
@@ -245,36 +348,9 @@ export function ChatClient({
         </div>
       )}
 
-      {canLogMeals && (
+      {canLogMeals && hasUserMessage && (
         <div className="px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
-          <form
-            ref={mealFormRef}
-            action={mealAction}
-            className="mx-auto flex max-w-3xl items-end gap-2"
-          >
-            <label className="sr-only" htmlFor="meal-message">
-              What did you eat?
-            </label>
-            <div className="min-h-0 flex-1 rounded-2xl border border-transparent bg-brandcolor-white transition-colors hover:border-brandcolor-strokeweak focus-within:border-brandcolor-stroke-strong">
-              <textarea
-                id="meal-message"
-                name="message"
-                rows={2}
-                value={mealDraft}
-                onChange={(e) => setMealDraft(e.target.value)}
-                onKeyDown={onMealKeyDown}
-                placeholder='e.g. "600g chicken and rice"'
-                className="min-h-[2.75rem] w-full resize-none rounded-2xl border-0 bg-transparent px-4 py-3 text-base text-brandcolor-text-strong outline-none focus:ring-0"
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={mealSendDisabled}
-              className="min-h-[2.75rem] shrink-0 rounded-full bg-brandcolor-primary px-5 text-sm font-semibold text-brandcolor-white hover:bg-brandcolor-primary-hover disabled:pointer-events-none disabled:opacity-50"
-            >
-              {mealPending ? "…" : "Send"}
-            </button>
-          </form>
+          <div className="mx-auto max-w-3xl">{mealForm}</div>
         </div>
       )}
     </div>
@@ -298,7 +374,7 @@ function SliderRow({ name, label }: { name: string; label: string }) {
   );
 }
 
-function Chip({
+function ReactionChip({
   name,
   value,
   label,
