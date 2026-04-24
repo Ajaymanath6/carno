@@ -3,17 +3,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { SignOutButton } from "@clerk/nextjs";
-import {
-  CaretDoubleLeft,
-  CaretDoubleRight,
-  List,
-  SignOut,
-  X,
-} from "@phosphor-icons/react";
+import { List, Plus, Sidebar, SignOut, X } from "@phosphor-icons/react";
 import { APP_NAV_ITEMS } from "@/config/app-nav";
-import { CARNO_LOGO_CREAM } from "@/lib/brand";
+import { CARNO_LOGO_AGENT } from "@/lib/brand";
+import { NewDayChatDialog } from "@/components/NewDayChatDialog";
 
 const SIDEBAR_EXPANDED_KEY = "carno-sidebar-expanded";
 
@@ -63,6 +58,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const drawerId = useId();
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  const newChatDialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
     try {
@@ -109,21 +105,64 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         aria-label="Main navigation"
       >
         <div className="flex flex-1 flex-col pt-3">
-          <Link
-            href="/chat"
-            className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl border border-brandcolor-strokeweak bg-brandcolor-white p-1 hover:border-brandcolor-strokeweak"
-            title="Carno — Chat"
-          >
-            <Image
-              src={CARNO_LOGO_CREAM}
-              alt=""
-              width={36}
-              height={36}
-              className="h-9 w-9 object-contain"
-              priority
-            />
-          </Link>
+          {sidebarExpanded ? (
+            <div className="flex w-full items-center gap-1.5 px-2">
+              <Link
+                href="/chat"
+                className="flex h-11 min-w-0 flex-1 items-center justify-center rounded-xl border border-brandcolor-strokeweak bg-brandcolor-white p-1 hover:border-brandcolor-strokeweak"
+                title="Carno — Chats"
+              >
+                <Image
+                  src={CARNO_LOGO_AGENT}
+                  alt=""
+                  width={36}
+                  height={36}
+                  className="h-9 w-9 rounded-lg object-cover"
+                  priority
+                />
+              </Link>
+              <button
+                type="button"
+                onClick={() => setSidebarExpanded(false)}
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-brandcolor-strokeweak text-brandcolor-stroke-strong hover:bg-brandcolor-fill"
+                title="Collapse sidebar"
+                aria-label="Collapse sidebar"
+              >
+                <Sidebar className="-scale-x-100" size={22} weight="regular" aria-hidden />
+              </button>
+            </div>
+          ) : (
+            <div className="flex justify-center px-2">
+              <button
+                type="button"
+                onClick={() => setSidebarExpanded(true)}
+                className="flex h-11 w-11 items-center justify-center rounded-xl border border-brandcolor-strokeweak text-brandcolor-stroke-strong hover:bg-brandcolor-fill"
+                title="Expand sidebar"
+                aria-label="Expand sidebar"
+              >
+                <Sidebar size={22} weight="regular" aria-hidden />
+              </button>
+            </div>
+          )}
           <nav className="mt-4 flex flex-1 flex-col gap-1 px-2">
+            <button
+              type="button"
+              onClick={() => newChatDialogRef.current?.showModal()}
+              className={`group flex items-center rounded-xl py-2.5 text-brandcolor-stroke-strong transition-colors ${
+                sidebarExpanded ? "gap-2 px-2" : "justify-center px-0"
+              }`}
+              title="New chat for today — keep or clear today’s log"
+              aria-label="New chat options for today"
+            >
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors group-hover:bg-brandcolor-white">
+                <Plus size={22} weight="bold" aria-hidden />
+              </span>
+              {sidebarExpanded ? (
+                <span className="truncate text-sm font-medium text-brandcolor-text-strong">
+                  New chat
+                </span>
+              ) : null}
+            </button>
             {APP_NAV_ITEMS.map(({ href, label, Icon }) => {
               const active = isActivePath(pathname, href);
               return (
@@ -148,18 +187,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </nav>
         </div>
         <div className="mt-auto border-t border-brandcolor-strokeweak p-2">
-          <button
-            type="button"
-            onClick={() => setSidebarExpanded((v) => !v)}
-            className="mb-2 flex w-full items-center justify-center rounded-lg py-2 text-brandcolor-stroke-strong hover:bg-brandcolor-white"
-            title={sidebarExpanded ? "Collapse sidebar" : "Expand sidebar"}
-          >
-            {sidebarExpanded ? (
-              <CaretDoubleLeft size={22} weight="bold" aria-hidden />
-            ) : (
-              <CaretDoubleRight size={22} weight="bold" aria-hidden />
-            )}
-          </button>
           <SignOutButton redirectUrl="/login">
             <button
               type="button"
@@ -181,6 +208,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </button>
           </SignOutButton>
         </div>
+        <NewDayChatDialog dialogRef={newChatDialogRef} />
       </aside>
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
@@ -200,17 +228,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <List size={26} weight="regular" />
               )}
             </button>
-            <div className="flex min-w-0 flex-1 items-center justify-center gap-2">
+            <div className="flex min-w-0 flex-1 items-center justify-center">
               <Image
-                src={CARNO_LOGO_CREAM}
-                alt=""
-                width={28}
-                height={28}
-                className="h-7 w-7 shrink-0 rounded-md border border-brandcolor-strokeweak bg-brandcolor-white object-contain p-0.5"
+                src={CARNO_LOGO_AGENT}
+                alt="Carno"
+                width={36}
+                height={36}
+                className="h-9 w-9 shrink-0 rounded-lg object-cover"
               />
-              <span className="font-serif text-base font-semibold tracking-tight text-brandcolor-text-strong">
-                Carno
-              </span>
             </div>
             <SignOutButton redirectUrl="/login">
               <button

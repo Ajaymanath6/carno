@@ -29,15 +29,15 @@ export default function RootLayout({
   const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "";
 
   return (
-    <ClerkProvider publishableKey={publishableKey} afterSignOutUrl="/login">
-      <html
-        lang="en"
-        className={`${dmSans.variable} ${dmSerifDisplay.variable} h-full antialiased`}
-      >
-        <body className="flex min-h-full flex-col bg-brandcolor-fill text-brandcolor-text-strong">
+    <html
+      lang="en"
+      className={`${dmSans.variable} ${dmSerifDisplay.variable} h-full antialiased`}
+    >
+      <body className="flex min-h-full flex-col bg-brandcolor-fill text-brandcolor-text-strong">
+        <ClerkProvider publishableKey={publishableKey} afterSignOutUrl="/login">
           {children}
-        </body>
-      </html>
-    </ClerkProvider>
+        </ClerkProvider>
+      </body>
+    </html>
   );
 }

@@ -18,7 +18,7 @@ export default async function ChatPage() {
   const messages = await prisma.chatMessage.findMany({
     where: { sessionId: day.id },
     orderBy: { createdAt: "asc" },
-    select: { id: true, role: true, body: true, createdAt: true },
+    select: { id: true, role: true, body: true, createdAt: true, metadata: true },
   });
 
   const refreshed = await prisma.daySession.findUnique({
@@ -36,14 +36,6 @@ export default async function ChatPage() {
 
   return (
     <main className="flex min-h-0 flex-1 flex-col md:min-h-0">
-      <div className="border-b border-brandcolor-strokeweak bg-brandcolor-white px-4 py-3">
-        <h1 className="font-serif text-lg font-semibold text-brandcolor-text-strong">
-          Today · {refreshed.localDate}
-        </h1>
-        <p className="text-sm text-brandcolor-text-weak">
-          Log meals anytime. After ~3 hours you’ll get a symptom check-in for that meal.
-        </p>
-      </div>
       <ChatClient
         messages={messages}
         sessionId={refreshed.id}
@@ -52,6 +44,7 @@ export default async function ChatPage() {
         pendingFoodEntryId={refreshed.pendingFoodEntryId}
         timezone={user.timezone}
         displayName={displayName}
+        localDate={refreshed.localDate}
       />
     </main>
   );

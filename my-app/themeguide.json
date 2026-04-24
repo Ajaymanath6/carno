@@ -10,7 +10,7 @@
         "background": "bg-brandcolor-fill",
         "text": "text-brandcolor-fill"
       },
-      "whenToUse": ["body", "sidebar", "mobile header", "chat scroll gutter", "table header tint"],
+      "whenToUse": ["body", "sidebar", "mobile header", "chat scroll gutter", "table header tint", "chat day badge (Today · date)"],
       "examples": ["<body class=\"... bg-brandcolor-fill text-brandcolor-text-strong\">"]
     },
     "brandcolor-white": {
@@ -101,9 +101,24 @@
     "input": {
       "classes": "rounded-xl border border-brandcolor-strokeweak bg-brandcolor-fill px-3 py-2 text-sm text-brandcolor-text-strong"
     },
+    "dayDateBadge": {
+      "styling": "inline-flex rounded-full border border-brandcolor-strokeweak bg-brandcolor-fill px-3 py-1 text-xs font-medium text-brandcolor-text-strong; shows weekday (long) · Today · YYYY-MM-DD using weekdayLongForLocalDateKey in src/lib/date.ts",
+      "whenToUse": "Above the onboarding greeting on a new day, and sticky at top of the chat transcript after the first meal log."
+    },
     "mealComposer": {
-      "wrapper": "rounded-2xl border border-transparent bg-brandcolor-white hover:border-brandcolor-strokeweak focus-within:border-brandcolor-stroke-strong",
-      "sendWhenEmpty": "disabled:opacity-50 disabled:pointer-events-none on Send when message is whitespace-only"
+      "wrapper": "Single rounded-2xl row: white field + inline circular primary control with PaperPlaneRight (arrow send) or CircleNotch while pending; border-transparent → hover:border-brandcolor-strokeweak → focus-within:border-brandcolor-stroke-strong",
+      "sendWhenEmpty": "disabled:opacity-50 disabled:pointer-events-none on send when message is whitespace-only"
+    },
+    "mealQuickPicks": {
+      "styling": "Single nowrap row (overflow-x-auto on xs): flex-1 tiles, image+label; bg-brandcolor-white border-brandcolor-strokeweak; hover:bg-brandcolor-fill; Image mix-blend-multiply",
+      "whenToUse": "Onboarding food shortcuts only."
+    },
+    "sidebarDesktop": {
+      "collapsedTop": "Phosphor Sidebar opens rail; hover:bg-brandcolor-fill on control.",
+      "expandedTop": "Logo link to /chat (CARNO_LOGO_AGENT on bg-brandcolor-white in link); Sidebar mirrored (-scale-x-100) collapses; hover:bg-brandcolor-fill.",
+      "newChatRow": "Plus + label 'New chat' above Chats; Plus sits in a rounded span with group-hover:bg-brandcolor-white; opens NewDayChatDialog.",
+      "navLabels": "First item label 'Chats' (today); History unchanged for past days.",
+      "newDayDialog": "Continue closes; Start fresh submits resetActiveDaySessionForToday (ACTIVE + CHAT only)."
     }
   },
   "aiInstructions": {

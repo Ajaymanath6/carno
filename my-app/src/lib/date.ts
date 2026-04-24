@@ -33,6 +33,19 @@ export function getLocalDateKey(timeZone: string, date: Date = new Date()): stri
   }).format(date);
 }
 
+/**
+ * Full weekday name (e.g. "Monday") for a calendar `YYYY-MM-DD` key in `timeZone`.
+ * Uses the same UTC-noon anchor as {@link shiftLocalDateKey} for stable civil dates.
+ */
+export function weekdayLongForLocalDateKey(dateKey: string, timeZone: string): string {
+  const [y, m, d] = dateKey.split("-").map(Number);
+  const utc = Date.UTC(y, (m ?? 1) - 1, d ?? 1, 12, 0, 0);
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    weekday: "long",
+  }).format(new Date(utc));
+}
+
 /** Shift a YYYY-MM-DD key by whole days (civil date, UTC noon anchor). */
 export function shiftLocalDateKey(dateKey: string, deltaDays: number): string {
   const [y, m, d] = dateKey.split("-").map(Number);

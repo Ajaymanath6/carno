@@ -2,6 +2,11 @@ import type { DaySession } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getLocalDateKey } from "@/lib/date";
 
+/** First assistant line for a new day (new session or after “start fresh today”). */
+export const DAY_CHAT_WELCOME_BODY =
+  "Hi — log anything you eat here (for example: “600g chicken and rice”). " +
+  "About three hours after each meal I’ll ask how you felt so we can spot patterns.";
+
 export async function getOrCreateDaySession(
   userId: string,
   timezone: string,
@@ -25,9 +30,7 @@ export async function getOrCreateDaySession(
     data: {
       sessionId: session.id,
       role: "ASSISTANT",
-      body:
-        "Hi — log anything you eat here (for example: “600g chicken and rice”). " +
-        "About three hours after each meal I’ll ask how you felt so we can spot patterns.",
+      body: DAY_CHAT_WELCOME_BODY,
     },
   });
   return session;

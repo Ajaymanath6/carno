@@ -4,37 +4,43 @@ import Image from "next/image";
 import type { KeyboardEvent } from "react";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
-import type { ChatMessage, ConversationPhase } from "@prisma/client";
-import { Bird, Cow, Cube, Egg, ForkKnife } from "@phosphor-icons/react";
+import type { ChatMessage, ConversationPhase, Prisma } from "@prisma/client";
+import { CircleNotch, PaperPlaneRight } from "@phosphor-icons/react";
 import {
   generateDailySummary,
   sendMealMessage,
   submitReaction,
   type ActionState,
 } from "@/app/actions/chat";
-import { EOD_PANEL_START_HOUR, getLocalHourInTimeZone } from "@/lib/date";
-import { CARNO_LOGO_AGENT } from "@/lib/brand";
+import { EOD_PANEL_START_HOUR, getLocalHourInTimeZone, weekdayLongForLocalDateKey } from "@/lib/date";
+import {
+  CARNO_LOGO_AGENT,
+  MEAL_QUICK_BROWN_EGGS,
+  MEAL_QUICK_CHICKEN,
+  MEAL_QUICK_MUTTON,
+  MEAL_QUICK_PANEER,
+  MEAL_QUICK_RED_MEAT,
+} from "@/lib/brand";
 
 const MEAL_FORM_ID = "carno-meal-form";
 
 const MEAL_QUICK_PICKS = [
-  { label: "Chicken", value: "Chicken", Icon: Bird },
-  { label: "Mutton", value: "Mutton", Icon: Cow },
-  { label: "Paneer", value: "Paneer", Icon: Cube },
-  { label: "Red meat", value: "Red meat", Icon: ForkKnife },
-  { label: "Eggs", value: "Eggs", Icon: Egg },
-  { label: "White eggs", value: "White eggs", Icon: Egg },
-  { label: "Brown eggs", value: "Brown eggs", Icon: Egg },
+  { label: "Chicken", value: "Chicken", imageSrc: MEAL_QUICK_CHICKEN },
+  { label: "Mutton", value: "Mutton", imageSrc: MEAL_QUICK_MUTTON },
+  { label: "Paneer", value: "Paneer", imageSrc: MEAL_QUICK_PANEER },
+  { label: "Red meat", value: "Red meat", imageSrc: MEAL_QUICK_RED_MEAT },
+  { label: "Brown eggs", value: "Brown eggs", imageSrc: MEAL_QUICK_BROWN_EGGS },
 ] as const;
 
 type Props = {
-  messages: Pick<ChatMessage, "id" | "role" | "body" | "createdAt">[];
+  messages: Pick<ChatMessage, "id" | "role" | "body" | "createdAt" | "metadata">[];
   sessionId: string;
   phase: ConversationPhase;
   sessionStatus: "ACTIVE" | "CLOSED";
   pendingFoodEntryId: string | null;
   timezone: string;
   displayName: string;
+  localDate: string;
 };
 
 const initialActionState: ActionState = {};
@@ -58,6 +64,7 @@ export function ChatClient({
   pendingFoodEntryId,
   timezone,
   displayName,
+  localDate,
 }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const mealFormRef = useRef<HTMLFormElement>(null);
@@ -130,43 +137,48 @@ export function ChatClient({
     mealFormRef.current?.requestSubmit();
   }
 
-  const mealForm = (
-    <form
-      id={MEAL_FORM_ID}
-      ref={mealFormRef}
-      action={mealAction}
-      className="flex w-full max-w-md items-end gap-2"
-    >
-      <label className="sr-only" htmlFor="meal-message">
-        What did you eat?
-      </label>
-      <div className="min-h-0 flex-1 rounded-2xl border border-transparent bg-brandcolor-white transition-colors hover:border-brandcolor-strokeweak focus-within:border-brandcolor-stroke-strong">
-        <textarea
-          id="meal-message"
-          name="message"
-          rows={2}
-          value={mealDraft}
-          onChange={(e) => setMealDraft(e.target.value)}
-          onKeyDown={onMealKeyDown}
-          placeholder="How can we help you today? Try weight + food — e.g. 600g chicken and rice."
-          className="min-h-[2.75rem] w-full resize-none rounded-2xl border-0 bg-transparent px-4 py-3 text-base text-brandcolor-text-strong outline-none focus:ring-0"
-        />
-      </div>
-      <button
-        type="submit"
-        disabled={mealSendDisabled}
-        className="min-h-[2.75rem] shrink-0 rounded-full bg-brandcolor-primary px-5 text-sm font-semibold text-brandcolor-white hover:bg-brandcolor-primary-hover disabled:pointer-events-none disabled:opacity-50"
-      >
-        {mealPending ? "…" : "Send"}
-      </button>
-    </form>
+  const mealComposer = (maxWidthClass: string) => (
+    <div className={`mx-auto w-full ${maxWidthClass}`}>
+      <form id={MEAL_FORM_ID} ref={mealFormRef} action={mealAction} className="flex w-full">
+        <label className="sr-only" htmlFor="meal-message">
+          What did you eat?
+        </label>
+        <div className="flex min-h-[3rem] w-full items-end rounded-2xl border border-transparent bg-brandcolor-white pl-1 transition-colors hover:border-brandcolor-strokeweak focus-within:border-brandcolor-stroke-strong">
+          <textarea
+            id="meal-message"
+            name="message"
+            rows={2}
+            value={mealDraft}
+            onChange={(e) => setMealDraft(e.target.value)}
+            onKeyDown={onMealKeyDown}
+            placeholder="How can we help you today? Try weight + food — e.g. 600g chicken and rice."
+            className="min-h-[2.75rem] min-w-0 flex-1 resize-none border-0 bg-transparent py-3 pl-3 pr-2 text-base text-brandcolor-text-strong outline-none focus:ring-0"
+          />
+          <button
+            type="submit"
+            disabled={mealSendDisabled}
+            aria-label={mealPending ? "Sending…" : "Send meal"}
+            className="mb-1.5 mr-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brandcolor-primary text-brandcolor-white hover:bg-brandcolor-primary-hover disabled:pointer-events-none disabled:opacity-50"
+          >
+            {mealPending ? (
+              <CircleNotch className="animate-spin" size={22} weight="bold" aria-hidden />
+            ) : (
+              <PaperPlaneRight className="-translate-x-px" size={22} weight="bold" aria-hidden />
+            )}
+          </button>
+        </div>
+      </form>
+    </div>
   );
 
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-brandcolor-fill">
       {!showReaction && !showOnboarding && (
         <div className="min-h-0 flex-1 overflow-y-auto">
-          <ul className="mx-auto flex max-w-3xl flex-col gap-3 px-4 py-4">
+          <div className="sticky top-0 z-10 flex justify-center bg-brandcolor-fill/90 px-4 py-2 backdrop-blur-sm">
+            <DayDateBadge localDate={localDate} timezone={timezone} />
+          </div>
+          <ul className="mx-auto flex max-w-3xl flex-col gap-3 px-4 pb-4 pt-1">
             {messages.map((m) => (
               <li
                 key={m.id}
@@ -188,13 +200,13 @@ export function ChatClient({
                   </div>
                 )}
                 <div
-                  className={`max-w-[min(85%,calc(100%-2.75rem))] rounded-2xl px-4 py-2 text-sm leading-relaxed whitespace-pre-wrap ${
+                  className={`max-w-[min(85%,calc(100%-2.75rem))] rounded-2xl px-4 py-2 text-sm leading-relaxed ${
                     m.role === "USER"
                       ? "bg-brandcolor-white text-brandcolor-text-strong"
                       : "border border-brandcolor-strokeweak bg-brandcolor-white text-brandcolor-text-strong"
                   }`}
                 >
-                  {m.body}
+                  <AssistantBubbleBody metadata={m.metadata} body={m.body} />
                 </div>
               </li>
             ))}
@@ -204,28 +216,37 @@ export function ChatClient({
       )}
 
       {!showReaction && showOnboarding && (
-        <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-6 px-4 py-8">
-          <div className="max-w-md text-center">
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-5 px-4 py-8">
+          <div className="flex w-full max-w-md flex-col items-center gap-4 text-center">
+            <DayDateBadge localDate={localDate} timezone={timezone} />
             <h2 className="font-serif text-2xl font-semibold text-brandcolor-text-strong md:text-3xl">
               {salutation}, {displayName}
             </h2>
-            <p className="mt-3 text-sm leading-relaxed text-brandcolor-text-weak">
+            <p className="text-sm leading-relaxed text-brandcolor-text-weak">
               Start logging your meals to build a clearer picture of what works for you. Tap a
               shortcut below or describe what you ate.
             </p>
           </div>
-          {mealForm}
-          <div className="grid w-full max-w-md grid-cols-2 gap-2 sm:grid-cols-3">
-            {MEAL_QUICK_PICKS.map(({ label, value, Icon }) => (
+          {mealComposer("max-w-md")}
+          <div className="flex w-full max-w-md flex-nowrap items-stretch justify-between gap-1 overflow-x-auto pb-1 sm:gap-1.5">
+            {MEAL_QUICK_PICKS.map(({ label, value, imageSrc }) => (
               <button
                 key={value}
                 type="button"
                 disabled={mealPending}
                 onClick={() => submitQuickPick(value)}
-                className="flex items-center justify-center gap-2 rounded-xl border border-brandcolor-strokeweak bg-brandcolor-white px-3 py-3 text-sm font-medium text-brandcolor-text-strong hover:bg-brandcolor-fill disabled:opacity-50"
+                className="group flex min-w-0 flex-1 shrink-0 flex-row items-center gap-1 rounded-lg border border-brandcolor-strokeweak bg-brandcolor-white px-1.5 py-1.5 text-left text-[11px] font-medium leading-tight text-brandcolor-text-strong transition-colors hover:border-brandcolor-strokeweak hover:bg-brandcolor-fill sm:text-xs disabled:opacity-50"
               >
-                <Icon className="shrink-0 text-brandcolor-stroke-strong" size={22} aria-hidden />
-                {label}
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-brandcolor-white group-hover:bg-brandcolor-fill">
+                  <Image
+                    src={imageSrc}
+                    alt=""
+                    width={32}
+                    height={32}
+                    className="max-h-8 max-w-8 object-contain mix-blend-multiply"
+                  />
+                </span>
+                <span className="min-w-0 truncate">{label}</span>
               </button>
             ))}
           </div>
@@ -350,10 +371,61 @@ export function ChatClient({
 
       {canLogMeals && hasUserMessage && (
         <div className="px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
-          <div className="mx-auto max-w-3xl">{mealForm}</div>
+          {mealComposer("max-w-3xl")}
         </div>
       )}
     </div>
+  );
+}
+
+function mealThumbFromMetadata(metadata: Prisma.JsonValue | null): string | null {
+  if (metadata == null || typeof metadata !== "object" || Array.isArray(metadata)) {
+    return null;
+  }
+  const thumb = (metadata as Record<string, unknown>).mealThumb;
+  return typeof thumb === "string" ? thumb : null;
+}
+
+function AssistantBubbleBody({
+  metadata,
+  body,
+}: {
+  metadata: Prisma.JsonValue | null;
+  body: string;
+}) {
+  const thumb = mealThumbFromMetadata(metadata);
+  return (
+    <span className="inline-flex max-w-full flex-wrap items-center gap-2 align-top">
+      {thumb != null ? (
+        <span className="inline-flex shrink-0 items-center self-center bg-transparent leading-none">
+          <Image
+            src={thumb}
+            alt=""
+            width={28}
+            height={28}
+            className="h-7 w-7 object-contain mix-blend-multiply"
+          />
+        </span>
+      ) : null}
+      <span className="min-w-0 flex-1 whitespace-pre-wrap">{body}</span>
+    </span>
+  );
+}
+
+function DayDateBadge({ localDate, timezone }: { localDate: string; timezone: string }) {
+  const weekday = weekdayLongForLocalDateKey(localDate, timezone);
+  return (
+    <span className="inline-flex max-w-[min(100%,22rem)] flex-wrap items-center justify-center gap-x-1.5 rounded-full border border-brandcolor-strokeweak bg-brandcolor-fill px-3 py-1 text-center font-sans text-xs font-medium tracking-wide text-brandcolor-text-strong">
+      <span className="capitalize">{weekday}</span>
+      <span className="text-brandcolor-text-weak" aria-hidden>
+        ·
+      </span>
+      <span>Today</span>
+      <span className="text-brandcolor-text-weak" aria-hidden>
+        ·
+      </span>
+      <span>{localDate}</span>
+    </span>
   );
 }
 

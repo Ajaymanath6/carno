@@ -6,9 +6,10 @@ import { getOrCreateAppUser } from "@/lib/user";
 import { getOrCreateDaySession } from "@/lib/session";
 import { normalizeFoodLabel } from "@/lib/text";
 import { processDueFollowUpsForSession } from "@/lib/followups";
-import { MessageRole, ConversationPhase } from "@prisma/client";
+import { MessageRole, ConversationPhase, Prisma } from "@prisma/client";
 import { shiftLocalDateKey } from "@/lib/date";
 import { buildDailySummaryPayload } from "@/lib/summary";
+import { mealThumbPathForNormalizedFood } from "@/lib/meal-thumb";
 
 const FOLLOW_UP_MS = 3 * 60 * 60 * 1000;
 
@@ -38,6 +39,12 @@ export async function sendMealMessage(
 
   const foodNameNormalized = normalizeFoodLabel(text.split(/[.,;]/)[0] ?? text);
   const followUpDueAt = new Date(Date.now() + FOLLOW_UP_MS);
+  const mealThumb = mealThumbPathForNormalizedFood(foodNameNormalized);
+  const savedFoodLabel = foodNameNormalized.slice(0, 80);
+  const savedFoodDisplay =
+    savedFoodLabel.length > 0
+      ? savedFoodLabel.charAt(0).toUpperCase() + savedFoodLabel.slice(1)
+      : savedFoodLabel;
 
   await prisma.$transaction([
     prisma.chatMessage.create({
@@ -45,6 +52,9 @@ export async function sendMealMessage(
         sessionId: day.id,
         role: MessageRole.USER,
         body: text,
+        ...(mealThumb != null
+          ? { metadata: { mealThumb } as Prisma.InputJsonValue }
+          : {}),
       },
     }),
     prisma.foodEntry.create({
@@ -60,12 +70,15 @@ export async function sendMealMessage(
         sessionId: day.id,
         role: MessageRole.ASSISTANT,
         body:
-          `Logged. I’ll ask how you felt about **${foodNameNormalized.slice(0, 80)}** after about 3 hours ` +
-          `(around ${followUpDueAt.toLocaleTimeString(undefined, {
+          `Got it — I’ve saved ${savedFoodDisplay}. In about three hours I’ll check in ` +
+          `on how that sat with you (around ${followUpDueAt.toLocaleTimeString(undefined, {
             hour: "numeric",
             minute: "2-digit",
             timeZone: appUser.timezone,
           })} your time).`,
+        ...(mealThumb != null
+          ? { metadata: { mealThumb } as Prisma.InputJsonValue }
+          : {}),
       },
     }),
   ]);
