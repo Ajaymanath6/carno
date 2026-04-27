@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import type { KeyboardEvent } from "react";
+import type { ComponentProps, KeyboardEvent } from "react";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { useRouter } from "next/navigation";
@@ -74,6 +74,40 @@ type Props = {
 };
 
 const initialActionState: ActionState = {};
+
+function SummaryPreviewPill({
+  previewAction,
+  sessionId,
+  previewPending,
+  mealPending,
+  reactionPending,
+  formClassName,
+}: {
+  previewAction: ComponentProps<"form">["action"];
+  sessionId: string;
+  previewPending: boolean;
+  mealPending: boolean;
+  reactionPending: boolean;
+  formClassName?: string;
+}) {
+  return (
+    <form action={previewAction} className={formClassName ?? "flex shrink-0 justify-end"}>
+      <input type="hidden" name="sessionId" value={sessionId} />
+      <button
+        type="submit"
+        disabled={previewPending || mealPending || reactionPending}
+        className="inline-flex items-center gap-1.5 rounded-full border border-brandcolor-strokeweak bg-brandcolor-white px-3 py-1.5 text-xs font-semibold tracking-wide text-brandcolor-text-strong shadow-sm hover:bg-brandcolor-fill disabled:opacity-60"
+      >
+        {previewPending ? (
+          <CircleNotch className="h-3.5 w-3.5 animate-spin" weight="bold" aria-hidden />
+        ) : (
+          <Article className="h-3.5 w-3.5 text-brandcolor-stroke-strong" weight="regular" aria-hidden />
+        )}
+        Summary
+      </button>
+    </form>
+  );
+}
 
 function salutationForHour(timezone: string): string {
   const h = getLocalHourInTimeZone(timezone);
@@ -222,32 +256,22 @@ export function ChatClient({
     mealFormRef.current?.requestSubmit();
   }
 
-  /** Shown in sticky header on transcript view; optional above composer for onboarding (see hideSummaryPill). */
-  const summaryPreviewForm = showSummaryBadge ? (
-    <form action={previewAction} className="flex shrink-0 justify-end">
-      <input type="hidden" name="sessionId" value={sessionId} />
-      <button
-        type="submit"
-        disabled={previewPending || mealPending || reactionPending}
-        className="inline-flex items-center gap-1.5 rounded-full border border-brandcolor-strokeweak bg-brandcolor-white px-3 py-1.5 text-xs font-semibold tracking-wide text-brandcolor-text-strong shadow-sm hover:bg-brandcolor-fill disabled:opacity-60"
-      >
-        {previewPending ? (
-          <CircleNotch className="h-3.5 w-3.5 animate-spin" weight="bold" aria-hidden />
-        ) : (
-          <Article className="h-3.5 w-3.5 text-brandcolor-stroke-strong" weight="regular" aria-hidden />
-        )}
-        Summary
-      </button>
-    </form>
-  ) : null;
-
   const mealComposer = (
     maxWidthClass: string,
     options?: { elevated?: boolean; hideSummaryPill?: boolean },
   ) => (
     <div className={`mx-auto w-full ${maxWidthClass}`}>
       {showSummaryBadge && !options?.hideSummaryPill ? (
-        <div className="mb-2 flex justify-start">{summaryPreviewForm}</div>
+        <div className="mb-2 flex justify-start">
+          <SummaryPreviewPill
+            previewAction={previewAction}
+            sessionId={sessionId}
+            previewPending={previewPending}
+            mealPending={mealPending}
+            reactionPending={reactionPending}
+            formClassName="flex justify-start"
+          />
+        </div>
       ) : null}
       <form id={MEAL_FORM_ID} ref={mealFormRef} action={mealAction} className="flex w-full">
         <label className="sr-only" htmlFor="meal-message">
@@ -294,7 +318,15 @@ export function ChatClient({
               <div className="flex min-w-0 flex-1 justify-center">
                 <DayDateBadge localDate={localDate} timezone={timezone} />
               </div>
-              {summaryPreviewForm}
+              {showSummaryBadge ? (
+                <SummaryPreviewPill
+                  previewAction={previewAction}
+                  sessionId={sessionId}
+                  previewPending={previewPending}
+                  mealPending={mealPending}
+                  reactionPending={reactionPending}
+                />
+              ) : null}
             </div>
             <ul className="mx-auto flex max-w-3xl flex-col gap-3 px-4 pb-4 pt-1">
               {messages.map((m) => (

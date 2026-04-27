@@ -7,12 +7,14 @@ const dmSans = DM_Sans({
   variable: "--font-dm-sans",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
+  fallback: ["ui-sans-serif", "system-ui", "sans-serif"],
 });
 
 const dmSerifDisplay = DM_Serif_Display({
   variable: "--font-dm-serif-display",
   subsets: ["latin"],
   weight: "400",
+  fallback: ["Georgia", "ui-serif", "serif"],
 });
 
 export const metadata: Metadata = {
