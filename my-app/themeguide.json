@@ -1,6 +1,6 @@
 {
   "name": "Carno Theme Guide",
-  "version": "2.0",
+  "version": "2.1",
   "sourceOfTruth": "src/app/globals.css (:root + @theme inline). No tailwind.config.js.",
   "themeColors": {
     "brandcolor-fill": {
@@ -113,6 +113,11 @@
     "mealQuickPicks": {
       "styling": "Two centered rows (3 tiles, then 2), max-w-md, justify-center; image+label; bg-brandcolor-white border-brandcolor-strokeweak; hover:bg-brandcolor-fill; Image mix-blend-multiply",
       "whenToUse": "Onboarding food shortcuts only."
+    },
+    "historyDayView": {
+      "scroll": "Main pane: outer main flex-1 min-h-0 overflow-hidden; full-width overflow-y-auto middle layer; inner mx-auto max-w-3xl — scrollbar at right edge of main column, not mid-viewport.",
+      "loggedAt": "formatLogTimestamp(loggedAt, user.timezone) — e.g. Mon, Apr 27, 7:07 AM (not ISO strings).",
+      "reactionNotes": "rounded-xl bg-brandcolor-fill px-3 py-2 text-sm text-brandcolor-text-strong; no border."
     },
     "sidebarDesktop": {
       "collapsedTop": "Phosphor Sidebar opens rail; hover:bg-brandcolor-fill on control.",

@@ -58,6 +58,18 @@ export function formatWeekdayMonthDayForLocalDateKey(dateKey: string, timeZone: 
   }).format(new Date(utc));
 }
 
+/** Friendly log line in user TZ, e.g. `Mon, Apr 27, 7:07 AM`. */
+export function formatLogTimestamp(loggedAt: Date, timeZone: string): string {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(loggedAt);
+}
+
 /** Shift a YYYY-MM-DD key by whole days (civil date, UTC noon anchor). */
 export function shiftLocalDateKey(dateKey: string, deltaDays: number): string {
   const [y, m, d] = dateKey.split("-").map(Number);

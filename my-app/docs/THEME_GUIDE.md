@@ -64,6 +64,12 @@ Paths: [`src/lib/brand.ts`](../src/lib/brand.ts).
 
 `@keyframes carno-speak` → **`animate-carno-speak`** on the assistant avatar while a server action is pending.
 
+## History (day view)
+
+- **Logged at:** Use `formatLogTimestamp` — same friendly style as the day heading (e.g. **Mon, Apr 27, 7:07 AM** in the user’s IANA timezone), not raw ISO strings.
+- **Scroll:** The scrollable layer is **full width** of the main pane; **`max-w-3xl`** only constrains the inner column so the **scrollbar stays at the right edge** of the content area (not centered mid-viewport).
+- **Reaction notes:** **`bg-brandcolor-fill`**, **`rounded-xl`**, comfortable padding — **no border**; body text **`text-brandcolor-text-strong`**.
+
 ## Machine-readable spec
 
 See [`themeguide.json`](../themeguide.json).
