@@ -1,5 +1,9 @@
 "use server";
 
+import {
+  PrismaClientInitializationError,
+  PrismaClientKnownRequestError,
+} from "@prisma/client/runtime/library";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getOrCreateAppUser } from "@/lib/user";
@@ -20,6 +24,30 @@ import { formatReactionShortSummary } from "@/lib/reaction-summary";
 const FOLLOW_UP_MS = 60 * 1000;
 
 export type ActionState = { error?: string; ok?: boolean };
+
+/** Maps DB connectivity failures to a safe user message (avoids crashing the UI when Neon is unreachable). */
+function prismaDatabaseUnavailableMessage(error: unknown): string | null {
+  if (error instanceof PrismaClientInitializationError) {
+    return (
+      "Can't connect to the database. Check DATABASE_URL is set (Neon project active), " +
+      "copy the same values to Vercel for deployments, then try again."
+    );
+  }
+  if (error instanceof PrismaClientKnownRequestError) {
+    if (error.code === "P1001" || error.code === "P1017") {
+      return (
+        "Can't reach the database server. Confirm Neon is running and DATABASE_URL matches your branch; " +
+        "for Vercel, redeploy after updating environment variables."
+      );
+    }
+  }
+  if (error instanceof Error && /can't reach database server/i.test(error.message)) {
+    return (
+      "Can't reach the database server. Resume or verify your Neon project and DATABASE_URL in this environment."
+    );
+  }
+  return null;
+}
 
 /**
  * Re-runs the follow-up job (due food entries → reaction prompt). The server only
@@ -135,7 +163,11 @@ export async function submitReaction(
   }
 
   if (entry.session.pendingFoodEntryId !== entry.id) {
-    return { error: "This check-in is no longer active." };
+    return {
+      error:
+        "This check-in is no longer active—the app may have moved on (e.g. refresh or another tab). " +
+        "Reload the chat page and use the check-in shown for your current meal.",
+    };
   }
 
   const num = (key: string) => {
@@ -253,82 +285,92 @@ export async function previewDailySummary(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const appUser = await getOrCreateAppUser();
-  if (!appUser) {
-    return { error: "Not signed in" };
-  }
-
-  const sessionId = String(formData.get("sessionId") ?? "");
-
-  const day = await prisma.daySession.findFirst({
-    where: { id: sessionId, userId: appUser.id },
-    include: {
-      foodEntries: {
-        include: { reactions: true },
-        orderBy: { loggedAt: "asc" },
-      },
-    },
-  });
-
-  if (!day) {
-    return { error: "Day not found." };
-  }
-
-  if (day.status !== SessionStatus.ACTIVE) {
-    return { error: "Open today’s chat to request a summary." };
-  }
-
-  if (day.phase !== ConversationPhase.CHAT) {
-    return { error: "Finish the symptom check-in first, then try Summary again." };
-  }
-
-  if (day.foodEntries.length === 0) {
-    return { error: "Log at least one meal first." };
-  }
-
-  const payload = buildDailySummaryPayload(day.localDate, day.foodEntries);
-  const displayName = displayNameFromUser({
-    name: appUser.name,
-    email: appUser.email,
-  });
-  const greetingLine = timeGreetingLine(displayName, appUser.timezone, new Date());
-
-  let aiArticle: string;
-  let aiProvider: "mock" | "studio" | "vertex";
   try {
-    const out = await generateGeminiDailyArticle({
-      payload,
-      greetingLine,
-      timezone: appUser.timezone,
-      displayName,
-      preview: true,
+    const appUser = await getOrCreateAppUser();
+    if (!appUser) {
+      return { error: "Not signed in" };
+    }
+
+    const sessionId = String(formData.get("sessionId") ?? "");
+
+    const day = await prisma.daySession.findFirst({
+      where: { id: sessionId, userId: appUser.id },
+      include: {
+        foodEntries: {
+          include: { reactions: true },
+          orderBy: { loggedAt: "asc" },
+        },
+      },
     });
-    aiArticle = out.article;
-    aiProvider = out.provider;
+
+    if (!day) {
+      return { error: "Day not found." };
+    }
+
+    if (day.status !== SessionStatus.ACTIVE) {
+      return { error: "Open today’s chat to request a summary." };
+    }
+
+    if (day.phase !== ConversationPhase.CHAT) {
+      return { error: "Finish the symptom check-in first, then try Summary again." };
+    }
+
+    if (day.foodEntries.length === 0) {
+      return { error: "Log at least one meal first." };
+    }
+
+    const payload = buildDailySummaryPayload(day.localDate, day.foodEntries);
+    const displayName = displayNameFromUser({
+      name: appUser.name,
+      email: appUser.email,
+    });
+    const greetingLine = timeGreetingLine(displayName, appUser.timezone, new Date());
+
+    let aiArticle: string;
+    let aiProvider: "mock" | "studio" | "vertex";
+    try {
+      const out = await generateGeminiDailyArticle({
+        payload,
+        greetingLine,
+        timezone: appUser.timezone,
+        displayName,
+        preview: true,
+      });
+      aiArticle = out.article;
+      aiProvider = out.provider;
+    } catch (e) {
+      console.error("[previewDailySummary] Gemini AI failed:", e);
+      const msg = e instanceof Error ? e.message : "Could not generate summary.";
+      return { error: msg };
+    }
+
+    await prisma.chatMessage.create({
+      data: {
+        sessionId: day.id,
+        role: MessageRole.ASSISTANT,
+        body: `${greetingLine}\n\n${aiArticle}`,
+        metadata: {
+          type: "daily_ai_summary_preview",
+          localDateKey: day.localDate,
+          greeting: greetingLine,
+          articleText: aiArticle,
+          builtWithAi: aiProvider !== "mock",
+          aiProvider,
+        } as Prisma.InputJsonValue,
+      },
+    });
+
+    revalidatePath("/chat");
+    revalidatePath("/history");
+    return { ok: true };
   } catch (e) {
-    console.error("[previewDailySummary] Gemini AI failed:", e);
-    const msg = e instanceof Error ? e.message : "Could not generate summary.";
-    return { error: msg };
+    const dbMsg = prismaDatabaseUnavailableMessage(e);
+    if (dbMsg) {
+      console.error("[previewDailySummary] Database unavailable:", e);
+      return { error: dbMsg };
+    }
+    throw e;
   }
-
-  await prisma.chatMessage.create({
-    data: {
-      sessionId: day.id,
-      role: MessageRole.ASSISTANT,
-      body: `${greetingLine}\n\n${aiArticle}`,
-      metadata: {
-        type: "daily_ai_summary_preview",
-        greeting: greetingLine,
-        articleText: aiArticle,
-        builtWithAi: aiProvider !== "mock",
-        aiProvider,
-      } as Prisma.InputJsonValue,
-    },
-  });
-
-  revalidatePath("/chat");
-  revalidatePath("/history");
-  return { ok: true };
 }
 
 export async function generateDailySummary(
@@ -404,6 +446,7 @@ export async function generateDailySummary(
         body: `${greetingLine}\n\n${aiArticle}`,
         metadata: {
           type: "daily_ai_summary",
+          localDateKey: day.localDate,
           greeting: greetingLine,
           articleText: aiArticle,
           builtWithAi: aiProvider !== "mock" && aiProvider != null,

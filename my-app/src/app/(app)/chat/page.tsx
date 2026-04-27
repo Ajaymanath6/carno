@@ -29,6 +29,10 @@ export default async function ChatPage() {
     redirect("/chat");
   }
 
+  const foodEntryCount = await prisma.foodEntry.count({
+    where: { sessionId: refreshed.id },
+  });
+
   const displayName = displayNameFromUser({
     name: user.name,
     email: user.email,
@@ -45,6 +49,7 @@ export default async function ChatPage() {
         timezone={user.timezone}
         displayName={displayName}
         localDate={refreshed.localDate}
+        foodEntryCount={foodEntryCount}
       />
     </main>
   );

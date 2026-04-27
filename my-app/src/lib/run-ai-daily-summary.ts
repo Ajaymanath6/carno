@@ -108,6 +108,7 @@ export async function runAiDailySummaryForSession(
         body: `${greetingLine}\n\n${article}`,
         metadata: {
           type: "daily_ai_summary",
+          localDateKey: day.localDate,
           greeting: greetingLine,
           articleText: article,
           builtWithAi: aiProvider !== "mock",

@@ -1,12 +1,22 @@
 "use client";
 
+import Link from "next/link";
 import Image from "next/image";
 import type { KeyboardEvent } from "react";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { useRouter } from "next/navigation";
 import type { ChatMessage, ConversationPhase, Prisma } from "@prisma/client";
-import { Article, CaretDown, CircleNotch, PaperPlaneRight } from "@phosphor-icons/react";
+import {
+  Article,
+  CalendarBlank,
+  CaretDown,
+  CircleNotch,
+  Moon,
+  PaperPlaneRight,
+  ShareNetwork,
+  Sun,
+} from "@phosphor-icons/react";
 import {
   generateDailySummary,
   pollDueFollowUps,
@@ -37,6 +47,10 @@ import type { ReactionSnapshot } from "@/lib/reaction-summary";
 
 const MEAL_FORM_ID = "carno-meal-form";
 
+/** Local wall-clock hour (0–23): preview badge shows sun icon when hour is in [start, end) for user timezone. */
+const SUMMARY_PREVIEW_SUN_HOUR_START = 6;
+const SUMMARY_PREVIEW_SUN_HOUR_END_EXCLUSIVE = 20;
+
 const MEAL_QUICK_PICKS = [
   { label: "Chicken", value: "Chicken", imageSrc: MEAL_QUICK_CHICKEN },
   { label: "Mutton", value: "Mutton", imageSrc: MEAL_QUICK_MUTTON },
@@ -54,6 +68,8 @@ type Props = {
   timezone: string;
   displayName: string;
   localDate: string;
+  /** Server count of meals today; helps show Summary when chat messages are briefly out of sync. */
+  foodEntryCount?: number;
 };
 
 const initialActionState: ActionState = {};
@@ -78,6 +94,7 @@ export function ChatClient({
   timezone,
   displayName,
   localDate,
+  foodEntryCount = 0,
 }: Props) {
   const router = useRouter();
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -132,6 +149,12 @@ export function ChatClient({
     }
   }, [previewState.ok, router]);
 
+  useEffect(() => {
+    if (reactionState.ok) {
+      router.refresh();
+    }
+  }, [reactionState.ok, router]);
+
   /** Follow-ups are written server-side when due; without polling nothing appears until refresh. */
   useEffect(() => {
     if (sessionStatus !== "ACTIVE" || phase !== "CHAT") {
@@ -163,7 +186,7 @@ export function ChatClient({
     sessionStatus === "ACTIVE" &&
     phase === "CHAT" &&
     !showReaction &&
-    hasUserMessage;
+    (hasUserMessage || foodEntryCount > 0);
 
   useEffect(() => {
     if (hasUserMessage || showReaction) {
@@ -293,7 +316,12 @@ export function ChatClient({
                         : "border border-brandcolor-strokeweak bg-brandcolor-white text-brandcolor-text-strong"
                     }`}
                   >
-                    <AssistantBubbleBody metadata={m.metadata} body={m.body} />
+                    <AssistantBubbleBody
+                      metadata={m.metadata}
+                      body={m.body}
+                      timezone={timezone}
+                      sessionLocalDate={localDate}
+                    />
                   </div>
                 </li>
               ))}
@@ -587,20 +615,88 @@ function isDailyAiSummaryPreviewMetadata(
   );
 }
 
+function SummaryShareRow({
+  greeting,
+  article,
+  historyDateKey,
+}: {
+  greeting: string;
+  article: string;
+  historyDateKey: string;
+}) {
+  const [copied, setCopied] = useState(false);
+  const shareBody = `${greeting}\n\n${article}`;
+  const historyHref = `/history/${encodeURIComponent(historyDateKey)}`;
+
+  async function handleShare() {
+    if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+      try {
+        await navigator.share({ title: "Daily summary", text: shareBody });
+        return;
+      } catch (err) {
+        const name = err instanceof Error ? err.name : "";
+        if (name === "AbortError") return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(shareBody);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* clipboard unavailable */
+    }
+  }
+
+  return (
+    <div className="flex min-w-0 flex-wrap items-center justify-end gap-2 border-t border-brandcolor-strokeweak/50 pt-3">
+      <button
+        type="button"
+        className="inline-flex min-h-11 touch-manipulation items-center justify-center gap-1.5 rounded-full border border-brandcolor-strokeweak bg-brandcolor-white px-3 text-xs font-semibold text-brandcolor-text-strong shadow-sm hover:bg-brandcolor-fill active:bg-brandcolor-fill/90 sm:min-h-10"
+        onClick={() => void handleShare()}
+      >
+        <ShareNetwork className="h-4 w-4 shrink-0" weight="regular" aria-hidden />
+        {copied ? "Copied" : "Share"}
+      </button>
+      <Link
+        href={historyHref}
+        className="inline-flex min-h-11 touch-manipulation items-center justify-center gap-1.5 rounded-full border border-brandcolor-strokeweak bg-brandcolor-white px-3 text-xs font-semibold text-brandcolor-text-strong shadow-sm hover:bg-brandcolor-fill active:bg-brandcolor-fill/90 sm:min-h-10"
+      >
+        <CalendarBlank className="h-4 w-4 shrink-0" weight="regular" aria-hidden />
+        Day detail
+      </Link>
+    </div>
+  );
+}
+
 function DailyAiSummaryBubble({
   metadata,
   preview,
+  timezone,
+  sessionLocalDate,
 }: {
   metadata: Record<string, unknown>;
   preview?: boolean;
+  timezone: string;
+  sessionLocalDate: string;
 }) {
   const greeting = String(metadata.greeting ?? "");
   const article = String(metadata.articleText ?? "");
   const builtWithAi = metadata.builtWithAi === true;
+  const rawKey = metadata.localDateKey;
+  const dateKey =
+    typeof rawKey === "string" && /^\d{4}-\d{2}-\d{2}$/.test(rawKey)
+      ? rawKey
+      : sessionLocalDate;
+
+  const hour = getLocalHourInTimeZone(timezone);
+  const showSun =
+    hour >= SUMMARY_PREVIEW_SUN_HOUR_START &&
+    hour < SUMMARY_PREVIEW_SUN_HOUR_END_EXCLUSIVE;
+
   return (
     <div className="w-full min-w-0 space-y-2">
-      <div className="rounded-xl bg-brandcolor-fill px-4 py-3 text-sm text-brandcolor-text-strong">
-        <div className="mb-2 flex flex-wrap items-center gap-2">
+      <div className="flex min-w-0 flex-col gap-3 rounded-xl bg-brandcolor-fill px-4 py-3 text-sm text-brandcolor-text-strong">
+        <div className="flex flex-wrap items-center gap-2">
           <Article
             className="h-5 w-5 shrink-0 text-brandcolor-stroke-strong"
             weight="regular"
@@ -608,7 +704,20 @@ function DailyAiSummaryBubble({
           />
           <span className="font-semibold">Summary</span>
           {preview ? (
-            <span className="text-xs font-medium text-brandcolor-text-weak">
+            <span className="inline-flex items-center gap-1 text-xs font-medium text-brandcolor-text-weak">
+              {showSun ? (
+                <Sun
+                  className="h-3.5 w-3.5 shrink-0 text-brandcolor-stroke-strong"
+                  weight="regular"
+                  aria-hidden
+                />
+              ) : (
+                <Moon
+                  className="h-3.5 w-3.5 shrink-0 text-brandcolor-stroke-strong"
+                  weight="regular"
+                  aria-hidden
+                />
+              )}
               Preview — day still open
             </span>
           ) : null}
@@ -617,7 +726,8 @@ function DailyAiSummaryBubble({
           ) : null}
         </div>
         <p className="font-medium text-brandcolor-text-strong">{greeting}</p>
-        <p className="mt-2 whitespace-pre-wrap leading-relaxed">{article}</p>
+        <p className="min-w-0 whitespace-pre-wrap leading-relaxed">{article}</p>
+        <SummaryShareRow greeting={greeting} article={article} historyDateKey={dateKey} />
       </div>
     </div>
   );
@@ -754,18 +864,33 @@ function ReactionSavedBubble({
 function AssistantBubbleBody({
   metadata,
   body,
+  timezone,
+  sessionLocalDate,
 }: {
   metadata: Prisma.JsonValue | null;
   body: string;
+  timezone: string;
+  sessionLocalDate: string;
 }) {
   if (isDailyAiSummaryPreviewMetadata(metadata)) {
     return (
-      <DailyAiSummaryBubble metadata={metadata as Record<string, unknown>} preview />
+      <DailyAiSummaryBubble
+        metadata={metadata as Record<string, unknown>}
+        preview
+        timezone={timezone}
+        sessionLocalDate={sessionLocalDate}
+      />
     );
   }
 
   if (isDailyAiSummaryMetadata(metadata)) {
-    return <DailyAiSummaryBubble metadata={metadata as Record<string, unknown>} />;
+    return (
+      <DailyAiSummaryBubble
+        metadata={metadata as Record<string, unknown>}
+        timezone={timezone}
+        sessionLocalDate={sessionLocalDate}
+      />
+    );
   }
 
   if (isReactionSavedMetadata(metadata)) {
