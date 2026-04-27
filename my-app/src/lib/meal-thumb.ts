@@ -15,7 +15,7 @@ export function mealThumbPathForNormalizedFood(normalized: string): string | nul
   if (!s) {
     return null;
   }
-  if (s.includes("chicken")) {
+  if (s.includes("chicken") || s.includes("chiken")) {
     return MEAL_QUICK_CHICKEN;
   }
   if (s.includes("mutton")) {

@@ -6,7 +6,7 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { useRouter } from "next/navigation";
 import type { ChatMessage, ConversationPhase, Prisma } from "@prisma/client";
-import { CircleNotch, PaperPlaneRight } from "@phosphor-icons/react";
+import { CaretDown, CircleNotch, PaperPlaneRight } from "@phosphor-icons/react";
 import {
   generateDailySummary,
   pollDueFollowUps,
@@ -23,6 +23,7 @@ import {
   MEAL_QUICK_PANEER,
   MEAL_QUICK_RED_MEAT,
 } from "@/lib/brand";
+import type { ReactionSnapshot } from "@/lib/reaction-summary";
 
 const MEAL_FORM_ID = "carno-meal-form";
 
@@ -192,7 +193,7 @@ export function ChatClient({
             value={mealDraft}
             onChange={(e) => setMealDraft(e.target.value)}
             onKeyDown={onMealKeyDown}
-            placeholder="How can we help you today? Try weight + food — e.g. 600g chicken and rice."
+            placeholder="Log a meal — e.g. 500g chicken"
             className="min-h-[2.75rem] min-w-0 flex-1 resize-none border-0 bg-transparent py-3 pl-3 pr-2 text-base text-brandcolor-text-strong outline-none focus:ring-0"
           />
           <button
@@ -502,6 +503,132 @@ function SymptomCheckInForm({
   );
 }
 
+function isReactionSavedMetadata(
+  metadata: Prisma.JsonValue | null,
+): metadata is Prisma.JsonObject & {
+  type: string;
+  shortSummary: string;
+  reaction: ReactionSnapshot;
+} {
+  if (metadata == null || typeof metadata !== "object" || Array.isArray(metadata)) {
+    return false;
+  }
+  const m = metadata as Record<string, unknown>;
+  return (
+    m.type === "reaction_saved" &&
+    typeof m.shortSummary === "string" &&
+    m.reaction != null &&
+    typeof m.reaction === "object" &&
+    !Array.isArray(m.reaction)
+  );
+}
+
+function scoreOrDash(n: number | null): string {
+  return n != null ? `${n}/5` : "—";
+}
+
+function ReactionSavedBubble({
+  body,
+  metadata,
+}: {
+  body: string;
+  metadata: Record<string, unknown>;
+}) {
+  const [open, setOpen] = useState(false);
+  const shortSummary = String(metadata.shortSummary ?? "");
+  const reaction = metadata.reaction as ReactionSnapshot;
+
+  const vsLast =
+    reaction.symptomsBetterOrWorse === "better"
+      ? "Better"
+      : reaction.symptomsBetterOrWorse === "same"
+        ? "About the same"
+        : reaction.symptomsBetterOrWorse === "worse"
+          ? "Worse"
+          : "—";
+
+  return (
+    <div className="w-full min-w-0 space-y-2">
+      <p className="whitespace-pre-wrap text-sm leading-relaxed">{body}</p>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center gap-2 rounded-xl border border-brandcolor-strokeweak bg-brandcolor-fill px-3 py-2 text-left transition-colors hover:bg-brandcolor-fill/80"
+        aria-expanded={open}
+      >
+        <span className="min-w-0 flex-1 text-xs font-medium leading-snug text-brandcolor-text-strong">
+          {shortSummary}
+        </span>
+        <CaretDown
+          className={`h-5 w-5 shrink-0 text-brandcolor-stroke-strong transition-transform duration-200 ${
+            open ? "rotate-180" : ""
+          }`}
+          weight="bold"
+          aria-hidden
+        />
+      </button>
+      {open ? (
+        <div className="overflow-x-auto rounded-xl border border-brandcolor-strokeweak bg-brandcolor-fill/70">
+          <table className="w-full min-w-[17rem] border-collapse text-left text-xs text-brandcolor-text-strong">
+            <tbody className="divide-y divide-brandcolor-strokeweak/80">
+              <tr>
+                <th className="px-3 py-2 font-normal text-brandcolor-text-weak">Energy</th>
+                <td className="px-3 py-2 font-medium">{scoreOrDash(reaction.energyLevel)}</td>
+              </tr>
+              <tr>
+                <th className="px-3 py-2 font-normal text-brandcolor-text-weak">Bloating</th>
+                <td className="px-3 py-2 font-medium">{scoreOrDash(reaction.bloating)}</td>
+              </tr>
+              <tr>
+                <th className="px-3 py-2 font-normal text-brandcolor-text-weak">Gas</th>
+                <td className="px-3 py-2 font-medium">{scoreOrDash(reaction.gas)}</td>
+              </tr>
+              <tr>
+                <th className="px-3 py-2 font-normal text-brandcolor-text-weak">
+                  Stomach discomfort
+                </th>
+                <td className="px-3 py-2 font-medium">{scoreOrDash(reaction.stomachDiscomfort)}</td>
+              </tr>
+              <tr>
+                <th className="px-3 py-2 font-normal text-brandcolor-text-weak">Mood</th>
+                <td className="px-3 py-2 font-medium">{scoreOrDash(reaction.mood)}</td>
+              </tr>
+              <tr>
+                <th className="px-3 py-2 align-top font-normal text-brandcolor-text-weak">Notes</th>
+                <td className="px-3 py-2 whitespace-pre-wrap">
+                  {reaction.notes?.trim() ? reaction.notes : "—"}
+                </td>
+              </tr>
+              <tr>
+                <th className="px-3 py-2 font-normal text-brandcolor-text-weak">
+                  Same meal yesterday?
+                </th>
+                <td className="px-3 py-2 font-medium">
+                  {reaction.ateYesterdaySame ? "Yes" : "No"}
+                </td>
+              </tr>
+              <tr>
+                <th className="px-3 py-2 align-top font-normal text-brandcolor-text-weak">
+                  Different vs usual?
+                </th>
+                <td className="px-3 py-2 whitespace-pre-wrap">
+                  {reaction.feltDifferentNotes?.trim() ? reaction.feltDifferentNotes : "—"}
+                </td>
+              </tr>
+              <tr>
+                <th className="px-3 py-2 font-normal text-brandcolor-text-weak">
+                  Symptoms vs last time
+                </th>
+                <td className="px-3 py-2 font-medium">{vsLast}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function AssistantBubbleBody({
   metadata,
   body,
@@ -509,6 +636,12 @@ function AssistantBubbleBody({
   metadata: Prisma.JsonValue | null;
   body: string;
 }) {
+  if (isReactionSavedMetadata(metadata)) {
+    return (
+      <ReactionSavedBubble body={body} metadata={metadata as Record<string, unknown>} />
+    );
+  }
+
   const thumb = mealThumbFromMetadata(metadata);
   return (
     <span className="inline-flex max-w-full flex-wrap items-center gap-2 align-top">

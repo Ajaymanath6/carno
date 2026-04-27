@@ -10,6 +10,8 @@ import { MessageRole, ConversationPhase, Prisma } from "@prisma/client";
 import { shiftLocalDateKey } from "@/lib/date";
 import { buildDailySummaryPayload } from "@/lib/summary";
 import { mealThumbPathForNormalizedFood } from "@/lib/meal-thumb";
+import type { ReactionSnapshot } from "@/lib/reaction-summary";
+import { formatReactionShortSummary } from "@/lib/reaction-summary";
 
 /** Meal follow-up ping. Set to `3 * 60 * 60 * 1000` for production (~3 hours). */
 const FOLLOW_UP_MS = 60 * 1000;
@@ -151,23 +153,37 @@ export async function submitReaction(
   }
   const ateYesterday = ateRaw === "yes";
 
+  const reactionSnapshot: ReactionSnapshot = {
+    energyLevel: num("energyLevel"),
+    bloating: num("bloating"),
+    gas: num("gas"),
+    stomachDiscomfort: num("stomachDiscomfort"),
+    mood: num("mood"),
+    notes: String(formData.get("notes") ?? "").trim().slice(0, 2000) || null,
+    ateYesterdaySame: ateYesterday,
+    feltDifferentNotes:
+      String(formData.get("feltDifferentNotes") ?? "").trim().slice(0, 2000) ||
+      null,
+    symptomsBetterOrWorse:
+      String(formData.get("symptomsBetterOrWorse") ?? "").trim().slice(0, 200) ||
+      null,
+  };
+
+  const shortSummary = formatReactionShortSummary(reactionSnapshot);
+
   await prisma.$transaction(async (tx) => {
     await tx.reactionEntry.create({
       data: {
         foodEntryId: entry.id,
-        energyLevel: num("energyLevel"),
-        bloating: num("bloating"),
-        gas: num("gas"),
-        stomachDiscomfort: num("stomachDiscomfort"),
-        mood: num("mood"),
-        notes: String(formData.get("notes") ?? "").slice(0, 2000) || null,
-        ateYesterdaySame: ateYesterday,
-        feltDifferentNotes:
-          String(formData.get("feltDifferentNotes") ?? "").slice(0, 2000) ||
-          null,
-        symptomsBetterOrWorse:
-          String(formData.get("symptomsBetterOrWorse") ?? "").slice(0, 200) ||
-          null,
+        energyLevel: reactionSnapshot.energyLevel,
+        bloating: reactionSnapshot.bloating,
+        gas: reactionSnapshot.gas,
+        stomachDiscomfort: reactionSnapshot.stomachDiscomfort,
+        mood: reactionSnapshot.mood,
+        notes: reactionSnapshot.notes,
+        ateYesterdaySame: reactionSnapshot.ateYesterdaySame,
+        feltDifferentNotes: reactionSnapshot.feltDifferentNotes,
+        symptomsBetterOrWorse: reactionSnapshot.symptomsBetterOrWorse,
       },
     });
 
@@ -201,6 +217,11 @@ export async function submitReaction(
         sessionId: entry.sessionId,
         role: MessageRole.ASSISTANT,
         body: comparison,
+        metadata: {
+          type: "reaction_saved",
+          shortSummary,
+          reaction: reactionSnapshot,
+        } as Prisma.InputJsonValue,
       },
     });
 
