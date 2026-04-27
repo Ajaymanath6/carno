@@ -1,6 +1,6 @@
 {
   "name": "Carno Theme Guide",
-  "version": "2.1",
+  "version": "2.2",
   "sourceOfTruth": "src/app/globals.css (:root + @theme inline). No tailwind.config.js.",
   "themeColors": {
     "brandcolor-fill": {
@@ -120,8 +120,9 @@
       "reactionNotes": "rounded-xl bg-brandcolor-fill px-3 py-2 text-sm text-brandcolor-text-strong; no border."
     },
     "aiDailySummaryBubble": {
-      "metadata": "ChatMessage.metadata.type === daily_ai_summary with greeting + articleText + builtWithAi.",
-      "styling": "Phosphor Article + label Summary + optional Built with AI; rounded-xl bg-brandcolor-fill px-4 py-3; greeting font-medium; body whitespace-pre-wrap."
+      "metadata": "ChatMessage.metadata.type === daily_ai_summary with greeting + articleText + builtWithAi + optional aiProvider (studio|vertex|mock).",
+      "styling": "Phosphor Article + label Summary + optional Built with AI; rounded-xl bg-brandcolor-fill px-4 py-3; greeting font-medium; body whitespace-pre-wrap.",
+      "backends": "Server-only: GEMINI_API_KEY (Google AI Studio) or Vertex WIF; never expose keys to client."
     },
     "sidebarDesktop": {
       "collapsedTop": "Phosphor Sidebar opens rail; hover:bg-brandcolor-fill on control.",

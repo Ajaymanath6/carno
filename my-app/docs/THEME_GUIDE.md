@@ -73,6 +73,7 @@ Paths: [`src/lib/brand.ts`](../src/lib/brand.ts).
 ## AI daily summary (chat)
 
 - Assistant metadata `type: daily_ai_summary`: Phosphor **`Article`**, label **Summary**, optional caption **Built with AI** (`text-brandcolor-text-weak`). Card **`rounded-xl bg-brandcolor-fill`**, **no border**; greeting line **`font-medium`**, article body **`whitespace-pre-wrap`**.
+- Text is generated **server-side only** (Google AI Studio API key or Vertex); never expose keys to the browser.
 
 ## Machine-readable spec
 

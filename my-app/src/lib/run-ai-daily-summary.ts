@@ -3,7 +3,7 @@ import { buildDailySummaryPayload } from "@/lib/summary";
 import { EOD_PANEL_START_HOUR } from "@/lib/date";
 import { shouldGenerateAiDailySummary } from "@/lib/eod-summary-schedule";
 import { timeGreetingLine } from "@/lib/time-greeting";
-import { generateVertexDailyArticle } from "@/lib/vertex-daily-summary";
+import { generateGeminiDailyArticle } from "@/lib/vertex-daily-summary";
 import { displayNameFromUser } from "@/lib/display-name";
 
 export type RunAiDailySummaryResult =
@@ -68,13 +68,16 @@ export async function runAiDailySummaryForSession(
   const payload = buildDailySummaryPayload(day.localDate, day.foodEntries);
 
   let article: string;
+  let aiProvider: "mock" | "studio" | "vertex";
   try {
-    article = await generateVertexDailyArticle({
+    const out = await generateGeminiDailyArticle({
       payload,
       greetingLine,
       timezone: tz,
       displayName,
     });
+    article = out.article;
+    aiProvider = out.provider;
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     return { status: "error", message: msg };
@@ -107,7 +110,8 @@ export async function runAiDailySummaryForSession(
           type: "daily_ai_summary",
           greeting: greetingLine,
           articleText: article,
-          builtWithAi: process.env.VERTEX_DISABLED !== "true",
+          builtWithAi: aiProvider !== "mock",
+          aiProvider,
         } as Prisma.InputJsonValue,
       },
     });

@@ -11,7 +11,7 @@ import { formatWeekdayMonthDayForLocalDateKey, shiftLocalDateKey } from "@/lib/d
 import { displayNameFromUser } from "@/lib/display-name";
 import { timeGreetingLine } from "@/lib/time-greeting";
 import { buildDailySummaryPayload } from "@/lib/summary";
-import { generateVertexDailyArticle } from "@/lib/vertex-daily-summary";
+import { generateGeminiDailyArticle } from "@/lib/vertex-daily-summary";
 import { mealThumbPathForNormalizedFood } from "@/lib/meal-thumb";
 import type { ReactionSnapshot } from "@/lib/reaction-summary";
 import { formatReactionShortSummary } from "@/lib/reaction-summary";
@@ -291,19 +291,24 @@ export async function generateDailySummary(
   let aiArticle: string | null = priorAi || null;
   let aiGeneratedAt: Date | null = existingSummary?.aiGeneratedAt ?? null;
 
+  let aiProvider: "mock" | "studio" | "vertex" | null = null;
+
   if (!priorAi) {
     try {
-      aiArticle = await generateVertexDailyArticle({
+      const out = await generateGeminiDailyArticle({
         payload,
         greetingLine,
         timezone: appUser.timezone,
         displayName,
         dayOverallSurvey: survey || null,
       });
+      aiArticle = out.article;
+      aiProvider = out.provider;
       aiGeneratedAt = new Date();
     } catch (e) {
-      console.error("[generateDailySummary] Vertex AI failed:", e);
+      console.error("[generateDailySummary] Gemini AI failed:", e);
       aiArticle = null;
+      aiProvider = null;
       aiGeneratedAt = null;
     }
   }
@@ -316,7 +321,8 @@ export async function generateDailySummary(
           type: "daily_ai_summary",
           greeting: greetingLine,
           articleText: aiArticle,
-          builtWithAi: process.env.VERTEX_DISABLED !== "true",
+          builtWithAi: aiProvider !== "mock" && aiProvider != null,
+          ...(aiProvider != null ? { aiProvider } : {}),
         } as Prisma.InputJsonValue,
       };
     }
