@@ -4,10 +4,12 @@ import Image from "next/image";
 import type { KeyboardEvent } from "react";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
+import { useRouter } from "next/navigation";
 import type { ChatMessage, ConversationPhase, Prisma } from "@prisma/client";
 import { CircleNotch, PaperPlaneRight } from "@phosphor-icons/react";
 import {
   generateDailySummary,
+  pollDueFollowUps,
   sendMealMessage,
   submitReaction,
   type ActionState,
@@ -66,6 +68,7 @@ export function ChatClient({
   displayName,
   localDate,
 }: Props) {
+  const router = useRouter();
   const bottomRef = useRef<HTMLDivElement>(null);
   const mealFormRef = useRef<HTMLFormElement>(null);
   const [mealDraft, setMealDraft] = useState("");
@@ -113,6 +116,28 @@ export function ChatClient({
       queueMicrotask(() => setMealDraft(""));
     }
   }, [mealState.ok]);
+
+  /** Follow-ups are written server-side when due; without polling nothing appears until refresh. */
+  useEffect(() => {
+    if (sessionStatus !== "ACTIVE" || phase !== "CHAT") {
+      return;
+    }
+    const POLL_MS = 8000;
+    const run = () => {
+      void pollDueFollowUps(sessionId).then(() => router.refresh());
+    };
+    const intervalId = setInterval(run, POLL_MS);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        run();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [sessionId, phase, sessionStatus, router]);
 
   const showReaction =
     sessionStatus === "ACTIVE" &&

@@ -16,6 +16,16 @@ const FOLLOW_UP_MS = 60 * 1000;
 
 export type ActionState = { error?: string; ok?: boolean };
 
+/**
+ * Re-runs the follow-up job (due food entries → reaction prompt). The server only
+ * processes this on navigation/cron otherwise, so the client calls this on an
+ * interval while the user stays on the chat page.
+ */
+export async function pollDueFollowUps(sessionId: string): Promise<void> {
+  await processDueFollowUpsForSession(sessionId);
+  revalidatePath("/chat");
+}
+
 export async function sendMealMessage(
   _prev: ActionState,
   formData: FormData,

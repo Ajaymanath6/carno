@@ -34,7 +34,7 @@ export async function processDueFollowUpsForSession(sessionId: string): Promise<
         sessionId,
         role: MessageRole.ASSISTANT,
         body:
-          `It’s been about 3 hours since you logged: “${next.rawText.slice(0, 500)}”. ` +
+          `Checking in — you logged: “${next.rawText.slice(0, 500)}”. ` +
           `How did you feel after eating this? Use the sliders below, then answer the follow-up questions.`,
         metadata: {
           type: "follow_up_prompt",
