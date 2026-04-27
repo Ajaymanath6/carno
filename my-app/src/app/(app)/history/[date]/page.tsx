@@ -62,6 +62,25 @@ export default async function HistoryDayPage({
               {day.dailySummary.dayOverallSurvey && (
                 <p className="mt-2 text-sm">{day.dailySummary.dayOverallSurvey}</p>
               )}
+              {day.dailySummary.aiArticle?.trim() ? (
+                <div className="mt-3 rounded-xl bg-brandcolor-fill px-4 py-3">
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-brandcolor-text-weak">
+                    AI narrative
+                  </h3>
+                  <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-brandcolor-text-strong">
+                    {day.dailySummary.aiArticle}
+                  </p>
+                  {day.dailySummary.aiGeneratedAt ? (
+                    <p className="mt-2 text-xs text-brandcolor-text-weak">
+                      Generated{" "}
+                      {new Intl.DateTimeFormat(undefined, {
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                      }).format(day.dailySummary.aiGeneratedAt)}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
               <pre className="mt-3 overflow-x-auto text-xs text-brandcolor-text-weak">
                 {JSON.stringify(payload, null, 2)}
               </pre>

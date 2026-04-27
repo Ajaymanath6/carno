@@ -10,6 +10,7 @@ import { Article, CaretDown, CircleNotch, PaperPlaneRight } from "@phosphor-icon
 import {
   generateDailySummary,
   pollDueFollowUps,
+  previewDailySummary,
   sendMealMessage,
   submitReaction,
   type ActionState,
@@ -98,8 +99,12 @@ export function ChatClient({
     generateDailySummary,
     initialActionState,
   );
+  const [previewState, previewAction, previewPending] = useActionState(
+    previewDailySummary,
+    initialActionState,
+  );
 
-  const agentBusy = mealPending || reactionPending || summaryPending;
+  const agentBusy = mealPending || reactionPending || summaryPending || previewPending;
   const mealSendDisabled = mealPending || !mealDraft.trim();
   const hasUserMessage = messages.some((m) => m.role === "USER");
   const canLogMeals = sessionStatus === "ACTIVE" && phase === "CHAT";
@@ -120,6 +125,12 @@ export function ChatClient({
       queueMicrotask(() => setMealDraft(""));
     }
   }, [mealState.ok]);
+
+  useEffect(() => {
+    if (previewState.ok) {
+      router.refresh();
+    }
+  }, [previewState.ok, router]);
 
   /** Follow-ups are written server-side when due; without polling nothing appears until refresh. */
   useEffect(() => {
@@ -147,6 +158,12 @@ export function ChatClient({
     sessionStatus === "ACTIVE" &&
     phase === "ASK_REACTION" &&
     !!pendingFoodEntryId;
+
+  const showSummaryBadge =
+    sessionStatus === "ACTIVE" &&
+    phase === "CHAT" &&
+    !showReaction &&
+    hasUserMessage;
 
   useEffect(() => {
     if (hasUserMessage || showReaction) {
@@ -186,6 +203,23 @@ export function ChatClient({
     options?: { elevated?: boolean },
   ) => (
     <div className={`mx-auto w-full ${maxWidthClass}`}>
+      {showSummaryBadge ? (
+        <form action={previewAction} className="mb-2 flex justify-start">
+          <input type="hidden" name="sessionId" value={sessionId} />
+          <button
+            type="submit"
+            disabled={previewPending || mealPending || reactionPending}
+            className="inline-flex items-center gap-1.5 rounded-full border border-brandcolor-strokeweak bg-brandcolor-white px-3 py-1.5 text-xs font-semibold tracking-wide text-brandcolor-text-strong shadow-sm hover:bg-brandcolor-fill disabled:opacity-60"
+          >
+            {previewPending ? (
+              <CircleNotch className="h-3.5 w-3.5 animate-spin" weight="bold" aria-hidden />
+            ) : (
+              <Article className="h-3.5 w-3.5 text-brandcolor-stroke-strong" weight="regular" aria-hidden />
+            )}
+            Summary
+          </button>
+        </form>
+      ) : null}
       <form id={MEAL_FORM_ID} ref={mealFormRef} action={mealAction} className="flex w-full">
         <label className="sr-only" htmlFor="meal-message">
           What did you eat?
@@ -394,6 +428,11 @@ export function ChatClient({
           {summaryState.error}
         </p>
       )}
+      {previewState.error && (
+        <p className="mx-auto max-w-3xl px-4 pb-2 text-center text-sm font-medium text-brandcolor-primary">
+          {previewState.error}
+        </p>
+      )}
 
       {sessionStatus === "ACTIVE" && !showReaction && showEodPanel && (
         <div className="border-t border-brandcolor-strokeweak bg-brandcolor-fill px-4 py-3">
@@ -529,10 +568,31 @@ function isDailyAiSummaryMetadata(
   );
 }
 
+function isDailyAiSummaryPreviewMetadata(
+  metadata: Prisma.JsonValue | null,
+): metadata is Prisma.JsonObject & {
+  type: string;
+  greeting: string;
+  articleText: string;
+  builtWithAi?: boolean;
+} {
+  if (metadata == null || typeof metadata !== "object" || Array.isArray(metadata)) {
+    return false;
+  }
+  const m = metadata as Record<string, unknown>;
+  return (
+    m.type === "daily_ai_summary_preview" &&
+    typeof m.greeting === "string" &&
+    typeof m.articleText === "string"
+  );
+}
+
 function DailyAiSummaryBubble({
   metadata,
+  preview,
 }: {
   metadata: Record<string, unknown>;
+  preview?: boolean;
 }) {
   const greeting = String(metadata.greeting ?? "");
   const article = String(metadata.articleText ?? "");
@@ -547,6 +607,11 @@ function DailyAiSummaryBubble({
             aria-hidden
           />
           <span className="font-semibold">Summary</span>
+          {preview ? (
+            <span className="text-xs font-medium text-brandcolor-text-weak">
+              Preview — day still open
+            </span>
+          ) : null}
           {builtWithAi ? (
             <span className="text-xs text-brandcolor-text-weak">Built with AI</span>
           ) : null}
@@ -693,6 +758,12 @@ function AssistantBubbleBody({
   metadata: Prisma.JsonValue | null;
   body: string;
 }) {
+  if (isDailyAiSummaryPreviewMetadata(metadata)) {
+    return (
+      <DailyAiSummaryBubble metadata={metadata as Record<string, unknown>} preview />
+    );
+  }
+
   if (isDailyAiSummaryMetadata(metadata)) {
     return <DailyAiSummaryBubble metadata={metadata as Record<string, unknown>} />;
   }

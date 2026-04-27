@@ -9,12 +9,14 @@ export type GenerateGeminiDailyArticleResult = {
   provider: GeminiDailyArticleProvider;
 };
 
-type ArticleInput = {
+export type ArticleInput = {
   payload: DailySummaryPayload;
   greetingLine: string;
   timezone: string;
   displayName: string;
   dayOverallSurvey?: string | null;
+  /** Mid-day snapshot; user may log more meals before end-of-day summary. */
+  preview?: boolean;
 };
 
 /**
@@ -58,12 +60,17 @@ function buildDailySummaryPrompt(input: ArticleInput): string {
     input.dayOverallSurvey?.trim() ?
       `\n\nUser's own closing reflection (honor if consistent with data):\n"${input.dayOverallSurvey.trim()}"`
     : "";
+  const previewNote = input.preview ?
+    `\n\nThis is a mid-day snapshot: the user may log more meals or check-ins later today. ` +
+      `Summarize only what appears in the JSON; note explicitly if the day may still be incomplete.`
+  : "";
   return (
     `You are a concise gut-health diary coach. Write a short article (under 200 words) summarizing what this person ate today ` +
     `and how they reported feeling (energy, digestion, mood) based ONLY on the JSON below. ` +
     `Do not invent meals or scores. Use plain sentences; no markdown # headings. ` +
     `Timezone: ${input.timezone}. Their first name for tone: ${input.displayName}. ` +
     `Optional opening: you may start with a phrase in the spirit of: "${input.greetingLine}" then continue with the summary.` +
+    previewNote +
     surveyNote +
     `\n\nDATA JSON:\n${dataJson}`
   );

@@ -6,7 +6,7 @@ import { getOrCreateAppUser } from "@/lib/user";
 import { getOrCreateDaySession } from "@/lib/session";
 import { displayFoodTitleFromLog, normalizeFoodLabel } from "@/lib/text";
 import { processDueFollowUpsForSession } from "@/lib/followups";
-import { MessageRole, ConversationPhase, Prisma } from "@prisma/client";
+import { MessageRole, ConversationPhase, Prisma, SessionStatus } from "@prisma/client";
 import { formatWeekdayMonthDayForLocalDateKey, shiftLocalDateKey } from "@/lib/date";
 import { displayNameFromUser } from "@/lib/display-name";
 import { timeGreetingLine } from "@/lib/time-greeting";
@@ -243,6 +243,91 @@ export async function submitReaction(
 
   await processDueFollowUpsForSession(entry.sessionId);
   revalidatePath("/chat");
+  return { ok: true };
+}
+
+/**
+ * In-chat AI summary only: does not persist DailySummary or close the day (so EOD cron still runs).
+ */
+export async function previewDailySummary(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const appUser = await getOrCreateAppUser();
+  if (!appUser) {
+    return { error: "Not signed in" };
+  }
+
+  const sessionId = String(formData.get("sessionId") ?? "");
+
+  const day = await prisma.daySession.findFirst({
+    where: { id: sessionId, userId: appUser.id },
+    include: {
+      foodEntries: {
+        include: { reactions: true },
+        orderBy: { loggedAt: "asc" },
+      },
+    },
+  });
+
+  if (!day) {
+    return { error: "Day not found." };
+  }
+
+  if (day.status !== SessionStatus.ACTIVE) {
+    return { error: "Open today’s chat to request a summary." };
+  }
+
+  if (day.phase !== ConversationPhase.CHAT) {
+    return { error: "Finish the symptom check-in first, then try Summary again." };
+  }
+
+  if (day.foodEntries.length === 0) {
+    return { error: "Log at least one meal first." };
+  }
+
+  const payload = buildDailySummaryPayload(day.localDate, day.foodEntries);
+  const displayName = displayNameFromUser({
+    name: appUser.name,
+    email: appUser.email,
+  });
+  const greetingLine = timeGreetingLine(displayName, appUser.timezone, new Date());
+
+  let aiArticle: string;
+  let aiProvider: "mock" | "studio" | "vertex";
+  try {
+    const out = await generateGeminiDailyArticle({
+      payload,
+      greetingLine,
+      timezone: appUser.timezone,
+      displayName,
+      preview: true,
+    });
+    aiArticle = out.article;
+    aiProvider = out.provider;
+  } catch (e) {
+    console.error("[previewDailySummary] Gemini AI failed:", e);
+    const msg = e instanceof Error ? e.message : "Could not generate summary.";
+    return { error: msg };
+  }
+
+  await prisma.chatMessage.create({
+    data: {
+      sessionId: day.id,
+      role: MessageRole.ASSISTANT,
+      body: `${greetingLine}\n\n${aiArticle}`,
+      metadata: {
+        type: "daily_ai_summary_preview",
+        greeting: greetingLine,
+        articleText: aiArticle,
+        builtWithAi: aiProvider !== "mock",
+        aiProvider,
+      } as Prisma.InputJsonValue,
+    },
+  });
+
+  revalidatePath("/chat");
+  revalidatePath("/history");
   return { ok: true };
 }
 
