@@ -6,6 +6,9 @@ import { getOrCreateDaySession } from "@/lib/session";
 import { processDueFollowUpsForSession } from "@/lib/followups";
 import { ChatClient } from "@/components/chat/ChatClient";
 
+/** Always personalised server data (messages, meal count); avoids CDN caching a stale shell without the Summary badge. */
+export const dynamic = "force-dynamic";
+
 export default async function ChatPage() {
   const user = await getOrCreateAppUser();
   if (!user) {

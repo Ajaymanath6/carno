@@ -1,6 +1,7 @@
 import { GoogleGenAI } from "@google/genai/node";
 import { GetSecretValueCommand, SecretsManagerClient } from "@aws-sdk/client-secrets-manager";
 import type { DailySummaryPayload } from "@/lib/summary";
+import { stripDuplicateGreetingPrefix } from "@/lib/strip-duplicate-greeting";
 
 export type GeminiDailyArticleProvider = "mock" | "studio" | "vertex";
 
@@ -69,18 +70,19 @@ function buildDailySummaryPrompt(input: ArticleInput): string {
     `and how they reported feeling (energy, digestion, mood) based ONLY on the JSON below. ` +
     `Do not invent meals or scores. Use plain sentences; no markdown # headings. ` +
     `Timezone: ${input.timezone}. Their first name for tone: ${input.displayName}. ` +
-    `Optional opening: you may start with a phrase in the spirit of: "${input.greetingLine}" then continue with the summary.` +
+    `Do NOT repeat or restate this salutation in your article (the app shows it separately): "${input.greetingLine}". ` +
+    `Start directly with substantive sentences about their meals and symptoms.` +
     previewNote +
     surveyNote +
     `\n\nDATA JSON:\n${dataJson}`
   );
 }
 
-function mockArticle(input: { payload: DailySummaryPayload; greetingLine: string }): string {
+function mockArticle(input: { payload: DailySummaryPayload }): string {
   const nFood = input.payload.foods.length;
   const nRx = input.payload.reactions.length;
   return (
-    `${input.greetingLine} — here's a quick snapshot: you logged ${nFood} meal(s) and ${nRx} check-in(s) today. ` +
+    `Here's a quick snapshot: you logged ${nFood} meal(s) and ${nRx} check-in(s) today. ` +
     `(VERTEX_DISABLED=true — enable Gemini API key or Vertex for live output.)`
   );
 }
@@ -105,7 +107,7 @@ function resolveAiProvider(): "auto" | "studio" | "vertex" {
 export async function generateGeminiDailyArticle(input: ArticleInput): Promise<GenerateGeminiDailyArticleResult> {
   if (process.env.VERTEX_DISABLED === "true") {
     return {
-      article: mockArticle(input),
+      article: mockArticle({ payload: input.payload }),
       provider: "mock",
     };
   }
@@ -138,7 +140,8 @@ export async function generateGeminiDailyArticle(input: ArticleInput): Promise<G
     if (!text) {
       throw new Error("Gemini API (Studio) returned empty text.");
     }
-    return { article: text, provider: "studio" };
+    const article = stripDuplicateGreetingPrefix(input.greetingLine, text);
+    return { article, provider: "studio" };
   }
 
   if (tryVertex && project) {
@@ -169,7 +172,8 @@ export async function generateGeminiDailyArticle(input: ArticleInput): Promise<G
     if (!text) {
       throw new Error("Vertex generateContent returned empty text.");
     }
-    return { article: text, provider: "vertex" };
+    const article = stripDuplicateGreetingPrefix(input.greetingLine, text);
+    return { article, provider: "vertex" };
   }
 
   throw new Error(

@@ -7,29 +7,37 @@ import { prisma } from "@/lib/prisma";
 export async function processDueFollowUpsForSession(sessionId: string): Promise<void> {
   const now = new Date();
 
-  const next = await prisma.foodEntry.findFirst({
-    where: {
-      sessionId,
-      followUpCompletedAt: null,
-      followUpPromptSentAt: null,
-      followUpDueAt: { lte: now },
-    },
-    orderBy: { followUpDueAt: "asc" },
-  });
+  await prisma.$transaction(async (tx) => {
+    const next = await tx.foodEntry.findFirst({
+      where: {
+        sessionId,
+        followUpCompletedAt: null,
+        followUpPromptSentAt: null,
+        followUpDueAt: { lte: now },
+      },
+      orderBy: { followUpDueAt: "asc" },
+    });
 
-  if (!next) {
-    return;
-  }
+    if (!next) {
+      return;
+    }
 
-  await prisma.$transaction([
-    prisma.foodEntry.update({
-      where: { id: next.id },
+    const claimed = await tx.foodEntry.updateMany({
+      where: {
+        id: next.id,
+        followUpPromptSentAt: null,
+      },
       data: {
         followUpPromptSentAt: now,
         followUpNotifiedAt: now,
       },
-    }),
-    prisma.chatMessage.create({
+    });
+
+    if (claimed.count !== 1) {
+      return;
+    }
+
+    await tx.chatMessage.create({
       data: {
         sessionId,
         role: MessageRole.ASSISTANT,
@@ -41,13 +49,14 @@ export async function processDueFollowUpsForSession(sessionId: string): Promise<
           foodEntryId: next.id,
         } as Prisma.InputJsonValue,
       },
-    }),
-    prisma.daySession.update({
+    });
+
+    await tx.daySession.update({
       where: { id: sessionId },
       data: {
         phase: ConversationPhase.ASK_REACTION,
         pendingFoodEntryId: next.id,
       },
-    }),
-  ]);
+    });
+  });
 }

@@ -44,6 +44,7 @@ import {
   ReactionMetricsTableRows,
 } from "@/components/reaction-metrics";
 import type { ReactionSnapshot } from "@/lib/reaction-summary";
+import { stripDuplicateGreetingPrefix } from "@/lib/strip-duplicate-greeting";
 
 const MEAL_FORM_ID = "carno-meal-form";
 
@@ -681,7 +682,7 @@ function DailyAiSummaryBubble({
 }) {
   const greeting = String(metadata.greeting ?? "");
   const article = String(metadata.articleText ?? "");
-  const builtWithAi = metadata.builtWithAi === true;
+  const articleDisplay = stripDuplicateGreetingPrefix(greeting, article);
   const rawKey = metadata.localDateKey;
   const dateKey =
     typeof rawKey === "string" && /^\d{4}-\d{2}-\d{2}$/.test(rawKey)
@@ -721,13 +722,10 @@ function DailyAiSummaryBubble({
               Preview — day still open
             </span>
           ) : null}
-          {builtWithAi ? (
-            <span className="text-xs text-brandcolor-text-weak">Built with AI</span>
-          ) : null}
         </div>
-        <p className="font-medium text-brandcolor-text-strong">{greeting}</p>
-        <p className="min-w-0 whitespace-pre-wrap leading-relaxed">{article}</p>
-        <SummaryShareRow greeting={greeting} article={article} historyDateKey={dateKey} />
+        <p className="font-semibold text-brandcolor-text-strong">{greeting}</p>
+        <p className="min-w-0 whitespace-pre-wrap leading-relaxed">{articleDisplay}</p>
+        <SummaryShareRow greeting={greeting} article={articleDisplay} historyDateKey={dateKey} />
       </div>
     </div>
   );
