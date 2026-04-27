@@ -258,10 +258,10 @@ export function ChatClient({
 
   const mealComposer = (
     maxWidthClass: string,
-    options?: { elevated?: boolean; hideSummaryPill?: boolean },
+    options?: { elevated?: boolean },
   ) => (
     <div className={`mx-auto w-full ${maxWidthClass}`}>
-      {showSummaryBadge && !options?.hideSummaryPill ? (
+      {showSummaryBadge ? (
         <div className="mb-2 flex justify-start">
           <SummaryPreviewPill
             previewAction={previewAction}
@@ -314,19 +314,8 @@ export function ChatClient({
       {!showOnboarding && (
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <div className="min-h-0 flex-1 overflow-y-auto">
-            <div className="sticky top-0 z-10 mx-auto flex w-full max-w-3xl flex-wrap items-center gap-2 bg-brandcolor-fill/90 px-4 py-2 backdrop-blur-sm">
-              <div className="flex min-w-0 flex-1 justify-center">
-                <DayDateBadge localDate={localDate} timezone={timezone} />
-              </div>
-              {showSummaryBadge ? (
-                <SummaryPreviewPill
-                  previewAction={previewAction}
-                  sessionId={sessionId}
-                  previewPending={previewPending}
-                  mealPending={mealPending}
-                  reactionPending={reactionPending}
-                />
-              ) : null}
+            <div className="sticky top-0 z-10 flex justify-center bg-brandcolor-fill/90 px-4 py-2 backdrop-blur-sm">
+              <DayDateBadge localDate={localDate} timezone={timezone} />
             </div>
             <ul className="mx-auto flex max-w-3xl flex-col gap-3 px-4 pb-4 pt-1">
               {messages.map((m) => (
@@ -397,7 +386,7 @@ export function ChatClient({
           {floatingMealDock && (
             <div className="flex shrink-0 justify-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
               <div className="pointer-events-auto w-full max-w-3xl">
-                {mealComposer("max-w-3xl", { elevated: true, hideSummaryPill: true })}
+                {mealComposer("max-w-3xl", { elevated: true })}
               </div>
             </div>
           )}
@@ -532,7 +521,7 @@ export function ChatClient({
 
       {inlineTranscriptMealWithEod && (
         <div className="flex justify-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
-          <div className="w-full max-w-3xl">{mealComposer("max-w-3xl", { hideSummaryPill: true })}</div>
+          <div className="w-full max-w-3xl">{mealComposer("max-w-3xl")}</div>
         </div>
       )}
 

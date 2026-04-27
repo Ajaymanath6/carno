@@ -37,7 +37,7 @@ export default function RootLayout({
     >
       <body className="flex h-screen flex-col overflow-hidden bg-brandcolor-fill text-brandcolor-text-strong">
         <ClerkProvider publishableKey={publishableKey} afterSignOutUrl="/login">
-          {children}
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">{children}</div>
         </ClerkProvider>
       </body>
     </html>

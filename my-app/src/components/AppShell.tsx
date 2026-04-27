@@ -212,7 +212,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        <header className="shrink-0 border-b border-brandcolor-strokeweak bg-brandcolor-fill text-brandcolor-text-strong md:hidden">
+        {/* Fixed on small screens so the bar stays visible while /chat scrolls (flex children can push static headers away). */}
+        <header className="fixed inset-x-0 top-0 z-[45] border-b border-brandcolor-strokeweak bg-brandcolor-fill pt-[env(safe-area-inset-top,0px)] text-brandcolor-text-strong md:hidden">
           <div className="relative mx-auto flex h-12 w-full max-w-3xl items-center justify-center px-3">
             <button
               type="button"
@@ -245,7 +246,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">{children}</div>
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden pt-[calc(3rem+env(safe-area-inset-top,0px))] md:pt-0">
+          {children}
+        </div>
       </div>
 
       {drawerOpen && (
