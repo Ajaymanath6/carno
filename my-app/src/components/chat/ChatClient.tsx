@@ -97,12 +97,6 @@ export function ChatClient({
   const salutation = salutationForHour(timezone);
 
   useEffect(() => {
-    if (hasUserMessage) {
-      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages.length, phase, mealState.ok, reactionState.ok, hasUserMessage]);
-
-  useEffect(() => {
     function tick() {
       setShowEodPanel(getLocalHourInTimeZone(timezone) >= EOD_PANEL_START_HOUR);
     }
@@ -143,6 +137,12 @@ export function ChatClient({
     sessionStatus === "ACTIVE" &&
     phase === "ASK_REACTION" &&
     !!pendingFoodEntryId;
+
+  useEffect(() => {
+    if (hasUserMessage || showReaction) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages.length, phase, mealState.ok, reactionState.ok, hasUserMessage, showReaction]);
 
   /** Fixed bottom dock so the thread can scroll underneath (hidden when EOD panel needs the stack). */
   const floatingMealDock =
@@ -214,7 +214,7 @@ export function ChatClient({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-brandcolor-fill">
-      {!showReaction && !showOnboarding && (
+      {!showOnboarding && (
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <div className="min-h-0 flex-1 overflow-y-auto">
             <div className="sticky top-0 z-10 flex justify-center bg-brandcolor-fill/90 px-4 py-2 backdrop-blur-sm">
@@ -253,6 +253,31 @@ export function ChatClient({
                   </div>
                 </li>
               ))}
+              {showReaction && pendingFoodEntryId ? (
+                <li className="flex gap-2 items-start justify-start">
+                  <div
+                    className={`relative shrink-0 rounded-full bg-brandcolor-fill p-0.5 shadow-sm ${
+                      reactionPending ? "animate-carno-speak" : ""
+                    }`}
+                  >
+                    <Image
+                      src={CARNO_LOGO_AGENT}
+                      alt="Carno"
+                      width={32}
+                      height={32}
+                      unoptimized
+                      className="h-8 w-8 rounded-full object-contain"
+                    />
+                  </div>
+                  <div className="max-w-[min(95%,calc(100%-2.75rem))] flex-1 rounded-2xl border border-brandcolor-strokeweak bg-brandcolor-white px-4 py-3 text-sm text-brandcolor-text-strong shadow-sm">
+                    <SymptomCheckInForm
+                      foodEntryId={pendingFoodEntryId}
+                      formAction={reactionAction}
+                      pending={reactionPending}
+                    />
+                  </div>
+                </li>
+              ) : null}
               <div ref={bottomRef} />
             </ul>
           </div>
@@ -387,72 +412,6 @@ export function ChatClient({
         </div>
       )}
 
-      {showReaction && pendingFoodEntryId && (
-        <div className="border-t border-brandcolor-strokeweak bg-brandcolor-white p-4 shadow-sm">
-          <form action={reactionAction} className="mx-auto max-w-3xl space-y-3">
-            <input name="foodEntryId" type="hidden" value={pendingFoodEntryId} />
-            <p className="text-sm font-medium text-brandcolor-text-strong">
-              Symptom check-in (1 = low / none, 5 = high)
-            </p>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <SliderRow name="energyLevel" label="Energy" />
-              <SliderRow name="bloating" label="Bloating" />
-              <SliderRow name="gas" label="Gas" />
-              <SliderRow name="stomachDiscomfort" label="Stomach discomfort" />
-              <SliderRow name="mood" label="Mood" />
-            </div>
-            <label className="block text-sm">
-              <span className="text-brandcolor-text-weak">Notes</span>
-              <textarea
-                name="notes"
-                rows={2}
-                className="mt-1 w-full rounded-xl border border-brandcolor-strokeweak bg-brandcolor-fill px-3 py-2 text-sm text-brandcolor-text-strong"
-                placeholder="Optional details"
-              />
-            </label>
-            <fieldset className="space-y-2">
-              <legend className="text-sm font-medium text-brandcolor-text-strong">
-                Did you eat the same meal yesterday?
-              </legend>
-              <div className="flex flex-wrap gap-2">
-                <ReactionChip name="ateYesterdaySame" value="yes" label="Yes" />
-                <ReactionChip name="ateYesterdaySame" value="no" label="No" />
-              </div>
-            </fieldset>
-            <label className="block text-sm">
-              <span className="text-brandcolor-text-weak">
-                Did anything feel different vs usual?
-              </span>
-              <textarea
-                name="feltDifferentNotes"
-                rows={2}
-                className="mt-1 w-full rounded-xl border border-brandcolor-strokeweak bg-brandcolor-fill px-3 py-2 text-sm text-brandcolor-text-strong"
-              />
-            </label>
-            <label className="block text-sm">
-              <span className="text-brandcolor-text-weak">Symptoms vs last time</span>
-              <select
-                name="symptomsBetterOrWorse"
-                className="mt-1 w-full rounded-xl border border-brandcolor-strokeweak bg-brandcolor-fill px-3 py-2 text-sm text-brandcolor-text-strong"
-                defaultValue=""
-              >
-                <option value="">Select…</option>
-                <option value="better">Better</option>
-                <option value="same">About the same</option>
-                <option value="worse">Worse</option>
-              </select>
-            </label>
-            <button
-              type="submit"
-              disabled={reactionPending}
-              className="flex min-h-11 w-full items-center justify-center rounded-full bg-brandcolor-primary px-4 py-2 text-sm font-semibold text-brandcolor-white hover:bg-brandcolor-primary-hover disabled:opacity-60"
-            >
-              {reactionPending ? "Saving…" : "Save check-in"}
-            </button>
-          </form>
-        </div>
-      )}
-
       {inlineTranscriptMealWithEod && (
         <div className="flex justify-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
           <div className="w-full max-w-3xl">{mealComposer("max-w-3xl")}</div>
@@ -469,6 +428,78 @@ function mealThumbFromMetadata(metadata: Prisma.JsonValue | null): string | null
   }
   const thumb = (metadata as Record<string, unknown>).mealThumb;
   return typeof thumb === "string" ? thumb : null;
+}
+
+function SymptomCheckInForm({
+  foodEntryId,
+  formAction,
+  pending,
+}: {
+  foodEntryId: string;
+  formAction: (formData: FormData) => void;
+  pending: boolean;
+}) {
+  return (
+    <form action={formAction} className="space-y-3">
+      <input name="foodEntryId" type="hidden" value={foodEntryId} />
+      <p className="text-sm font-medium text-brandcolor-text-strong">
+        Symptom check-in (1 = low / none, 5 = high)
+      </p>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <SliderRow name="energyLevel" label="Energy" />
+        <SliderRow name="bloating" label="Bloating" />
+        <SliderRow name="gas" label="Gas" />
+        <SliderRow name="stomachDiscomfort" label="Stomach discomfort" />
+        <SliderRow name="mood" label="Mood" />
+      </div>
+      <label className="block text-sm">
+        <span className="text-brandcolor-text-weak">Notes</span>
+        <textarea
+          name="notes"
+          rows={2}
+          className="mt-1 w-full rounded-xl border border-brandcolor-strokeweak bg-brandcolor-fill px-3 py-2 text-sm text-brandcolor-text-strong"
+          placeholder="Optional details"
+        />
+      </label>
+      <fieldset className="space-y-2">
+        <legend className="text-sm font-medium text-brandcolor-text-strong">
+          Did you eat the same meal yesterday?
+        </legend>
+        <div className="flex flex-wrap gap-2">
+          <ReactionChip name="ateYesterdaySame" value="yes" label="Yes" />
+          <ReactionChip name="ateYesterdaySame" value="no" label="No" />
+        </div>
+      </fieldset>
+      <label className="block text-sm">
+        <span className="text-brandcolor-text-weak">Did anything feel different vs usual?</span>
+        <textarea
+          name="feltDifferentNotes"
+          rows={2}
+          className="mt-1 w-full rounded-xl border border-brandcolor-strokeweak bg-brandcolor-fill px-3 py-2 text-sm text-brandcolor-text-strong"
+        />
+      </label>
+      <label className="block text-sm">
+        <span className="text-brandcolor-text-weak">Symptoms vs last time</span>
+        <select
+          name="symptomsBetterOrWorse"
+          className="mt-1 w-full rounded-xl border border-brandcolor-strokeweak bg-brandcolor-fill px-3 py-2 text-sm text-brandcolor-text-strong"
+          defaultValue=""
+        >
+          <option value="">Select…</option>
+          <option value="better">Better</option>
+          <option value="same">About the same</option>
+          <option value="worse">Worse</option>
+        </select>
+      </label>
+      <button
+        type="submit"
+        disabled={pending}
+        className="flex min-h-11 w-full items-center justify-center rounded-full bg-brandcolor-primary px-4 py-2 text-sm font-semibold text-brandcolor-white hover:bg-brandcolor-primary-hover disabled:opacity-60"
+      >
+        {pending ? "Saving…" : "Save check-in"}
+      </button>
+    </form>
+  );
 }
 
 function AssistantBubbleBody({
