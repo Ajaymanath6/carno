@@ -97,9 +97,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, [drawerOpen]);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col md:min-h-0 md:flex-row">
+    <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden md:flex-row">
       <aside
-        className={`relative z-30 hidden min-h-0 shrink-0 flex-col border-r border-brandcolor-strokeweak bg-brandcolor-fill text-brandcolor-text-strong transition-[width] duration-200 ease-out md:flex md:min-h-[100dvh] ${
+        className={`relative z-30 hidden h-full max-h-full min-h-0 shrink-0 flex-col overflow-hidden border-r border-brandcolor-strokeweak bg-brandcolor-fill text-brandcolor-text-strong transition-[width] duration-200 ease-out md:flex ${
           sidebarExpanded ? "w-52" : "w-16"
         }`}
         aria-label="Main navigation"
@@ -211,7 +211,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <header className="shrink-0 border-b border-brandcolor-strokeweak bg-brandcolor-fill text-brandcolor-text-strong md:hidden">
           <div className="relative mx-auto flex h-12 w-full max-w-3xl items-center justify-center px-3">
             <button
@@ -245,7 +245,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        <div className="flex min-h-0 flex-1 flex-col">{children}</div>
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">{children}</div>
       </div>
 
       {drawerOpen && (

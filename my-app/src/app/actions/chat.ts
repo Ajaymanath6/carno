@@ -300,7 +300,7 @@ export async function generateDailySummary(
           `${payload.reactions.length} reaction(s) recorded. ` +
           (survey
             ? `Your day overall: ${survey}`
-            : "Open Chats anytime to review this day."),
+            : "Open History anytime to review this day."),
       },
     }),
   ]);

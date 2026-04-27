@@ -33,7 +33,7 @@ export default function RootLayout({
       lang="en"
       className={`${dmSans.variable} ${dmSerifDisplay.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col bg-brandcolor-fill text-brandcolor-text-strong">
+      <body className="flex h-screen flex-col overflow-hidden bg-brandcolor-fill text-brandcolor-text-strong">
         <ClerkProvider publishableKey={publishableKey} afterSignOutUrl="/login">
           {children}
         </ClerkProvider>

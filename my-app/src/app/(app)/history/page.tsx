@@ -21,9 +21,9 @@ export default async function HistoryPage() {
   });
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-8">
+    <main className="mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col gap-4 overflow-y-auto px-4 py-8">
       <div>
-        <h1 className="font-serif text-xl font-semibold text-brandcolor-text-strong">Chats</h1>
+        <h1 className="font-serif text-xl font-semibold text-brandcolor-text-strong">History</h1>
         <p className="mt-1 text-sm text-brandcolor-text-weak">
           Recent days (newest first). Closed days include a saved summary.
         </p>

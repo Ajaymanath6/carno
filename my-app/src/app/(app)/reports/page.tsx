@@ -109,7 +109,7 @@ export default async function ReportsPage({
   const rankedFoods = [...byFood.entries()].sort((a, b) => b[1].count - a[1].count);
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8">
+    <main className="mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col gap-6 overflow-y-auto px-4 py-8">
       <div>
         <h1 className="font-serif text-xl font-semibold text-brandcolor-text-strong">
           Reports

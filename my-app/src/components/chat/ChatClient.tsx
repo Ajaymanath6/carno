@@ -370,7 +370,7 @@ export function ChatClient({
 
       {sessionStatus === "CLOSED" && (
         <p className="mx-auto max-w-3xl px-4 pb-4 text-center text-sm text-brandcolor-text-weak">
-          This day is closed. Open <strong>Chats</strong> to review or come back
+          This day is closed. Open <strong>History</strong> to review or come back
           tomorrow for a new chat.
         </p>
       )}

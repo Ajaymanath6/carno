@@ -12,7 +12,7 @@ export default async function SignInPage() {
   }
 
   return (
-    <main className="flex flex-1 flex-col items-center justify-center bg-brandcolor-fill px-4 py-16">
+    <main className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto bg-brandcolor-fill px-4 py-16">
       <SignIn
         routing="path"
         path="/login"
