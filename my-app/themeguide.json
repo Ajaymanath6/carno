@@ -119,6 +119,10 @@
       "loggedAt": "formatLogTimestamp(loggedAt, user.timezone) — e.g. Mon, Apr 27, 7:07 AM (not ISO strings).",
       "reactionNotes": "rounded-xl bg-brandcolor-fill px-3 py-2 text-sm text-brandcolor-text-strong; no border."
     },
+    "aiDailySummaryBubble": {
+      "metadata": "ChatMessage.metadata.type === daily_ai_summary with greeting + articleText + builtWithAi.",
+      "styling": "Phosphor Article + label Summary + optional Built with AI; rounded-xl bg-brandcolor-fill px-4 py-3; greeting font-medium; body whitespace-pre-wrap."
+    },
     "sidebarDesktop": {
       "collapsedTop": "Phosphor Sidebar opens rail; hover:bg-brandcolor-fill on control.",
       "expandedTop": "Expanded row: justify-between — logo link left, collapse h-8 w-8 right (Sidebar 20px). Collapsed: h-8 w-8 expand. Mobile header: logo left end, menu + sign-out right. Chat avatar: bg-brandcolor-fill.",

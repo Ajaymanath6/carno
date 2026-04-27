@@ -70,6 +70,10 @@ Paths: [`src/lib/brand.ts`](../src/lib/brand.ts).
 - **Scroll:** The scrollable layer is **full width** of the main pane; **`max-w-3xl`** only constrains the inner column so the **scrollbar stays at the right edge** of the content area (not centered mid-viewport).
 - **Reaction notes:** **`bg-brandcolor-fill`**, **`rounded-xl`**, comfortable padding — **no border**; body text **`text-brandcolor-text-strong`**.
 
+## AI daily summary (chat)
+
+- Assistant metadata `type: daily_ai_summary`: Phosphor **`Article`**, label **Summary**, optional caption **Built with AI** (`text-brandcolor-text-weak`). Card **`rounded-xl bg-brandcolor-fill`**, **no border**; greeting line **`font-medium`**, article body **`whitespace-pre-wrap`**.
+
 ## Machine-readable spec
 
 See [`themeguide.json`](../themeguide.json).

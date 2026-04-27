@@ -6,7 +6,7 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { useRouter } from "next/navigation";
 import type { ChatMessage, ConversationPhase, Prisma } from "@prisma/client";
-import { CaretDown, CircleNotch, PaperPlaneRight } from "@phosphor-icons/react";
+import { Article, CaretDown, CircleNotch, PaperPlaneRight } from "@phosphor-icons/react";
 import {
   generateDailySummary,
   pollDueFollowUps,
@@ -510,6 +510,54 @@ function SymptomCheckInForm({
   );
 }
 
+function isDailyAiSummaryMetadata(
+  metadata: Prisma.JsonValue | null,
+): metadata is Prisma.JsonObject & {
+  type: string;
+  greeting: string;
+  articleText: string;
+  builtWithAi?: boolean;
+} {
+  if (metadata == null || typeof metadata !== "object" || Array.isArray(metadata)) {
+    return false;
+  }
+  const m = metadata as Record<string, unknown>;
+  return (
+    m.type === "daily_ai_summary" &&
+    typeof m.greeting === "string" &&
+    typeof m.articleText === "string"
+  );
+}
+
+function DailyAiSummaryBubble({
+  metadata,
+}: {
+  metadata: Record<string, unknown>;
+}) {
+  const greeting = String(metadata.greeting ?? "");
+  const article = String(metadata.articleText ?? "");
+  const builtWithAi = metadata.builtWithAi === true;
+  return (
+    <div className="w-full min-w-0 space-y-2">
+      <div className="rounded-xl bg-brandcolor-fill px-4 py-3 text-sm text-brandcolor-text-strong">
+        <div className="mb-2 flex flex-wrap items-center gap-2">
+          <Article
+            className="h-5 w-5 shrink-0 text-brandcolor-stroke-strong"
+            weight="regular"
+            aria-hidden
+          />
+          <span className="font-semibold">Summary</span>
+          {builtWithAi ? (
+            <span className="text-xs text-brandcolor-text-weak">Built with AI</span>
+          ) : null}
+        </div>
+        <p className="font-medium text-brandcolor-text-strong">{greeting}</p>
+        <p className="mt-2 whitespace-pre-wrap leading-relaxed">{article}</p>
+      </div>
+    </div>
+  );
+}
+
 function isReactionSavedMetadata(
   metadata: Prisma.JsonValue | null,
 ): metadata is Prisma.JsonObject & {
@@ -645,6 +693,10 @@ function AssistantBubbleBody({
   metadata: Prisma.JsonValue | null;
   body: string;
 }) {
+  if (isDailyAiSummaryMetadata(metadata)) {
+    return <DailyAiSummaryBubble metadata={metadata as Record<string, unknown>} />;
+  }
+
   if (isReactionSavedMetadata(metadata)) {
     return (
       <ReactionSavedBubble body={body} metadata={metadata as Record<string, unknown>} />

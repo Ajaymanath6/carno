@@ -8,7 +8,10 @@ import { displayFoodTitleFromLog, normalizeFoodLabel } from "@/lib/text";
 import { processDueFollowUpsForSession } from "@/lib/followups";
 import { MessageRole, ConversationPhase, Prisma } from "@prisma/client";
 import { formatWeekdayMonthDayForLocalDateKey, shiftLocalDateKey } from "@/lib/date";
+import { displayNameFromUser } from "@/lib/display-name";
+import { timeGreetingLine } from "@/lib/time-greeting";
 import { buildDailySummaryPayload } from "@/lib/summary";
+import { generateVertexDailyArticle } from "@/lib/vertex-daily-summary";
 import { mealThumbPathForNormalizedFood } from "@/lib/meal-thumb";
 import type { ReactionSnapshot } from "@/lib/reaction-summary";
 import { formatReactionShortSummary } from "@/lib/reaction-summary";
@@ -275,6 +278,66 @@ export async function generateDailySummary(
     appUser.timezone,
   );
 
+  const existingSummary = await prisma.dailySummary.findUnique({
+    where: { sessionId: day.id },
+  });
+  const priorAi = existingSummary?.aiArticle?.trim();
+  const displayName = displayNameFromUser({
+    name: appUser.name,
+    email: appUser.email,
+  });
+  const greetingLine = timeGreetingLine(displayName, appUser.timezone, new Date());
+
+  let aiArticle: string | null = priorAi || null;
+  let aiGeneratedAt: Date | null = existingSummary?.aiGeneratedAt ?? null;
+
+  if (!priorAi) {
+    try {
+      aiArticle = await generateVertexDailyArticle({
+        payload,
+        greetingLine,
+        timezone: appUser.timezone,
+        displayName,
+        dayOverallSurvey: survey || null,
+      });
+      aiGeneratedAt = new Date();
+    } catch (e) {
+      console.error("[generateDailySummary] Vertex AI failed:", e);
+      aiArticle = null;
+      aiGeneratedAt = null;
+    }
+  }
+
+  const chatData = (() => {
+    if (aiArticle && !priorAi) {
+      return {
+        body: `${greetingLine}\n\n${aiArticle}`,
+        metadata: {
+          type: "daily_ai_summary",
+          greeting: greetingLine,
+          articleText: aiArticle,
+          builtWithAi: process.env.VERTEX_DISABLED !== "true",
+        } as Prisma.InputJsonValue,
+      };
+    }
+    if (priorAi) {
+      return {
+        body:
+          `**Day closed (${summaryDateLabel})** — ${day.foodEntries.length} meal log(s), ` +
+          `${payload.reactions.length} reaction(s). ` +
+          (survey ? `Your reflection: ${survey}` : "Open History anytime to review."),
+      };
+    }
+    return {
+      body:
+        `**Daily summary (${summaryDateLabel})**: ${day.foodEntries.length} meal log(s), ` +
+        `${payload.reactions.length} reaction(s) recorded. ` +
+        (survey
+          ? `Your day overall: ${survey}`
+          : "Open History anytime to review this day."),
+    };
+  })();
+
   await prisma.$transaction([
     prisma.dailySummary.upsert({
       where: { sessionId: day.id },
@@ -282,10 +345,13 @@ export async function generateDailySummary(
         sessionId: day.id,
         payload: payload as object,
         dayOverallSurvey: survey || null,
+        aiArticle,
+        aiGeneratedAt,
       },
       update: {
         payload: payload as object,
         dayOverallSurvey: survey || null,
+        ...(aiArticle ? { aiArticle, aiGeneratedAt } : {}),
       },
     }),
     prisma.daySession.update({
@@ -299,12 +365,8 @@ export async function generateDailySummary(
       data: {
         sessionId: day.id,
         role: MessageRole.ASSISTANT,
-        body:
-          `**Daily summary (${summaryDateLabel})**: ${day.foodEntries.length} meal log(s), ` +
-          `${payload.reactions.length} reaction(s) recorded. ` +
-          (survey
-            ? `Your day overall: ${survey}`
-            : "Open History anytime to review this day."),
+        body: chatData.body,
+        ...(chatData.metadata != null ? { metadata: chatData.metadata } : {}),
       },
     }),
   ]);

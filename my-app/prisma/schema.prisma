@@ -111,4 +111,7 @@ model DailySummary {
   payload          Json
   dayOverallSurvey String?    @db.Text
   generatedAt      DateTime   @default(now())
+  /** Gemini-generated narrative for the day (meals + how you felt). */
+  aiArticle        String?    @db.Text
+  aiGeneratedAt    DateTime?
 }
