@@ -190,90 +190,125 @@ export function ChatClient({
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-brandcolor-fill">
       {!showReaction && !showOnboarding && (
-        <div className="min-h-0 flex-1 overflow-y-auto">
-          <div className="sticky top-0 z-10 flex justify-center bg-brandcolor-fill/90 px-4 py-2 backdrop-blur-sm">
-            <DayDateBadge localDate={localDate} timezone={timezone} />
-          </div>
-          <ul
-            className={`mx-auto flex max-w-3xl flex-col gap-3 px-4 pt-1 ${
-              floatingMealDock && hasUserMessage ? "pb-32" : "pb-4"
-            }`}
-          >
-            {messages.map((m) => (
-              <li
-                key={m.id}
-                className={`flex gap-2 ${m.role === "USER" ? "justify-end" : "items-end justify-start"}`}
-              >
-                {m.role !== "USER" && (
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            <div className="sticky top-0 z-10 flex justify-center bg-brandcolor-fill/90 px-4 py-2 backdrop-blur-sm">
+              <DayDateBadge localDate={localDate} timezone={timezone} />
+            </div>
+            <ul className="mx-auto flex max-w-3xl flex-col gap-3 px-4 pb-4 pt-1">
+              {messages.map((m) => (
+                <li
+                  key={m.id}
+                  className={`flex gap-2 ${m.role === "USER" ? "justify-end" : "items-end justify-start"}`}
+                >
+                  {m.role !== "USER" && (
+                    <div
+                      className={`relative shrink-0 rounded-full bg-brandcolor-fill p-0.5 shadow-sm ${
+                        agentBusy ? "animate-carno-speak" : ""
+                      }`}
+                    >
+                      <Image
+                        src={CARNO_LOGO_AGENT}
+                        alt="Carno"
+                        width={32}
+                        height={32}
+                        unoptimized
+                        className="h-8 w-8 rounded-full object-contain"
+                      />
+                    </div>
+                  )}
                   <div
-                    className={`relative shrink-0 rounded-full bg-brandcolor-fill p-0.5 shadow-sm ${
-                      agentBusy ? "animate-carno-speak" : ""
+                    className={`max-w-[min(85%,calc(100%-2.75rem))] rounded-2xl px-4 py-2 text-sm leading-relaxed ${
+                      m.role === "USER"
+                        ? "bg-brandcolor-white text-brandcolor-text-strong"
+                        : "border border-brandcolor-strokeweak bg-brandcolor-white text-brandcolor-text-strong"
                     }`}
                   >
-                    <Image
-                      src={CARNO_LOGO_AGENT}
-                      alt="Carno"
-                      width={32}
-                      height={32}
-                      className="h-8 w-8 rounded-full object-contain"
-                    />
+                    <AssistantBubbleBody metadata={m.metadata} body={m.body} />
                   </div>
-                )}
-                <div
-                  className={`max-w-[min(85%,calc(100%-2.75rem))] rounded-2xl px-4 py-2 text-sm leading-relaxed ${
-                    m.role === "USER"
-                      ? "bg-brandcolor-white text-brandcolor-text-strong"
-                      : "border border-brandcolor-strokeweak bg-brandcolor-white text-brandcolor-text-strong"
-                  }`}
-                >
-                  <AssistantBubbleBody metadata={m.metadata} body={m.body} />
-                </div>
-              </li>
-            ))}
-            <div ref={bottomRef} />
-          </ul>
+                </li>
+              ))}
+              <div ref={bottomRef} />
+            </ul>
+          </div>
+          {floatingMealDock && (
+            <div className="flex shrink-0 justify-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
+              <div className="pointer-events-auto w-full max-w-3xl">
+                {mealComposer("max-w-3xl", { elevated: true })}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
       {!showReaction && showOnboarding && (
-        <div
-          className={`flex min-h-0 flex-1 flex-col items-center justify-center gap-5 px-4 py-8 ${
-            floatingMealDock ? "pb-40" : ""
-          }`}
-        >
-          <div className="flex w-full max-w-md flex-col items-center gap-4 text-center">
-            <DayDateBadge localDate={localDate} timezone={timezone} />
-            <h2 className="font-serif text-2xl font-semibold text-brandcolor-text-strong md:text-3xl">
-              {salutation}, {displayName}
-            </h2>
-            <p className="text-sm leading-relaxed text-brandcolor-text-weak">
-              Start logging your meals to build a clearer picture of what works for you. Tap a
-              shortcut below or describe what you ate.
-            </p>
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto px-4 py-8">
+            <div className="flex w-full max-w-md flex-col items-center gap-4 text-center">
+              <DayDateBadge localDate={localDate} timezone={timezone} />
+              <h2 className="font-serif text-2xl font-semibold text-brandcolor-text-strong md:text-3xl">
+                {salutation}, {displayName}
+              </h2>
+              <p className="text-sm leading-relaxed text-brandcolor-text-weak">
+                Start logging your meals to build a clearer picture of what works for you. Tap a
+                shortcut below or describe what you ate.
+              </p>
+            </div>
+            {showEodPanel ? (
+              <div className="mt-5 w-full max-w-md">{mealComposer("max-w-md")}</div>
+            ) : null}
+            <div className="mt-5 flex w-full max-w-md flex-col items-center gap-2">
+              <div className="flex w-full flex-wrap justify-center gap-2">
+                {MEAL_QUICK_PICKS.slice(0, 3).map(({ label, value, imageSrc }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    disabled={mealPending}
+                    onClick={() => submitQuickPick(value)}
+                    className="group flex min-w-[5.5rem] flex-row items-center gap-1 rounded-lg border border-brandcolor-strokeweak bg-brandcolor-white px-2 py-1.5 text-left text-[11px] font-medium leading-tight text-brandcolor-text-strong transition-colors hover:border-brandcolor-strokeweak hover:bg-brandcolor-fill sm:min-w-0 sm:text-xs disabled:opacity-50"
+                  >
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-brandcolor-white group-hover:bg-brandcolor-fill">
+                      <Image
+                        src={imageSrc}
+                        alt=""
+                        width={32}
+                        height={32}
+                        className="max-h-8 max-w-8 object-contain mix-blend-multiply"
+                      />
+                    </span>
+                    <span className="min-w-0 truncate">{label}</span>
+                  </button>
+                ))}
+              </div>
+              <div className="flex w-full flex-wrap justify-center gap-2">
+                {MEAL_QUICK_PICKS.slice(3).map(({ label, value, imageSrc }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    disabled={mealPending}
+                    onClick={() => submitQuickPick(value)}
+                    className="group flex min-w-[5.5rem] flex-row items-center gap-1 rounded-lg border border-brandcolor-strokeweak bg-brandcolor-white px-2 py-1.5 text-left text-[11px] font-medium leading-tight text-brandcolor-text-strong transition-colors hover:border-brandcolor-strokeweak hover:bg-brandcolor-fill sm:min-w-0 sm:text-xs disabled:opacity-50"
+                  >
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-brandcolor-white group-hover:bg-brandcolor-fill">
+                      <Image
+                        src={imageSrc}
+                        alt=""
+                        width={32}
+                        height={32}
+                        className="max-h-8 max-w-8 object-contain mix-blend-multiply"
+                      />
+                    </span>
+                    <span className="min-w-0 truncate">{label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
-          {showEodPanel ? mealComposer("max-w-md") : null}
-          <div className="flex w-full max-w-md flex-nowrap items-stretch justify-between gap-1 overflow-x-auto pb-1 sm:gap-1.5">
-            {MEAL_QUICK_PICKS.map(({ label, value, imageSrc }) => (
-              <button
-                key={value}
-                type="button"
-                disabled={mealPending}
-                onClick={() => submitQuickPick(value)}
-                className="group flex min-w-0 flex-1 shrink-0 flex-row items-center gap-1 rounded-lg border border-brandcolor-strokeweak bg-brandcolor-white px-1.5 py-1.5 text-left text-[11px] font-medium leading-tight text-brandcolor-text-strong transition-colors hover:border-brandcolor-strokeweak hover:bg-brandcolor-fill sm:text-xs disabled:opacity-50"
-              >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-brandcolor-white group-hover:bg-brandcolor-fill">
-                  <Image
-                    src={imageSrc}
-                    alt=""
-                    width={32}
-                    height={32}
-                    className="max-h-8 max-w-8 object-contain mix-blend-multiply"
-                  />
-                </span>
-                <span className="min-w-0 truncate">{label}</span>
-              </button>
-            ))}
-          </div>
+          {floatingMealDock && (
+            <div className="flex shrink-0 justify-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
+              <div className="w-full max-w-md">{mealComposer("max-w-md", { elevated: true })}</div>
+            </div>
+          )}
         </div>
       )}
 
@@ -394,23 +429,11 @@ export function ChatClient({
       )}
 
       {inlineTranscriptMealWithEod && (
-        <div className="px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
-          {mealComposer("max-w-3xl")}
+        <div className="flex justify-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
+          <div className="w-full max-w-3xl">{mealComposer("max-w-3xl")}</div>
         </div>
       )}
 
-      {floatingMealDock && (
-        <div
-          className="pointer-events-none fixed inset-x-0 bottom-0 z-[35] flex justify-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3"
-          aria-live="polite"
-        >
-          <div
-            className={`pointer-events-auto w-full ${showOnboarding ? "max-w-md" : "max-w-3xl"}`}
-          >
-            {mealComposer(showOnboarding ? "max-w-md" : "max-w-3xl", { elevated: true })}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

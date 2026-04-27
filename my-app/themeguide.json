@@ -108,10 +108,10 @@
     "mealComposer": {
       "wrapper": "Single rounded-2xl row: white field + inline circular primary control with PaperPlaneRight (arrow send) or CircleNotch while pending; border-transparent → hover:border-brandcolor-strokeweak → focus-within:border-brandcolor-stroke-strong",
       "sendWhenEmpty": "disabled:opacity-50 disabled:pointer-events-none on send when message is whitespace-only",
-      "floatingDock": "When CHAT logging is allowed, no reaction panel, and EOD summary strip is off: fixed bottom-center (z-[35]), max-w-md onboarding / max-w-3xl transcript, pointer-events-none shell + elevated white pill (shadow-lg ring); transcript ul pb-32; onboarding column pb-40. If EOD strip is on, composer stays inline after that block instead."
+      "floatingDock": "When CHAT logging is allowed, no reaction panel, and EOD summary strip is off: composer is shrink-0 at bottom of chat flex column (justify-center, max-w-md / max-w-3xl), elevated pill — not viewport-fixed. If EOD strip is on, composer inline after that block."
     },
     "mealQuickPicks": {
-      "styling": "Single nowrap row (overflow-x-auto on xs): flex-1 tiles, image+label; bg-brandcolor-white border-brandcolor-strokeweak; hover:bg-brandcolor-fill; Image mix-blend-multiply",
+      "styling": "Two centered rows (3 tiles, then 2), max-w-md, justify-center; image+label; bg-brandcolor-white border-brandcolor-strokeweak; hover:bg-brandcolor-fill; Image mix-blend-multiply",
       "whenToUse": "Onboarding food shortcuts only."
     },
     "sidebarDesktop": {

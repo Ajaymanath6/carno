@@ -117,6 +117,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   alt=""
                   width={32}
                   height={32}
+                  unoptimized
                   className="h-8 w-8 rounded-md object-contain"
                   priority
                 />
@@ -223,6 +224,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 alt="Carno"
                 width={32}
                 height={32}
+                unoptimized
                 className="h-8 w-8 shrink-0 rounded-md object-contain"
               />
             </Link>

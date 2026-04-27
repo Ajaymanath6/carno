@@ -2,8 +2,8 @@
 export const CARNO_LOGO_CREAM = "/brand/carno-mark-cream.png";
 export const CARNO_LOGO_MARROW_BG = "/brand/carno-mark-marrow-bg.png";
 export const CARNO_LOGO_FLAME_BONE = "/brand/carno-mark-flame-bone.png";
-/** Chat assistant avatar (flame + bone mark). After replacing the PNG, rename (e.g. `carno-agent-2.png`) or hard-refresh: Next.js 16 rejects `?v=` on local `next/image` src with default `images.localPatterns`. */
-export const CARNO_LOGO_AGENT = "/brand/carno-agent.png";
+/** Sidebar / header / assistant avatar (`public/brand/carno-agent.svg`). */
+export const CARNO_LOGO_AGENT = "/brand/carno-agent.svg";
 
 /** Meal quick-pick row (onboarding). */
 export const MEAL_QUICK_CHICKEN = "/brand/meal-quick-chicken.png";

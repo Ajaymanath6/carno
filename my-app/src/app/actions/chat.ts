@@ -11,7 +11,8 @@ import { shiftLocalDateKey } from "@/lib/date";
 import { buildDailySummaryPayload } from "@/lib/summary";
 import { mealThumbPathForNormalizedFood } from "@/lib/meal-thumb";
 
-const FOLLOW_UP_MS = 3 * 60 * 60 * 1000;
+/** Meal follow-up ping. Set to `3 * 60 * 60 * 1000` for production (~3 hours). */
+const FOLLOW_UP_MS = 60 * 1000;
 
 export type ActionState = { error?: string; ok?: boolean };
 
@@ -70,7 +71,7 @@ export async function sendMealMessage(
         sessionId: day.id,
         role: MessageRole.ASSISTANT,
         body:
-          `Got it — I’ve saved ${savedFoodDisplay}. In about three hours I’ll check in ` +
+          `Got it — I’ve saved ${savedFoodDisplay}. In about a minute I’ll check in ` +
           `on how that sat with you (around ${followUpDueAt.toLocaleTimeString(undefined, {
             hour: "numeric",
             minute: "2-digit",

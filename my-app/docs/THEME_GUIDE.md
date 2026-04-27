@@ -39,7 +39,7 @@ The app does not swap the whole palette for `prefers-color-scheme: dark`.
 
 | File | Use |
 |------|-----|
-| `carno-agent.png` | Assistant avatar; sidebar & mobile header logo (`CARNO_LOGO_AGENT` in `brand.ts`). Do not add a `?query` to this path with `next/image` — Next 16 defaults `images.localPatterns` to disallow search strings on local `src`. |
+| `carno-agent.svg` | Sidebar, mobile header, assistant avatar (`CARNO_LOGO_AGENT`). `next.config` enables `dangerouslyAllowSVG`; logo uses **`unoptimized`** so the SVG renders reliably. Do not use `?query` on local `next/image` src unless `images.localPatterns` is configured. |
 | `carno-mark-cream.png` | Optional mark |
 | `carno-mark-marrow-bg.png`, `carno-mark-flame-bone.png` | Optional / marketing |
 
@@ -53,12 +53,12 @@ Paths: [`src/lib/brand.ts`](../src/lib/brand.ts).
 ## Chat
 
 - **Day badge:** Weekday (e.g. Monday) · Today · `YYYY-MM-DD` in a pill: **`bg-brandcolor-fill`**, **`border-brandcolor-strokeweak`**, small sans text — first row on new-day onboarding (above the greeting), and sticky atop the message list after the first log.
-- **Meal quick-picks:** Raster art under `public/brand/meal-quick-*.png` (chicken, mutton, paneer, red meat, brown eggs); five shortcuts on **one horizontal row** (scroll on very narrow widths). Tiles default **`bg-brandcolor-white`** + weak stroke; **hover** **`bg-brandcolor-fill`**. Image + label same line; **`mix-blend-multiply`** on the art.
+- **Meal quick-picks:** Raster art under `public/brand/meal-quick-*.png` (chicken, mutton, paneer, red meat, brown eggs); **two centered rows** (3 + 2), **`justify-center`**, **`max-w-md`**. Tiles default **`bg-brandcolor-white`** + weak stroke; **hover** **`bg-brandcolor-fill`**. Image + label same line; **`mix-blend-multiply`** on the art.
 - **Start fresh today:** Server action [`src/app/actions/day-session.ts`](../src/app/actions/day-session.ts) clears messages, food entries (reactions cascade), and daily summary for **today’s** session when **`ACTIVE`** and **`CHAT`** only; then re-inserts the welcome line from **`DAY_CHAT_WELCOME_BODY`** in [`src/lib/session.ts`](../src/lib/session.ts).
 - Assistant rows: avatar `CARNO_LOGO_AGENT` on **`bg-brandcolor-fill`**, no border on the avatar plate; bubble **`bg-brandcolor-white`** + weak border.
 - User bubbles: **`bg-brandcolor-white text-brandcolor-text-strong`** (no border).
 - Before the first USER message of the day: centered greeting (time-based + display name), **floating** bottom-centered meal field (same as transcript mode when no EOD panel), and stroke-weak quick-picks; transcript hidden so the DB seed welcome stays out of view until then.
-- Meal composer: one white pill; **`border-transparent`** → hover **`border-brandcolor-strokeweak`** → focus **`border-brandcolor-stroke-strong`**; primary circle with **PaperPlaneRight**; disabled at **50% opacity** when draft is empty; **Enter** submits (Shift+Enter newline). When logging is allowed and the EOD panel is **not** shown, the composer is **`fixed`** bottom-center (**`z-[35]`**, below the mobile nav drawer backdrop), **`max-w-3xl`** after the first message or **`max-w-md`** on onboarding, with **`shadow-lg`** so the thread scrolls underneath; **`pb-32`** / **`pb-40`** on scroll content avoids overlap. With EOD panel visible, the composer returns **inline** after that block so layouts do not collide.
+- Meal composer: one white pill; **`border-transparent`** → hover **`border-brandcolor-strokeweak`** → focus **`border-brandcolor-stroke-strong`**; primary circle with **PaperPlaneRight**; disabled at **50% opacity** when draft is empty; **Enter** submits (Shift+Enter newline). When logging is allowed and the EOD panel is **off**, the composer sits as a **`shrink-0`** strip at the **bottom of the chat column** (**`flex justify-center`**, **`max-w-3xl`** transcript / **`max-w-md`** onboarding, **`shadow-lg`** elevated), so it stays aligned with the main pane — not full-viewport **`fixed`**. With EOD panel visible, the composer is **inline** below that block.
 
 ## Agent animation
 

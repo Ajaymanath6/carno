@@ -1,7 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    dangerouslyAllowSVG: true,
+    contentSecurityPolicy:
+      "default-src 'self'; img-src 'self' data: blob:; script-src 'none'; frame-src 'none'; sandbox;",
+  },
 };
 
 export default nextConfig;
