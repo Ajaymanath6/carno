@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { formatWeekdayMonthDayForLocalDateKey } from "@/lib/date";
 import { getOrCreateAppUser } from "@/lib/user";
 import { redirect } from "next/navigation";
 
@@ -22,7 +23,7 @@ export default async function HistoryPage() {
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-8">
       <div>
-        <h1 className="font-serif text-xl font-semibold text-brandcolor-text-strong">History</h1>
+        <h1 className="font-serif text-xl font-semibold text-brandcolor-text-strong">Chats</h1>
         <p className="mt-1 text-sm text-brandcolor-text-weak">
           Recent days (newest first). Closed days include a saved summary.
         </p>
@@ -34,7 +35,9 @@ export default async function HistoryPage() {
               href={`/history/${d.localDate}`}
               className="flex items-center justify-between rounded-2xl border border-brandcolor-strokeweak bg-brandcolor-white px-4 py-3 text-sm text-brandcolor-text-strong hover:bg-brandcolor-fill"
             >
-              <span className="font-medium">{d.localDate}</span>
+              <span className="font-medium">
+                {formatWeekdayMonthDayForLocalDateKey(d.localDate, user.timezone)}
+              </span>
               <span className="text-brandcolor-text-weak">
                 {d.status === "CLOSED" ? "Closed" : "Active"} · {d.foodEntries.length}{" "}
                 meal(s)

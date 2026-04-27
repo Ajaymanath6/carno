@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { formatWeekdayMonthDayForLocalDateKey } from "@/lib/date";
 import { getOrCreateAppUser } from "@/lib/user";
 import { redirect, notFound } from "next/navigation";
 
@@ -45,7 +46,7 @@ export default async function HistoryDayPage({
           ← Back
         </Link>
         <h1 className="mt-2 font-serif text-xl font-semibold text-brandcolor-text-strong">
-          {day.localDate}
+          {formatWeekdayMonthDayForLocalDateKey(day.localDate, user.timezone)}
         </h1>
         <p className="mt-1 text-sm text-brandcolor-text-weak">
           Status: {day.status}

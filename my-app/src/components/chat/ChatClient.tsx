@@ -14,7 +14,12 @@ import {
   submitReaction,
   type ActionState,
 } from "@/app/actions/chat";
-import { EOD_PANEL_START_HOUR, getLocalHourInTimeZone, weekdayLongForLocalDateKey } from "@/lib/date";
+import {
+  EOD_PANEL_START_HOUR,
+  formatWeekdayMonthDayForLocalDateKey,
+  getLocalHourInTimeZone,
+  weekdayLongForLocalDateKey,
+} from "@/lib/date";
 import {
   CARNO_LOGO_AGENT,
   MEAL_QUICK_BROWN_EGGS,
@@ -31,7 +36,7 @@ const MEAL_QUICK_PICKS = [
   { label: "Chicken", value: "Chicken", imageSrc: MEAL_QUICK_CHICKEN },
   { label: "Mutton", value: "Mutton", imageSrc: MEAL_QUICK_MUTTON },
   { label: "Paneer", value: "Paneer", imageSrc: MEAL_QUICK_PANEER },
-  { label: "Red meat", value: "Red meat", imageSrc: MEAL_QUICK_RED_MEAT },
+  { label: "BEEF", value: "BEEF", imageSrc: MEAL_QUICK_RED_MEAT },
   { label: "Brown eggs", value: "Brown eggs", imageSrc: MEAL_QUICK_BROWN_EGGS },
 ] as const;
 
@@ -365,7 +370,7 @@ export function ChatClient({
 
       {sessionStatus === "CLOSED" && (
         <p className="mx-auto max-w-3xl px-4 pb-4 text-center text-sm text-brandcolor-text-weak">
-          This day is closed. Open <strong>History</strong> to review or come back
+          This day is closed. Open <strong>Chats</strong> to review or come back
           tomorrow for a new chat.
         </p>
       )}
@@ -663,6 +668,7 @@ function AssistantBubbleBody({
 
 function DayDateBadge({ localDate, timezone }: { localDate: string; timezone: string }) {
   const weekday = weekdayLongForLocalDateKey(localDate, timezone);
+  const dateLine = formatWeekdayMonthDayForLocalDateKey(localDate, timezone);
   return (
     <span className="inline-flex max-w-[min(100%,22rem)] flex-wrap items-center justify-center gap-x-1.5 rounded-full border border-brandcolor-strokeweak bg-brandcolor-fill px-3 py-1 text-center font-sans text-xs font-medium tracking-wide text-brandcolor-text-strong">
       <span className="capitalize">{weekday}</span>
@@ -673,7 +679,7 @@ function DayDateBadge({ localDate, timezone }: { localDate: string; timezone: st
       <span className="text-brandcolor-text-weak" aria-hidden>
         ·
       </span>
-      <span>{localDate}</span>
+      <span>{dateLine}</span>
     </span>
   );
 }

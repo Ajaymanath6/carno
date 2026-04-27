@@ -110,7 +110,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Link
                 href="/chat"
                 className="flex h-8 shrink-0 items-center justify-center rounded-lg bg-brandcolor-white p-0.5 transition-opacity hover:opacity-90"
-                title="Carno — Chats"
+                title="Carno — Today"
               >
                 <Image
                   src={CARNO_LOGO_AGENT}
@@ -213,11 +213,25 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <header className="shrink-0 border-b border-brandcolor-strokeweak bg-brandcolor-fill text-brandcolor-text-strong md:hidden">
-          <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3 px-3 py-2">
+          <div className="relative mx-auto flex h-12 w-full max-w-3xl items-center justify-center px-3">
+            <button
+              type="button"
+              className="absolute left-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-brandcolor-stroke-strong hover:bg-brandcolor-white"
+              aria-expanded={drawerOpen}
+              aria-controls={drawerId}
+              aria-label={drawerOpen ? "Close menu" : "Open menu"}
+              onClick={() => setDrawerOpen((v) => !v)}
+            >
+              {drawerOpen ? (
+                <X size={22} weight="regular" />
+              ) : (
+                <List size={22} weight="regular" />
+              )}
+            </button>
             <Link
               href="/chat"
-              className="shrink-0 rounded-lg bg-brandcolor-white p-0.5"
-              title="Carno — Chats"
+              className="rounded-lg bg-brandcolor-white p-0.5"
+              title="Carno — Today"
             >
               <Image
                 src={CARNO_LOGO_AGENT}
@@ -228,30 +242,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 className="h-8 w-8 shrink-0 rounded-md object-contain"
               />
             </Link>
-            <div className="flex shrink-0 items-center gap-2">
-              <button
-                type="button"
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-brandcolor-stroke-strong hover:bg-brandcolor-white"
-                aria-expanded={drawerOpen}
-                aria-controls={drawerId}
-                aria-label={drawerOpen ? "Close menu" : "Open menu"}
-                onClick={() => setDrawerOpen((v) => !v)}
-              >
-                {drawerOpen ? (
-                  <X size={22} weight="regular" />
-                ) : (
-                  <List size={22} weight="regular" />
-                )}
-              </button>
-              <SignOutButton redirectUrl="/login">
-                <button
-                  type="button"
-                  className="shrink-0 rounded-full border border-brandcolor-strokeweak px-3 py-1.5 text-sm text-brandcolor-text-strong hover:bg-brandcolor-white"
-                >
-                  Sign out
-                </button>
-              </SignOutButton>
-            </div>
           </div>
         </header>
 
@@ -268,12 +258,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           />
           <div
             id={drawerId}
-            className="fixed inset-y-0 left-0 z-50 flex w-[min(18.5rem,88vw)] flex-col border-r border-brandcolor-strokeweak bg-brandcolor-white py-4 shadow-xl md:hidden"
+            className="fixed inset-y-0 left-0 z-50 flex h-[100dvh] w-[min(18.5rem,88vw)] flex-col border-r border-brandcolor-strokeweak bg-brandcolor-white pt-4 shadow-xl md:hidden"
             role="dialog"
             aria-modal="true"
             aria-label="Navigation"
           >
-            <div className="flex items-center justify-between border-b border-brandcolor-strokeweak px-3 pb-3">
+            <div className="flex shrink-0 items-center justify-between border-b border-brandcolor-strokeweak px-3 pb-3">
               <span className="font-serif text-lg font-semibold text-brandcolor-text-strong">
                 Menu
               </span>
@@ -286,33 +276,51 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <X size={22} weight="regular" />
               </button>
             </div>
-            <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-2 pt-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setDrawerOpen(false);
-                  queueMicrotask(() => newChatDialogRef.current?.showModal());
-                }}
-                className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-base font-medium text-brandcolor-text-strong hover:bg-brandcolor-fill"
-              >
-                <Plus
-                  className="shrink-0 text-brandcolor-stroke-strong"
-                  size={22}
-                  weight="bold"
-                  aria-hidden
-                />
-                New chat for today
-              </button>
-              {APP_NAV_ITEMS.map((item) => (
-                <MobileDrawerLink
-                  key={item.href}
-                  href={item.href}
-                  label={item.label}
-                  icon={item.Icon}
-                  onNavigate={() => setDrawerOpen(false)}
-                />
-              ))}
-            </nav>
+            <div className="flex min-h-0 flex-1 flex-col">
+              <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-2 pt-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDrawerOpen(false);
+                    queueMicrotask(() => newChatDialogRef.current?.showModal());
+                  }}
+                  className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-base font-medium text-brandcolor-text-strong hover:bg-brandcolor-fill"
+                >
+                  <Plus
+                    className="shrink-0 text-brandcolor-stroke-strong"
+                    size={22}
+                    weight="bold"
+                    aria-hidden
+                  />
+                  New chat for today
+                </button>
+                {APP_NAV_ITEMS.map((item) => (
+                  <MobileDrawerLink
+                    key={item.href}
+                    href={item.href}
+                    label={item.label}
+                    icon={item.Icon}
+                    onNavigate={() => setDrawerOpen(false)}
+                  />
+                ))}
+              </nav>
+              <div className="shrink-0 border-t border-brandcolor-strokeweak p-3">
+                <SignOutButton redirectUrl="/login">
+                  <button
+                    type="button"
+                    className="flex w-full items-center justify-center gap-2 rounded-full border border-brandcolor-strokeweak py-2.5 text-sm font-medium text-brandcolor-text-strong hover:bg-brandcolor-fill"
+                  >
+                    <SignOut
+                      className="text-brandcolor-stroke-strong"
+                      size={22}
+                      weight="regular"
+                      aria-hidden
+                    />
+                    Sign out
+                  </button>
+                </SignOutButton>
+              </div>
+            </div>
           </div>
         </>
       )}

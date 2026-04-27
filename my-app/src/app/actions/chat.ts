@@ -7,7 +7,7 @@ import { getOrCreateDaySession } from "@/lib/session";
 import { normalizeFoodLabel } from "@/lib/text";
 import { processDueFollowUpsForSession } from "@/lib/followups";
 import { MessageRole, ConversationPhase, Prisma } from "@prisma/client";
-import { shiftLocalDateKey } from "@/lib/date";
+import { formatWeekdayMonthDayForLocalDateKey, shiftLocalDateKey } from "@/lib/date";
 import { buildDailySummaryPayload } from "@/lib/summary";
 import { mealThumbPathForNormalizedFood } from "@/lib/meal-thumb";
 import type { ReactionSnapshot } from "@/lib/reaction-summary";
@@ -266,6 +266,10 @@ export async function generateDailySummary(
   }
 
   const payload = buildDailySummaryPayload(day.localDate, day.foodEntries);
+  const summaryDateLabel = formatWeekdayMonthDayForLocalDateKey(
+    day.localDate,
+    appUser.timezone,
+  );
 
   await prisma.$transaction([
     prisma.dailySummary.upsert({
@@ -292,11 +296,11 @@ export async function generateDailySummary(
         sessionId: day.id,
         role: MessageRole.ASSISTANT,
         body:
-          `**Daily summary (${day.localDate})**: ${day.foodEntries.length} meal log(s), ` +
+          `**Daily summary (${summaryDateLabel})**: ${day.foodEntries.length} meal log(s), ` +
           `${payload.reactions.length} reaction(s) recorded. ` +
           (survey
             ? `Your day overall: ${survey}`
-            : "Open History anytime to review this day."),
+            : "Open Chats anytime to review this day."),
       },
     }),
   ]);

@@ -1,8 +1,8 @@
-import { ChartBar, ChatCircle, ClockCounterClockwise } from "@phosphor-icons/react";
+import { ChartBar, ChatCircle, Sun } from "@phosphor-icons/react";
 
 export const APP_NAV_ITEMS = [
-  { href: "/chat", label: "Chats", Icon: ChatCircle },
-  { href: "/history", label: "History", Icon: ClockCounterClockwise },
+  { href: "/chat", label: "Today", Icon: Sun },
+  { href: "/history", label: "Chats", Icon: ChatCircle },
   { href: "/reports", label: "Reports", Icon: ChartBar },
 ] as const;
 
