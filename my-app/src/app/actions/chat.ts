@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getOrCreateAppUser } from "@/lib/user";
 import { getOrCreateDaySession } from "@/lib/session";
-import { normalizeFoodLabel } from "@/lib/text";
+import { displayFoodTitleFromLog, normalizeFoodLabel } from "@/lib/text";
 import { processDueFollowUpsForSession } from "@/lib/followups";
 import { MessageRole, ConversationPhase, Prisma } from "@prisma/client";
 import { formatWeekdayMonthDayForLocalDateKey, shiftLocalDateKey } from "@/lib/date";
@@ -170,6 +170,8 @@ export async function submitReaction(
   };
 
   const shortSummary = formatReactionShortSummary(reactionSnapshot);
+  const mealThumb = mealThumbPathForNormalizedFood(entry.foodNameNormalized);
+  const foodDisplay = displayFoodTitleFromLog(entry.rawText, entry.foodNameNormalized);
 
   await prisma.$transaction(async (tx) => {
     await tx.reactionEntry.create({
@@ -221,6 +223,8 @@ export async function submitReaction(
           type: "reaction_saved",
           shortSummary,
           reaction: reactionSnapshot,
+          foodDisplay,
+          ...(mealThumb != null ? { mealThumb } : {}),
         } as Prisma.InputJsonValue,
       },
     });

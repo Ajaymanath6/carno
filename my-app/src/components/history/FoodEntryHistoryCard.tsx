@@ -1,0 +1,58 @@
+"use client";
+
+import Image from "next/image";
+import type { ReactionEntry } from "@prisma/client";
+import { ReactionMetricsGrid } from "@/components/reaction-metrics";
+import { mealThumbPathForNormalizedFood } from "@/lib/meal-thumb";
+import { reactionEntryToSnapshot } from "@/lib/reaction-summary";
+
+type Props = {
+  rawText: string;
+  foodNameNormalized: string;
+  loggedAt: Date;
+  reactions: ReactionEntry[];
+};
+
+export function FoodEntryHistoryCard({ rawText, foodNameNormalized, loggedAt, reactions }: Props) {
+  const thumb = mealThumbPathForNormalizedFood(foodNameNormalized);
+
+  return (
+    <li className="rounded-2xl border border-brandcolor-strokeweak bg-brandcolor-white p-3 text-sm">
+      <div className="flex gap-3">
+        {thumb ? (
+          <Image
+            src={thumb}
+            alt=""
+            width={40}
+            height={40}
+            unoptimized
+            className="h-10 w-10 shrink-0 object-contain mix-blend-multiply"
+          />
+        ) : (
+          <div
+            className="h-10 w-10 shrink-0 rounded-lg bg-brandcolor-fill"
+            aria-hidden
+          />
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="font-medium text-brandcolor-text-strong">{rawText}</p>
+          <p className="text-xs text-brandcolor-text-weak">Logged {loggedAt.toISOString()}</p>
+          {reactions.map((r) => (
+            <div key={r.id} className="mt-2 space-y-2 border-t border-brandcolor-strokeweak pt-2">
+              <ReactionMetricsGrid reaction={reactionEntryToSnapshot(r)} />
+              <p className="text-xs text-brandcolor-text-weak">
+                Same yesterday?{" "}
+                {r.ateYesterdaySame == null ? "—" : r.ateYesterdaySame ? "yes" : "no"}
+              </p>
+              {r.notes?.trim() ? (
+                <p className="whitespace-pre-wrap text-xs text-brandcolor-text-weak">
+                  Notes: {r.notes}
+                </p>
+              ) : null}
+            </div>
+          ))}
+        </div>
+      </div>
+    </li>
+  );
+}

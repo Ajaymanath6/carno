@@ -55,3 +55,28 @@ export function formatReactionShortSummary(r: ReactionSnapshot): string {
 
   return line;
 }
+
+/** Map DB reaction row to snapshot shape (for UI reuse). */
+export function reactionEntryToSnapshot(r: {
+  energyLevel: number | null;
+  bloating: number | null;
+  gas: number | null;
+  stomachDiscomfort: number | null;
+  mood: number | null;
+  notes: string | null;
+  ateYesterdaySame: boolean | null;
+  feltDifferentNotes: string | null;
+  symptomsBetterOrWorse: string | null;
+}): ReactionSnapshot {
+  return {
+    energyLevel: r.energyLevel,
+    bloating: r.bloating,
+    gas: r.gas,
+    stomachDiscomfort: r.stomachDiscomfort,
+    mood: r.mood,
+    notes: r.notes,
+    ateYesterdaySame: Boolean(r.ateYesterdaySame),
+    feltDifferentNotes: r.feltDifferentNotes,
+    symptomsBetterOrWorse: r.symptomsBetterOrWorse,
+  };
+}

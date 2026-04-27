@@ -28,6 +28,10 @@ import {
   MEAL_QUICK_PANEER,
   MEAL_QUICK_RED_MEAT,
 } from "@/lib/brand";
+import {
+  REACTION_SLIDER_FIELDS,
+  ReactionMetricsTableRows,
+} from "@/components/reaction-metrics";
 import type { ReactionSnapshot } from "@/lib/reaction-summary";
 
 const MEAL_FORM_ID = "carno-meal-form";
@@ -452,11 +456,9 @@ function SymptomCheckInForm({
         Symptom check-in (1 = low / none, 5 = high)
       </p>
       <div className="grid gap-3 sm:grid-cols-2">
-        <SliderRow name="energyLevel" label="Energy" />
-        <SliderRow name="bloating" label="Bloating" />
-        <SliderRow name="gas" label="Gas" />
-        <SliderRow name="stomachDiscomfort" label="Stomach discomfort" />
-        <SliderRow name="mood" label="Mood" />
+        {REACTION_SLIDER_FIELDS.map(({ name, label, Icon }) => (
+          <SliderRow key={name} name={name} label={label} Icon={Icon} />
+        ))}
       </div>
       <label className="block text-sm">
         <span className="text-brandcolor-text-weak">Notes</span>
@@ -528,10 +530,6 @@ function isReactionSavedMetadata(
   );
 }
 
-function scoreOrDash(n: number | null): string {
-  return n != null ? `${n}/5` : "—";
-}
-
 function ReactionSavedBubble({
   body,
   metadata,
@@ -542,6 +540,10 @@ function ReactionSavedBubble({
   const [open, setOpen] = useState(false);
   const shortSummary = String(metadata.shortSummary ?? "");
   const reaction = metadata.reaction as ReactionSnapshot;
+  const foodDisplay =
+    typeof metadata.foodDisplay === "string" ? metadata.foodDisplay.trim() : "";
+  const mealThumbSaved =
+    typeof metadata.mealThumb === "string" ? metadata.mealThumb : null;
 
   const vsLast =
     reaction.symptomsBetterOrWorse === "better"
@@ -576,28 +578,30 @@ function ReactionSavedBubble({
         <div className="overflow-x-auto rounded-xl border border-brandcolor-strokeweak bg-brandcolor-fill/70">
           <table className="w-full min-w-[17rem] border-collapse text-left text-xs text-brandcolor-text-strong">
             <tbody className="divide-y divide-brandcolor-strokeweak/80">
-              <tr>
-                <th className="px-3 py-2 font-normal text-brandcolor-text-weak">Energy</th>
-                <td className="px-3 py-2 font-medium">{scoreOrDash(reaction.energyLevel)}</td>
-              </tr>
-              <tr>
-                <th className="px-3 py-2 font-normal text-brandcolor-text-weak">Bloating</th>
-                <td className="px-3 py-2 font-medium">{scoreOrDash(reaction.bloating)}</td>
-              </tr>
-              <tr>
-                <th className="px-3 py-2 font-normal text-brandcolor-text-weak">Gas</th>
-                <td className="px-3 py-2 font-medium">{scoreOrDash(reaction.gas)}</td>
-              </tr>
-              <tr>
-                <th className="px-3 py-2 font-normal text-brandcolor-text-weak">
-                  Stomach discomfort
-                </th>
-                <td className="px-3 py-2 font-medium">{scoreOrDash(reaction.stomachDiscomfort)}</td>
-              </tr>
-              <tr>
-                <th className="px-3 py-2 font-normal text-brandcolor-text-weak">Mood</th>
-                <td className="px-3 py-2 font-medium">{scoreOrDash(reaction.mood)}</td>
-              </tr>
+              {foodDisplay || mealThumbSaved ? (
+                <tr>
+                  <td className="px-3 py-2" colSpan={2}>
+                    <div className="flex items-center gap-2">
+                      {mealThumbSaved ? (
+                        <span className="inline-flex shrink-0 items-center leading-none">
+                          <Image
+                            src={mealThumbSaved}
+                            alt=""
+                            width={28}
+                            height={28}
+                            unoptimized
+                            className="h-7 w-7 object-contain mix-blend-multiply"
+                          />
+                        </span>
+                      ) : null}
+                      {foodDisplay ? (
+                        <span className="font-medium text-brandcolor-text-strong">{foodDisplay}</span>
+                      ) : null}
+                    </div>
+                  </td>
+                </tr>
+              ) : null}
+              <ReactionMetricsTableRows reaction={reaction} />
               <tr>
                 <th className="px-3 py-2 align-top font-normal text-brandcolor-text-weak">Notes</th>
                 <td className="px-3 py-2 whitespace-pre-wrap">
@@ -684,10 +688,26 @@ function DayDateBadge({ localDate, timezone }: { localDate: string; timezone: st
   );
 }
 
-function SliderRow({ name, label }: { name: string; label: string }) {
+function SliderRow({
+  name,
+  label,
+  Icon,
+}: {
+  name: string;
+  label: string;
+  Icon: (typeof REACTION_SLIDER_FIELDS)[number]["Icon"];
+}) {
   return (
     <label className="flex flex-col gap-1 text-sm text-brandcolor-text-strong">
-      <span>{label}</span>
+      <span className="inline-flex items-center gap-2">
+        <Icon
+          className="shrink-0 text-brandcolor-stroke-strong"
+          size={18}
+          weight="regular"
+          aria-hidden
+        />
+        {label}
+      </span>
       <input
         type="range"
         name={name}
