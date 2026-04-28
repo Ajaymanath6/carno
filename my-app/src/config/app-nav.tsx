@@ -1,8 +1,14 @@
-import { BookOpen, ChartBar, ClockCounterClockwise, Sun } from "@phosphor-icons/react";
+import { BookOpen, ChartBar, ClockCounterClockwise, Heart, Sun } from "@phosphor-icons/react";
 
 export const APP_NAV_ITEMS = [
   { href: "/chat", label: "Today", Icon: Sun },
   { href: "/learnings", label: "Learnings", Icon: BookOpen },
+  {
+    href: "/healing",
+    label: "Healing",
+    linkTitle: "Healing through carnivore",
+    Icon: Heart,
+  },
   { href: "/history", label: "History", Icon: ClockCounterClockwise },
   { href: "/reports", label: "Reports", Icon: ChartBar },
 ] as const;

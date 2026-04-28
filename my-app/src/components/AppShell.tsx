@@ -19,17 +19,22 @@ function isActivePath(pathname: string, href: string) {
   if (href === "/learnings") {
     return pathname === "/learnings";
   }
+  if (href === "/healing") {
+    return pathname === "/healing";
+  }
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 function MobileDrawerLink({
   href,
   label,
+  linkTitle,
   icon: Icon,
   onNavigate,
 }: {
   href: string;
   label: string;
+  linkTitle?: string;
   icon: (typeof APP_NAV_ITEMS)[number]["Icon"];
   onNavigate: () => void;
 }) {
@@ -38,6 +43,7 @@ function MobileDrawerLink({
   return (
     <Link
       href={href}
+      title={linkTitle ?? label}
       onClick={onNavigate}
       className={`flex items-center gap-3 rounded-xl px-3 py-3 text-base font-medium ${
         active
@@ -167,13 +173,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </span>
               ) : null}
             </button>
-            {APP_NAV_ITEMS.map(({ href, label, Icon }) => {
+            {APP_NAV_ITEMS.map((item) => {
+              const { href, label, Icon } = item;
+              const tip =
+                "linkTitle" in item && item.linkTitle ? item.linkTitle : label;
               const active = isActivePath(pathname, href);
               return (
                 <Link
                   key={href}
                   href={href}
-                  title={label}
+                  title={tip}
                   className={`flex items-center rounded-xl py-2.5 text-sm font-medium hover:bg-brandcolor-white ${
                     sidebarExpanded ? "gap-3 px-3" : "justify-center px-0"
                   } ${active ? "text-brandcolor-primary" : "text-brandcolor-text-strong"}`}
@@ -305,6 +314,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     key={item.href}
                     href={item.href}
                     label={item.label}
+                    linkTitle={"linkTitle" in item ? item.linkTitle : undefined}
                     icon={item.Icon}
                     onNavigate={() => setDrawerOpen(false)}
                   />

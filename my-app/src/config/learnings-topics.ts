@@ -1,6 +1,15 @@
 import type { ComponentType } from "react";
 import type { IconProps } from "@phosphor-icons/react";
-import { Drop, Egg, Heart, Leaf, Lightning, Question } from "@phosphor-icons/react";
+import {
+  Drop,
+  Egg,
+  Flask,
+  Heart,
+  Leaf,
+  Lightning,
+  Question,
+  WarningCircle,
+} from "@phosphor-icons/react";
 
 export type LearningTopic = {
   id: string;
@@ -40,4 +49,24 @@ export const LEARNINGS_TOPICS: LearningTopic[] = [
     question: "What about salt and electrolytes?",
     Icon: Lightning,
   },
+];
+
+/** Extra Learnings chip (hormones / EDCs). Kept separate so `LEARNINGS_TOPICS` stays six core ids elsewhere. */
+export const LEARNINGS_HORMONES_TOPIC: LearningTopic = {
+  id: "worst-hormones",
+  question: "Worst thing for hormones",
+  Icon: Flask,
+};
+
+export const LEARNINGS_CARNIVORE_MISTAKES_TOPIC: LearningTopic = {
+  id: "carnivore-mistakes",
+  question: "Carnivore mistakes",
+  Icon: WarningCircle,
+};
+
+/** All chips on the Learnings hub (six core + hormones + carnivore mistakes). */
+export const LEARNINGS_ALL_CHIPS: LearningTopic[] = [
+  ...LEARNINGS_TOPICS,
+  LEARNINGS_HORMONES_TOPIC,
+  LEARNINGS_CARNIVORE_MISTAKES_TOPIC,
 ];

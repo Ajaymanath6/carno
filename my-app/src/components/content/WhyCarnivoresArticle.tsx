@@ -8,7 +8,8 @@ type Props = {
   onBack: () => void;
 };
 
-export function WhyCarnivoresChatView({ onBack }: Props) {
+/** Chat-style article shared by Learnings and Healing. */
+export function WhyCarnivoresArticle({ onBack }: Props) {
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       <div className="min-h-0 flex-1 overflow-y-auto">

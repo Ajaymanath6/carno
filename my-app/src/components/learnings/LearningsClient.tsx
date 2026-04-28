@@ -3,9 +3,14 @@
 import type { KeyboardEvent } from "react";
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { PaperPlaneRight } from "@phosphor-icons/react";
-import { LEARNINGS_TOPICS } from "@/config/learnings-topics";
-import { WhyCarnivoresChatView } from "@/components/learnings/WhyCarnivoresChatView";
+import { WhyCarnivoresArticle } from "@/components/content/WhyCarnivoresArticle";
+import { NarrativeHealingArticle } from "@/components/healing/NarrativeHealingArticle";
+import { LearningsInquiryComposer } from "@/components/learnings/LearningsInquiryComposer";
+import { LEARNINGS_ALL_CHIPS } from "@/config/learnings-topics";
+import type { LearningTopic } from "@/config/learnings-topics";
+import { HEALING_PLANTS_ARTICLE } from "@/config/healing-plants-defense";
+import { LEARNINGS_CARNIVORE_MISTAKES_ARTICLE } from "@/config/learnings-carnivore-mistakes";
+import { LEARNINGS_HORMONES_ARTICLE } from "@/config/learnings-hormones";
 import { DayDateBadge } from "@/components/chat/ChatClient";
 import { salutationForTimezone } from "@/lib/time-greeting";
 
@@ -18,11 +23,18 @@ type Props = {
   displayName: string;
 };
 
+type LearningsArticleId =
+  | "why-carnivores"
+  | "plants"
+  | "worst-hormones"
+  | "carnivore-mistakes"
+  | null;
+
 export function LearningsClient({ localDate, timezone, displayName }: Props) {
   const router = useRouter();
   const inquiryRef = useRef<HTMLTextAreaElement>(null);
   const [inquiryDraft, setInquiryDraft] = useState("");
-  const [showWhyCarnivoresChat, setShowWhyCarnivoresChat] = useState(false);
+  const [articleId, setArticleId] = useState<LearningsArticleId>(null);
 
   const salutation = salutationForTimezone(timezone);
   const sendDisabled = !inquiryDraft.trim();
@@ -48,22 +60,61 @@ export function LearningsClient({ localDate, timezone, displayName }: Props) {
     inquiryRef.current?.focus();
   }
 
-  function onTopicClick(topic: (typeof LEARNINGS_TOPICS)[number]) {
+  function closeArticle() {
+    setArticleId(null);
+  }
+
+  function onTopicClick(topic: LearningTopic) {
     if (topic.id === "why-carnivores") {
-      setShowWhyCarnivoresChat(true);
+      setArticleId("why-carnivores");
+      return;
+    }
+    if (topic.id === "plants") {
+      setArticleId("plants");
+      return;
+    }
+    if (topic.id === "worst-hormones") {
+      setArticleId("worst-hormones");
+      return;
+    }
+    if (topic.id === "carnivore-mistakes") {
+      setArticleId("carnivore-mistakes");
       return;
     }
     setInquiryDraft(topic.question);
     queueMicrotask(focusInquiryField);
   }
 
+  function renderArticle() {
+    if (articleId === "why-carnivores") {
+      return <WhyCarnivoresArticle onBack={closeArticle} />;
+    }
+    if (articleId === "plants") {
+      return <NarrativeHealingArticle onBack={closeArticle} content={HEALING_PLANTS_ARTICLE} />;
+    }
+    if (articleId === "worst-hormones") {
+      return (
+        <NarrativeHealingArticle onBack={closeArticle} content={LEARNINGS_HORMONES_ARTICLE} />
+      );
+    }
+    if (articleId === "carnivore-mistakes") {
+      return (
+        <NarrativeHealingArticle
+          onBack={closeArticle}
+          content={LEARNINGS_CARNIVORE_MISTAKES_ARTICLE}
+        />
+      );
+    }
+    return null;
+  }
+
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-brandcolor-fill">
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        {showWhyCarnivoresChat ? (
-          <WhyCarnivoresChatView onBack={() => setShowWhyCarnivoresChat(false)} />
+        {articleId ? (
+          renderArticle()
         ) : (
-          <div className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto px-4 py-8">
+          <div className="flex min-h-0 flex-1 flex-col items-center overflow-y-auto px-4 py-8">
             <div className="flex w-full max-w-md flex-col items-center gap-4 text-center">
               <DayDateBadge localDate={localDate} timezone={timezone} />
               <h2 className="font-serif text-2xl font-semibold text-brandcolor-text-strong md:text-3xl">
@@ -75,9 +126,9 @@ export function LearningsClient({ localDate, timezone, displayName }: Props) {
                 own question below.
               </p>
             </div>
-            <div className="mt-5 flex w-full max-w-md flex-col items-center gap-2">
-              <div className="flex w-full flex-wrap justify-center gap-2">
-                {LEARNINGS_TOPICS.slice(0, 3).map((topic) => {
+            <div className="mt-6 w-full max-w-2xl">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-x-3 sm:gap-y-4">
+                {LEARNINGS_ALL_CHIPS.map((topic) => {
                   const Icon = topic.Icon;
                   return (
                     <button
@@ -86,7 +137,7 @@ export function LearningsClient({ localDate, timezone, displayName }: Props) {
                       aria-label={topic.question}
                       title={topic.question}
                       onClick={() => onTopicClick(topic)}
-                      className="group flex min-w-[5.5rem] flex-row items-center gap-1 rounded-lg border border-brandcolor-strokeweak bg-brandcolor-white px-2 py-1.5 text-left text-[11px] font-medium leading-tight text-brandcolor-text-strong transition-colors hover:border-brandcolor-strokeweak hover:bg-brandcolor-fill sm:min-w-0 sm:text-xs"
+                      className="group flex min-h-[5.25rem] flex-col items-center justify-start gap-1.5 rounded-lg border border-brandcolor-strokeweak bg-brandcolor-white px-2 py-2.5 text-center text-[11px] font-medium leading-snug text-brandcolor-text-strong transition-colors hover:border-brandcolor-strokeweak hover:bg-brandcolor-fill sm:min-h-[5.5rem] sm:text-xs"
                     >
                       <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-brandcolor-white group-hover:bg-brandcolor-fill">
                         <Icon
@@ -96,32 +147,7 @@ export function LearningsClient({ localDate, timezone, displayName }: Props) {
                           aria-hidden
                         />
                       </span>
-                      <span className="min-w-0 truncate">{topic.question}</span>
-                    </button>
-                  );
-                })}
-              </div>
-              <div className="flex w-full flex-wrap justify-center gap-2">
-                {LEARNINGS_TOPICS.slice(3).map((topic) => {
-                  const Icon = topic.Icon;
-                  return (
-                    <button
-                      key={topic.id}
-                      type="button"
-                      aria-label={topic.question}
-                      title={topic.question}
-                      onClick={() => onTopicClick(topic)}
-                      className="group flex min-w-[5.5rem] flex-row items-center gap-1 rounded-lg border border-brandcolor-strokeweak bg-brandcolor-white px-2 py-1.5 text-left text-[11px] font-medium leading-tight text-brandcolor-text-strong transition-colors hover:border-brandcolor-strokeweak hover:bg-brandcolor-fill sm:min-w-0 sm:text-xs"
-                    >
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-brandcolor-white group-hover:bg-brandcolor-fill">
-                        <Icon
-                          className="text-brandcolor-stroke-strong"
-                          size={28}
-                          weight="regular"
-                          aria-hidden
-                        />
-                      </span>
-                      <span className="min-w-0 truncate">{topic.question}</span>
+                      <span className="line-clamp-2 min-h-[2.5rem] w-full text-pretty">{topic.question}</span>
                     </button>
                   );
                 })}
@@ -129,36 +155,17 @@ export function LearningsClient({ localDate, timezone, displayName }: Props) {
             </div>
           </div>
         )}
-        <div className="flex shrink-0 justify-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
-          <div className="pointer-events-auto w-full max-w-md">
-            <div className="mx-auto w-full max-w-md">
-              <label className="sr-only" htmlFor="learnings-inquiry">
-                Ask about carnivore nutrition
-              </label>
-              <div className="flex min-h-[3rem] w-full items-end rounded-2xl border border-transparent bg-brandcolor-white pl-1 shadow-lg ring-1 ring-brandcolor-strokeweak/60 transition-colors hover:border-brandcolor-strokeweak focus-within:border-brandcolor-stroke-strong">
-                <textarea
-                  ref={inquiryRef}
-                  id="learnings-inquiry"
-                  rows={2}
-                  value={inquiryDraft}
-                  onChange={(e) => setInquiryDraft(e.target.value)}
-                  onKeyDown={onInquiryKeyDown}
-                  placeholder={INQUIRY_PLACEHOLDER}
-                  className="min-h-[2.75rem] min-w-0 flex-1 resize-none border-0 bg-transparent py-3 pl-3 pr-2 text-base text-brandcolor-text-strong outline-none focus:ring-0"
-                />
-                <button
-                  type="button"
-                  disabled={sendDisabled}
-                  aria-label="Send question to chat"
-                  onClick={goToChatWithDraft}
-                  className="mb-1.5 mr-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brandcolor-primary text-brandcolor-white hover:bg-brandcolor-primary-hover disabled:pointer-events-none disabled:opacity-50"
-                >
-                  <PaperPlaneRight className="-translate-x-px" size={22} weight="bold" aria-hidden />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <LearningsInquiryComposer
+          id="learnings-inquiry"
+          inquiryRef={inquiryRef}
+          value={inquiryDraft}
+          onChange={setInquiryDraft}
+          onKeyDown={onInquiryKeyDown}
+          onSend={goToChatWithDraft}
+          sendDisabled={sendDisabled}
+          placeholder={INQUIRY_PLACEHOLDER}
+          srLabel="Ask about carnivore nutrition"
+        />
       </div>
     </div>
   );
