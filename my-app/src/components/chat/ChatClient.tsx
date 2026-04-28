@@ -5,7 +5,7 @@ import Image from "next/image";
 import type { ComponentProps, KeyboardEvent } from "react";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import type { ChatMessage, ConversationPhase, Prisma } from "@prisma/client";
 import {
   Article,
@@ -31,6 +31,7 @@ import {
   getLocalHourInTimeZone,
   weekdayLongForLocalDateKey,
 } from "@/lib/date";
+import { salutationForTimezone } from "@/lib/time-greeting";
 import {
   CARNO_LOGO_AGENT,
   MEAL_QUICK_BROWN_EGGS,
@@ -109,17 +110,6 @@ function SummaryPreviewPill({
   );
 }
 
-function salutationForHour(timezone: string): string {
-  const h = getLocalHourInTimeZone(timezone);
-  if (h < 12) {
-    return "Good morning";
-  }
-  if (h < 17) {
-    return "Good afternoon";
-  }
-  return "Good evening";
-}
-
 export function ChatClient({
   messages,
   sessionId,
@@ -132,6 +122,7 @@ export function ChatClient({
   foodEntryCount = 0,
 }: Props) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const bottomRef = useRef<HTMLDivElement>(null);
   const mealFormRef = useRef<HTMLFormElement>(null);
   const [mealDraft, setMealDraft] = useState("");
@@ -161,7 +152,15 @@ export function ChatClient({
   const hasUserMessage = messages.some((m) => m.role === "USER");
   const canLogMeals = sessionStatus === "ACTIVE" && phase === "CHAT";
   const showOnboarding = canLogMeals && !hasUserMessage;
-  const salutation = salutationForHour(timezone);
+  const salutation = salutationForTimezone(timezone);
+
+  useEffect(() => {
+    const q = searchParams.get("q");
+    if (q != null && q.trim()) {
+      setMealDraft(q.trim());
+      router.replace("/chat", { scroll: false });
+    }
+  }, [searchParams, router]);
 
   useEffect(() => {
     function tick() {
@@ -945,7 +944,7 @@ function AssistantBubbleBody({
   );
 }
 
-function DayDateBadge({ localDate, timezone }: { localDate: string; timezone: string }) {
+export function DayDateBadge({ localDate, timezone }: { localDate: string; timezone: string }) {
   const weekday = weekdayLongForLocalDateKey(localDate, timezone);
   const dateLine = formatWeekdayMonthDayForLocalDateKey(localDate, timezone);
   return (

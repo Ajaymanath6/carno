@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { displayNameFromUser } from "@/lib/display-name";
@@ -43,17 +44,25 @@ export default async function ChatPage() {
 
   return (
     <main className="flex min-h-0 flex-1 flex-col md:min-h-0">
-      <ChatClient
-        messages={messages}
-        sessionId={refreshed.id}
-        phase={refreshed.phase}
-        sessionStatus={refreshed.status}
-        pendingFoodEntryId={refreshed.pendingFoodEntryId}
-        timezone={user.timezone}
-        displayName={displayName}
-        localDate={refreshed.localDate}
-        foodEntryCount={foodEntryCount}
-      />
+      <Suspense
+        fallback={
+          <div className="flex flex-1 items-center justify-center text-sm text-brandcolor-text-weak">
+            Loading…
+          </div>
+        }
+      >
+        <ChatClient
+          messages={messages}
+          sessionId={refreshed.id}
+          phase={refreshed.phase}
+          sessionStatus={refreshed.status}
+          pendingFoodEntryId={refreshed.pendingFoodEntryId}
+          timezone={user.timezone}
+          displayName={displayName}
+          localDate={refreshed.localDate}
+          foodEntryCount={foodEntryCount}
+        />
+      </Suspense>
     </main>
   );
 }
