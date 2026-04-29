@@ -3,6 +3,11 @@ import { prisma } from "@/lib/prisma";
 import { FoodEntryHistoryCard } from "@/components/history/FoodEntryHistoryCard";
 import { formatWeekdayMonthDayForLocalDateKey } from "@/lib/date";
 import { getOrCreateAppUser } from "@/lib/user";
+import {
+  dailySummarySelectFull,
+  dailySummarySelectWithoutAi,
+  isAiSummaryColumnsMissingError,
+} from "@/lib/prisma-daily-summary-fallback";
 import { redirect, notFound } from "next/navigation";
 
 export default async function HistoryDayPage({
@@ -16,21 +21,43 @@ export default async function HistoryDayPage({
     redirect("/login");
   }
 
-  const day = await prisma.daySession.findFirst({
-    where: { userId: user.id, localDate: date },
-    include: {
-      messages: { orderBy: { createdAt: "asc" } },
-      dailySummary: true,
-      foodEntries: {
-        include: { reactions: true },
-        orderBy: { loggedAt: "asc" },
-      },
+  const includeWithAi = {
+    messages: { orderBy: { createdAt: "asc" as const } },
+    dailySummary: { select: dailySummarySelectFull },
+    foodEntries: {
+      include: { reactions: true },
+      orderBy: { loggedAt: "asc" as const },
     },
-  });
+  } as const;
+
+  let day;
+  try {
+    day = await prisma.daySession.findFirst({
+      where: { userId: user.id, localDate: date },
+      include: includeWithAi,
+    });
+  } catch (e) {
+    if (!isAiSummaryColumnsMissingError(e)) throw e;
+    day = await prisma.daySession.findFirst({
+      where: { userId: user.id, localDate: date },
+      include: {
+        ...includeWithAi,
+        dailySummary: { select: dailySummarySelectWithoutAi },
+      },
+    });
+  }
 
   if (!day) {
     notFound();
   }
+
+  /** Widen type when DB predates `aiArticle` columns (fallback query omits those keys). */
+  const summaryView = day.dailySummary as
+    | (NonNullable<typeof day.dailySummary> & {
+        aiArticle?: string | null;
+        aiGeneratedAt?: Date | null;
+      })
+    | null;
 
   const payload = day.dailySummary?.payload as {
     foods?: unknown;
@@ -62,21 +89,21 @@ export default async function HistoryDayPage({
               {day.dailySummary.dayOverallSurvey && (
                 <p className="mt-2 text-sm">{day.dailySummary.dayOverallSurvey}</p>
               )}
-              {day.dailySummary.aiArticle?.trim() ? (
+              {summaryView?.aiArticle?.trim() ? (
                 <div className="mt-3 rounded-xl bg-brandcolor-fill px-4 py-3">
                   <h3 className="text-xs font-semibold uppercase tracking-wide text-brandcolor-text-weak">
                     AI narrative
                   </h3>
                   <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-brandcolor-text-strong">
-                    {day.dailySummary.aiArticle}
+                    {summaryView.aiArticle}
                   </p>
-                  {day.dailySummary.aiGeneratedAt ? (
+                  {summaryView.aiGeneratedAt ? (
                     <p className="mt-2 text-xs text-brandcolor-text-weak">
                       Generated{" "}
                       {new Intl.DateTimeFormat(undefined, {
                         dateStyle: "medium",
                         timeStyle: "short",
-                      }).format(day.dailySummary.aiGeneratedAt)}
+                      }).format(summaryView.aiGeneratedAt)}
                     </p>
                   ) : null}
                 </div>

@@ -58,6 +58,21 @@ export function formatWeekdayMonthDayForLocalDateKey(dateKey: string, timeZone: 
   }).format(new Date(utc));
 }
 
+/** Compact range for period summaries, e.g. `Mon, Jan 1 – Wed, Jan 7`. */
+export function formatPeriodDateRangeLabel(
+  firstKey: string | undefined,
+  lastKey: string | undefined,
+  timeZone: string,
+): string {
+  if (!firstKey?.trim() || !lastKey?.trim()) {
+    return "";
+  }
+  if (firstKey === lastKey) {
+    return formatWeekdayMonthDayForLocalDateKey(firstKey, timeZone);
+  }
+  return `${formatWeekdayMonthDayForLocalDateKey(firstKey, timeZone)} – ${formatWeekdayMonthDayForLocalDateKey(lastKey, timeZone)}`;
+}
+
 /** Friendly log line in user TZ, e.g. `Mon, Apr 27, 7:07 AM`. */
 export function formatLogTimestamp(loggedAt: Date, timeZone: string): string {
   return new Intl.DateTimeFormat("en-US", {

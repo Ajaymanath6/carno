@@ -2,7 +2,20 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatWeekdayMonthDayForLocalDateKey } from "@/lib/date";
 import { getOrCreateAppUser } from "@/lib/user";
+import {
+  dailySummarySelectFull,
+  dailySummarySelectWithoutAi,
+  isAiSummaryColumnsMissingError,
+} from "@/lib/prisma-daily-summary-fallback";
 import { redirect } from "next/navigation";
+import { HistoryPeriodSummary } from "@/components/history/HistoryPeriodSummary";
+import { estimateDayCaloriesBatch } from "@/lib/vertex-day-calories";
+
+const foodEntryCalorieSelect = {
+  rawText: true,
+  quantity: true,
+  unit: true,
+} as const;
 
 export default async function HistoryPage() {
   const user = await getOrCreateAppUser();
@@ -10,15 +23,43 @@ export default async function HistoryPage() {
     redirect("/login");
   }
 
-  const days = await prisma.daySession.findMany({
-    where: { userId: user.id },
-    orderBy: { localDate: "desc" },
-    take: 90,
-    include: {
-      dailySummary: true,
-      foodEntries: { select: { id: true } },
-    },
-  });
+  let days;
+  try {
+    days = await prisma.daySession.findMany({
+      where: { userId: user.id },
+      orderBy: { localDate: "desc" },
+      include: {
+        dailySummary: { select: dailySummarySelectFull },
+        foodEntries: { select: foodEntryCalorieSelect },
+      },
+    });
+  } catch (e) {
+    if (!isAiSummaryColumnsMissingError(e)) throw e;
+    days = await prisma.daySession.findMany({
+      where: { userId: user.id },
+      orderBy: { localDate: "desc" },
+      include: {
+        dailySummary: { select: dailySummarySelectWithoutAi },
+        foodEntries: { select: foodEntryCalorieSelect },
+      },
+    });
+  }
+
+  let kcalByDate = new Map<string, number>();
+  try {
+    kcalByDate = await estimateDayCaloriesBatch(
+      days.map((d) => ({
+        localDate: d.localDate,
+        meals: d.foodEntries.map((e) => ({
+          rawText: e.rawText,
+          quantity: e.quantity,
+          unit: e.unit,
+        })),
+      })),
+    );
+  } catch (err) {
+    console.error("[history] estimateDayCaloriesBatch:", err);
+  }
 
   return (
     <main className="flex min-h-0 w-full flex-1 flex-col overflow-hidden">
@@ -33,24 +74,37 @@ export default async function HistoryPage() {
             </p>
           </div>
           <ul className="flex flex-col gap-2">
-            {days.map((d) => (
-              <li key={d.id}>
-                <Link
-                  href={`/history/${d.localDate}`}
-                  className="flex items-center justify-between rounded-2xl border border-brandcolor-strokeweak bg-brandcolor-white px-4 py-3 text-sm text-brandcolor-text-strong hover:bg-brandcolor-fill"
-                >
-                  <span className="font-medium">
-                    {formatWeekdayMonthDayForLocalDateKey(d.localDate, user.timezone)}
-                  </span>
-                  <span className="text-brandcolor-text-weak">
-                    {d.status === "CLOSED" ? "Closed" : "Active"} · {d.foodEntries.length}{" "}
-                    meal(s)
-                    {d.dailySummary ? " · summary" : ""}
-                  </span>
-                </Link>
-              </li>
-            ))}
+            {days.map((d) => {
+              const kcal = kcalByDate.get(d.localDate);
+              const kcalSuffix =
+                kcal !== undefined ?
+                  ` · ~${kcal.toLocaleString()} kcal`
+                : ` · — kcal`;
+              return (
+                <li key={d.id}>
+                  <Link
+                    href={`/history/${d.localDate}`}
+                    className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-2xl border border-brandcolor-strokeweak bg-brandcolor-white px-4 py-3 text-sm text-brandcolor-text-strong hover:bg-brandcolor-fill"
+                  >
+                    <span className="font-medium">
+                      {formatWeekdayMonthDayForLocalDateKey(d.localDate, user.timezone)}
+                    </span>
+                    <span className="text-right text-brandcolor-text-weak">
+                      {d.status === "CLOSED" ? "Closed" : "Active"} · {d.foodEntries.length}{" "}
+                      meal(s)
+                      {kcalSuffix}
+                      {d.dailySummary ? " · summary" : ""}
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
+          {days.length > 0 && (
+            <div className="pt-1">
+              <HistoryPeriodSummary dayCount={days.length} />
+            </div>
+          )}
           {days.length === 0 && (
             <p className="text-sm text-brandcolor-text-weak">
               No days yet. Start logging from{" "}
