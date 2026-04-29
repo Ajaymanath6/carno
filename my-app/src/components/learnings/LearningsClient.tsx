@@ -11,6 +11,7 @@ import type { LearningTopic } from "@/config/learnings-topics";
 import { HEALING_PLANTS_ARTICLE } from "@/config/healing-plants-defense";
 import { LEARNINGS_CARNIVORE_MISTAKES_ARTICLE } from "@/config/learnings-carnivore-mistakes";
 import { LEARNINGS_HORMONES_ARTICLE } from "@/config/learnings-hormones";
+import { LEARNINGS_CHOLESTEROL_ARTICLE } from "@/config/learnings-cholesterol";
 import { DayDateBadge } from "@/components/chat/ChatClient";
 import { salutationForTimezone } from "@/lib/time-greeting";
 
@@ -28,6 +29,7 @@ type LearningsArticleId =
   | "plants"
   | "worst-hormones"
   | "carnivore-mistakes"
+  | "cholesterol"
   | null;
 
 export function LearningsClient({ localDate, timezone, displayName }: Props) {
@@ -81,6 +83,10 @@ export function LearningsClient({ localDate, timezone, displayName }: Props) {
       setArticleId("carnivore-mistakes");
       return;
     }
+    if (topic.id === "cholesterol") {
+      setArticleId("cholesterol");
+      return;
+    }
     setInquiryDraft(topic.question);
     queueMicrotask(focusInquiryField);
   }
@@ -103,6 +109,11 @@ export function LearningsClient({ localDate, timezone, displayName }: Props) {
           onBack={closeArticle}
           content={LEARNINGS_CARNIVORE_MISTAKES_ARTICLE}
         />
+      );
+    }
+    if (articleId === "cholesterol") {
+      return (
+        <NarrativeHealingArticle onBack={closeArticle} content={LEARNINGS_CHOLESTEROL_ARTICLE} />
       );
     }
     return null;
