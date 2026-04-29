@@ -8,6 +8,7 @@ import {
   dailySummarySelectWithoutAi,
   isAiSummaryColumnsMissingError,
 } from "@/lib/prisma-daily-summary-fallback";
+import { estimateMealCaloriesBatch } from "@/lib/vertex-day-calories";
 import { redirect, notFound } from "next/navigation";
 
 export default async function HistoryDayPage({
@@ -49,6 +50,20 @@ export default async function HistoryDayPage({
 
   if (!day) {
     notFound();
+  }
+
+  let kcalByEntryId = new Map<string, number>();
+  try {
+    kcalByEntryId = await estimateMealCaloriesBatch(
+      day.foodEntries.map((f) => ({
+        id: f.id,
+        rawText: f.rawText,
+        quantity: f.quantity,
+        unit: f.unit,
+      })),
+    );
+  } catch (err) {
+    console.error("[history/[date]] estimateMealCaloriesBatch:", err);
   }
 
   /** Widen type when DB predates `aiArticle` columns (fallback query omits those keys). */
@@ -125,6 +140,7 @@ export default async function HistoryDayPage({
                   loggedAt={f.loggedAt}
                   timezone={user.timezone}
                   reactions={f.reactions}
+                  estimatedKcal={kcalByEntryId.get(f.id)}
                 />
               ))}
             </ul>

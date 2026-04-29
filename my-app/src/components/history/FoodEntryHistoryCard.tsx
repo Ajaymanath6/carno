@@ -13,6 +13,8 @@ type Props = {
   loggedAt: Date;
   timezone: string;
   reactions: ReactionEntry[];
+  /** AI-estimated calories when Gemini/Vertex is configured; omit or undefined shows — */
+  estimatedKcal?: number;
 };
 
 export function FoodEntryHistoryCard({
@@ -21,6 +23,7 @@ export function FoodEntryHistoryCard({
   loggedAt,
   timezone,
   reactions,
+  estimatedKcal,
 }: Props) {
   const thumb = mealThumbPathForNormalizedFood(foodNameNormalized);
 
@@ -45,6 +48,9 @@ export function FoodEntryHistoryCard({
         <div className="min-w-0 flex-1">
           <p className="font-medium text-brandcolor-text-strong">{rawText}</p>
           <p className="text-xs text-brandcolor-text-weak">
+            {estimatedKcal !== undefined ?
+              <>~{estimatedKcal.toLocaleString()} kcal · </>
+            : <>— kcal · </>}
             Logged {formatLogTimestamp(loggedAt, timezone)}
           </p>
           {reactions.map((r) => (

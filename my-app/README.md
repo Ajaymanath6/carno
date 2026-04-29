@@ -34,3 +34,14 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Environment variables (History calorie estimates)
+
+Estimated calories on **History** (per day and per meal) use the same Gemini backends as other AI features. On **Vercel**, mirror your local setup so totals are not shown as `— kcal`:
+
+- Set **`GEMINI_API_KEY`** (Google AI Studio path when using the Studio API), **or**
+- Set **`VERTEX_PROJECT_ID`** / **`GOOGLE_CLOUD_PROJECT`** plus **`GOOGLE_EXTERNAL_ACCOUNT_JSON`** (or AWS Secrets Manager per `VERTEX_CREDENTIAL_SECRET_ID`) for Vertex.
+
+Do **not** set **`VERTEX_DISABLED=true`** in production if you want calorie estimates. Optional: **`AI_PROVIDER`** = `studio` | `vertex` | auto (default).
+
+Server logs prefix **`[calorie-kcal]`** when estimation is skipped so you can diagnose missing env in deployment logs.

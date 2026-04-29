@@ -42,14 +42,16 @@ export function HistoryPeriodSummary({ dayCount }: Props) {
 
   return (
     <>
-      <button
-        type="button"
-        onClick={openAndRun}
-        disabled={pending}
-        className="flex w-full items-center justify-center rounded-full bg-brandcolor-fill px-4 py-3 text-sm font-semibold text-brandcolor-text-strong hover:opacity-90 disabled:opacity-60"
-      >
-        {pending ? "Generating…" : `Clinical summary · last ${dayCount} day${dayCount === 1 ? "" : "s"}`}
-      </button>
+      <div className="flex w-full justify-start">
+        <button
+          type="button"
+          onClick={openAndRun}
+          disabled={pending}
+          className="inline-flex max-w-full items-center justify-center rounded-full border border-brandcolor-strokeweak bg-brandcolor-white px-4 py-3 text-left text-sm font-semibold text-brandcolor-primary shadow-sm hover:bg-brandcolor-fill disabled:opacity-60"
+        >
+          {pending ? "Generating…" : `Clinical summary · last ${dayCount} day${dayCount === 1 ? "" : "s"}`}
+        </button>
+      </div>
 
       <dialog
         ref={dialogRef}

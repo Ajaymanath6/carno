@@ -11,9 +11,26 @@ const BatchSchema = z.object({
   ),
 });
 
+const MealBatchSchema = z.object({
+  meals: z.array(
+    z.object({
+      id: z.string(),
+      kcal: z.number(),
+    }),
+  ),
+});
+
 export type DayCalorieInput = {
   localDate: string;
   meals: Array<{ rawText: string; quantity: string | null; unit: string | null }>;
+};
+
+/** Per food-entry row for meal-level kcal (IDs match Prisma `FoodEntry.id`). */
+export type MealCalorieEntryInput = {
+  id: string;
+  rawText: string;
+  quantity: string | null;
+  unit: string | null;
 };
 
 function resolveAiProvider(): "auto" | "studio" | "vertex" {
@@ -24,9 +41,39 @@ function resolveAiProvider(): "auto" | "studio" | "vertex" {
   return "auto";
 }
 
-function buildMealDescriptionLine(m: DayCalorieInput["meals"][0]): string {
+function buildMealDescriptionLine(
+  m: DayCalorieInput["meals"][0] | Pick<MealCalorieEntryInput, "rawText" | "quantity" | "unit">,
+): string {
   const q = [m.quantity?.trim(), m.unit?.trim()].filter(Boolean).join(" ");
   return q ? `${q} — ${m.rawText.trim()}` : m.rawText.trim();
+}
+
+/**
+ * When non-null, calorie AI will not run; log this on the server to explain `— kcal` in production.
+ * Mirrors routing in {@link generateContentText}.
+ */
+export function calorieEstimationUnavailableReason(): string | null {
+  if (process.env.VERTEX_DISABLED === "true") {
+    return "VERTEX_DISABLED=true (calorie estimates skipped).";
+  }
+  const mode = resolveAiProvider();
+  const geminiApiKey = process.env.GEMINI_API_KEY?.trim();
+  const project = process.env.VERTEX_PROJECT_ID ?? process.env.GOOGLE_CLOUD_PROJECT?.trim();
+
+  const tryStudio = mode === "studio" || (mode === "auto" && Boolean(geminiApiKey));
+  const tryVertex =
+    mode === "vertex" || (mode === "auto" && Boolean(project) && !geminiApiKey);
+
+  if (tryStudio && geminiApiKey) return null;
+  if (tryVertex && project) return null;
+
+  if (mode === "studio") {
+    return "AI_PROVIDER=studio requires GEMINI_API_KEY.";
+  }
+  if (mode === "vertex") {
+    return "AI_PROVIDER=vertex requires VERTEX_PROJECT_ID or GOOGLE_CLOUD_PROJECT.";
+  }
+  return "No AI backend for calories: set GEMINI_API_KEY (Studio), or Vertex project + credentials.";
 }
 
 function buildBatchPrompt(chunk: DayCalorieInput[]): string {
@@ -57,6 +104,35 @@ function parseBatchJson(text: string): z.infer<typeof BatchSchema> {
     }
     throw new Error("Could not parse calorie JSON from model.");
   }
+}
+
+function parseMealBatchJson(text: string): z.infer<typeof MealBatchSchema> {
+  const trimmed = text.trim();
+  try {
+    const direct = JSON.parse(trimmed) as unknown;
+    return MealBatchSchema.parse(direct);
+  } catch {
+    const match = trimmed.match(/\{[\s\S]*\}/);
+    if (match) {
+      return MealBatchSchema.parse(JSON.parse(match[0]) as unknown);
+    }
+    throw new Error("Could not parse meal calorie JSON from model.");
+  }
+}
+
+function buildMealLevelBatchPrompt(chunk: MealCalorieEntryInput[]): string {
+  const payload = chunk.map((e) => ({
+    id: e.id,
+    line: buildMealDescriptionLine(e),
+  }));
+  return (
+    `You estimate calories for each meal log line independently using typical USDA-style averages ` +
+    `(e.g. "7 eggs" → 7 × typical kcal per egg). Use reasonable integers; explain nothing. ` +
+    `Return ONLY valid JSON (no markdown fences):\n` +
+    `{"meals":[{"id":"<same id as input>","kcal":504}]}\n` +
+    `Include every id below exactly once. Integer kcal rounded, minimum 0.\n\n` +
+    `DATA:\n${JSON.stringify(payload)}`
+  );
 }
 
 async function generateContentText(prompt: string): Promise<string> {
@@ -115,6 +191,7 @@ async function generateContentText(prompt: string): Promise<string> {
 }
 
 const CHUNK_SIZE = 14;
+const MEAL_CHUNK_SIZE = 24;
 
 /**
  * Per-day total kcal from AI using typical nutrition averages (not lab-accurate).
@@ -136,7 +213,9 @@ export async function estimateDayCaloriesBatch(
     return out;
   }
 
-  if (process.env.VERTEX_DISABLED === "true") {
+  const skip = calorieEstimationUnavailableReason();
+  if (skip) {
+    console.warn("[calorie-kcal]", skip);
     return out;
   }
 
@@ -147,6 +226,38 @@ export async function estimateDayCaloriesBatch(
     const parsed = parseBatchJson(text);
     for (const row of parsed.days) {
       out.set(row.localDate, Math.max(0, Math.round(row.totalKcal)));
+    }
+  }
+
+  return out;
+}
+
+/**
+ * Per-meal (food entry) kcal from the same Gemini backends as day totals.
+ */
+export async function estimateMealCaloriesBatch(
+  entries: MealCalorieEntryInput[],
+): Promise<Map<string, number>> {
+  const out = new Map<string, number>();
+
+  const nonEmpty = entries.filter((e) => buildMealDescriptionLine(e).length > 0);
+  if (nonEmpty.length === 0) {
+    return out;
+  }
+
+  const skip = calorieEstimationUnavailableReason();
+  if (skip) {
+    console.warn("[calorie-kcal]", skip);
+    return out;
+  }
+
+  for (let i = 0; i < nonEmpty.length; i += MEAL_CHUNK_SIZE) {
+    const chunk = nonEmpty.slice(i, i + MEAL_CHUNK_SIZE);
+    const prompt = buildMealLevelBatchPrompt(chunk);
+    const text = await generateContentText(prompt);
+    const parsed = parseMealBatchJson(text);
+    for (const row of parsed.meals) {
+      out.set(row.id, Math.max(0, Math.round(row.kcal)));
     }
   }
 
