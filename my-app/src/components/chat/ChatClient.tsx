@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import type { ComponentProps, KeyboardEvent } from "react";
-import { useActionState, useEffect, useRef, useState } from "react";
+import { Fragment, useActionState, useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { ChatMessage, ConversationPhase, Prisma } from "@prisma/client";
@@ -61,8 +61,16 @@ const MEAL_QUICK_PICKS = [
   { label: "Brown eggs", value: "Brown eggs", imageSrc: MEAL_QUICK_BROWN_EGGS },
 ] as const;
 
+export type ChatMessageListItem = Pick<
+  ChatMessage,
+  "id" | "role" | "body" | "createdAt" | "metadata"
+> & {
+  /** Which day’s session this message belongs to (for timeline + summary metadata). */
+  sessionLocalDate: string;
+};
+
 type Props = {
-  messages: Pick<ChatMessage, "id" | "role" | "body" | "createdAt" | "metadata">[];
+  messages: ChatMessageListItem[];
   sessionId: string;
   phase: ConversationPhase;
   sessionStatus: "ACTIVE" | "CLOSED";
@@ -317,43 +325,56 @@ export function ChatClient({
               <DayDateBadge localDate={localDate} timezone={timezone} />
             </div>
             <ul className="mx-auto flex max-w-3xl flex-col gap-3 px-4 pb-4 pt-1">
-              {messages.map((m) => (
-                <li
-                  key={m.id}
-                  className={`flex gap-2 ${m.role === "USER" ? "justify-end" : "items-end justify-start"}`}
-                >
-                  {m.role !== "USER" && (
-                    <div
-                      className={`relative shrink-0 rounded-full bg-brandcolor-fill p-0.5 shadow-sm ${
-                        agentBusy ? "animate-carno-speak" : ""
-                      }`}
+              {messages.map((m, index) => {
+                const prev = index > 0 ? messages[index - 1] : null;
+                const showDayDivider =
+                  prev == null || prev.sessionLocalDate !== m.sessionLocalDate;
+                return (
+                  <Fragment key={m.id}>
+                    {showDayDivider ? (
+                      <li className="flex list-none justify-center py-1">
+                        <span className="rounded-full border border-brandcolor-strokeweak bg-brandcolor-fill px-3 py-1 text-xs font-medium text-brandcolor-text-weak">
+                          {formatWeekdayMonthDayForLocalDateKey(m.sessionLocalDate, timezone)}
+                        </span>
+                      </li>
+                    ) : null}
+                    <li
+                      className={`flex gap-2 ${m.role === "USER" ? "justify-end" : "items-end justify-start"}`}
                     >
-                      <Image
-                        src={CARNO_LOGO_AGENT}
-                        alt="Carno"
-                        width={32}
-                        height={32}
-                        unoptimized
-                        className="h-8 w-8 rounded-full object-contain"
-                      />
-                    </div>
-                  )}
-                  <div
-                    className={`max-w-[min(85%,calc(100%-2.75rem))] rounded-2xl px-4 py-2 text-sm leading-relaxed ${
-                      m.role === "USER"
-                        ? "bg-brandcolor-white text-brandcolor-text-strong"
-                        : "border border-brandcolor-strokeweak bg-brandcolor-white text-brandcolor-text-strong"
-                    }`}
-                  >
-                    <AssistantBubbleBody
-                      metadata={m.metadata}
-                      body={m.body}
-                      timezone={timezone}
-                      sessionLocalDate={localDate}
-                    />
-                  </div>
-                </li>
-              ))}
+                      {m.role !== "USER" && (
+                        <div
+                          className={`relative shrink-0 rounded-full bg-brandcolor-fill p-0.5 shadow-sm ${
+                            agentBusy ? "animate-carno-speak" : ""
+                          }`}
+                        >
+                          <Image
+                            src={CARNO_LOGO_AGENT}
+                            alt="Carno"
+                            width={32}
+                            height={32}
+                            unoptimized
+                            className="h-8 w-8 rounded-full object-contain"
+                          />
+                        </div>
+                      )}
+                      <div
+                        className={`max-w-[min(85%,calc(100%-2.75rem))] rounded-2xl px-4 py-2 text-sm leading-relaxed ${
+                          m.role === "USER"
+                            ? "bg-brandcolor-white text-brandcolor-text-strong"
+                            : "border border-brandcolor-strokeweak bg-brandcolor-white text-brandcolor-text-strong"
+                        }`}
+                      >
+                        <AssistantBubbleBody
+                          metadata={m.metadata}
+                          body={m.body}
+                          timezone={timezone}
+                          sessionLocalDate={m.sessionLocalDate}
+                        />
+                      </div>
+                    </li>
+                  </Fragment>
+                );
+              })}
               {showReaction && pendingFoodEntryId ? (
                 <li className="flex gap-2 items-start justify-start">
                   <div

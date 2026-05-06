@@ -19,11 +19,23 @@ export default async function ChatPage() {
   const day = await getOrCreateDaySession(user.id, user.timezone);
   await processDueFollowUpsForSession(day.id);
 
-  const messages = await prisma.chatMessage.findMany({
-    where: { sessionId: day.id },
+  const messagesRaw = await prisma.chatMessage.findMany({
+    where: { session: { userId: user.id } },
     orderBy: { createdAt: "asc" },
-    select: { id: true, role: true, body: true, createdAt: true, metadata: true },
+    select: {
+      id: true,
+      role: true,
+      body: true,
+      createdAt: true,
+      metadata: true,
+      session: { select: { localDate: true } },
+    },
   });
+
+  const messages = messagesRaw.map(({ session, ...row }) => ({
+    ...row,
+    sessionLocalDate: session.localDate,
+  }));
 
   const refreshed = await prisma.daySession.findUnique({
     where: { id: day.id },

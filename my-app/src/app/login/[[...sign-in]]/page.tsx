@@ -1,6 +1,6 @@
-import { SignIn } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import { LoginLandingShell } from "@/components/login/LoginLandingShell";
 
 /**
  * Catch-all handles `/login`, `/login/sso-callback`, OAuth steps, etc. when using routing="path".
@@ -11,20 +11,28 @@ export default async function SignInPage() {
     redirect("/chat");
   }
 
-  return (
-    <main className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto bg-brandcolor-fill px-4 py-16">
-      <SignIn
-        routing="path"
-        path="/login"
-        signUpUrl="/register"
-        fallbackRedirectUrl="/chat"
-        signUpFallbackRedirectUrl="/chat"
-        appearance={{
-          elements: {
-            rootBox: "mx-auto",
-          },
-        }}
-      />
-    </main>
-  );
+  const faqs = [
+    {
+      q: "How do I get access to Carno?",
+      a: "Tap Get access to sign in. New here? Use Create account.",
+    },
+    {
+      q: "Do I have to log every detail?",
+      a: "No. Short meal lines are enough; add reaction check-ins when you want.",
+    },
+    {
+      q: "What’s included in the summaries?",
+      a: "Daily: meals and reactions for one day. Period summary: multiple days in one clinician-friendly digest.",
+    },
+    {
+      q: "Is this medical advice?",
+      a: "No—personal tracking to support talks with your clinician or dietitian.",
+    },
+    {
+      q: "Who can see my logs?",
+      a: "You. Share summaries only when you choose.",
+    },
+  ] as const;
+
+  return <LoginLandingShell faqs={[...faqs]} />;
 }
