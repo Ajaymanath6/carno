@@ -44,14 +44,14 @@ export function LoginLandingHeader() {
         <div className="flex items-center gap-2">
           <nav className="hidden items-center gap-2 sm:flex">
             <Link
-              href="/pricing"
+              href="/login#pricing"
               className="inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium text-brandcolor-text-weak hover:bg-brandcolor-fill hover:text-brandcolor-text-strong"
             >
               <Tag size={16} weight="regular" aria-hidden />
               Pricing
             </Link>
             <Link
-              href="/faq"
+              href="/login#faq"
               className="inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium text-brandcolor-text-weak hover:bg-brandcolor-fill hover:text-brandcolor-text-strong"
             >
               <Question size={16} weight="regular" aria-hidden />

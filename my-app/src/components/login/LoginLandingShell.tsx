@@ -15,6 +15,7 @@ import {
 } from "@/components/login/login-auth-context";
 import { LoginLandingFooter } from "@/components/login/LoginLandingFooter";
 import { LoginBenefits, LoginLandingHeader } from "@/components/login/LoginLandingHeader";
+import { LoginPricingCards } from "@/components/login/LoginPricingCards";
 import { LOGIN_HERO_HOW_IT_WORKS, LOGIN_HERO_LOG_LEARN } from "@/lib/brand";
 
 function LoginHeroCTAs() {
@@ -80,6 +81,19 @@ export function LoginLandingShell({ faqs }: Props) {
   }, []);
 
   useEffect(() => {
+    const scrollToSection = () => {
+      const { hash } = window.location;
+      if (hash !== "#pricing" && hash !== "#faq") return;
+      window.requestAnimationFrame(() => {
+        document.querySelector(hash)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    };
+    scrollToSection();
+    window.addEventListener("hashchange", scrollToSection);
+    return () => window.removeEventListener("hashchange", scrollToSection);
+  }, []);
+
+  useEffect(() => {
     if (!authVisible) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -99,7 +113,7 @@ export function LoginLandingShell({ faqs }: Props) {
 
   return (
     <LoginAuthContext.Provider value={{ openAuth, closeAuth }}>
-      <main className="flex min-h-0 flex-1 flex-col overflow-x-clip overflow-y-auto bg-brandcolor-fill">
+      <main className="scroll-smooth flex min-h-0 flex-1 flex-col overflow-x-clip overflow-y-auto bg-brandcolor-fill">
         <LoginLandingHeader />
 
         <div className="relative mx-auto grid w-full max-w-5xl grid-cols-1 gap-8 px-4 pb-10 pt-24 lg:gap-10 lg:pb-16 lg:pt-28">
@@ -227,6 +241,10 @@ export function LoginLandingShell({ faqs }: Props) {
             </div>
           </div>
         : null}
+
+        <div className="mx-auto w-full max-w-5xl px-4 pb-10 lg:pb-12">
+          <LoginPricingCards />
+        </div>
 
         <div className="mx-auto w-full max-w-5xl px-4 pb-16 lg:pb-20">
           <LoginFaqAccordion items={faqs} />

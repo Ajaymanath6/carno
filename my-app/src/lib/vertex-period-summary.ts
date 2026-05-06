@@ -1,6 +1,9 @@
 import { GoogleGenAI } from "@google/genai/node";
 import type { PeriodSummaryPayload } from "@/lib/period-summary";
-import { loadGoogleExternalAccountCredentialJson } from "@/lib/vertex-daily-summary";
+import {
+  loadGoogleExternalAccountCredentialJson,
+  resolveAiProvider,
+} from "@/lib/vertex-daily-summary";
 
 export type GeminiPeriodArticleProvider = "mock" | "studio" | "vertex";
 
@@ -27,12 +30,16 @@ function mockPeriodArticle(input: PeriodArticleInput): string {
   );
 }
 
-function resolveAiProvider(): "auto" | "studio" | "vertex" {
-  const raw = process.env.AI_PROVIDER?.trim().toLowerCase();
-  if (raw === "studio" || raw === "vertex") {
+/**
+ * Period clinical summary backend: optional `AI_PROVIDER_PERIOD` overrides `AI_PROVIDER`
+ * so multi-day digests can target Vertex while daily summaries stay on Studio (or vice versa).
+ */
+function resolvePeriodAiProvider(): "auto" | "studio" | "vertex" {
+  const raw = process.env.AI_PROVIDER_PERIOD?.trim().toLowerCase();
+  if (raw === "studio" || raw === "vertex" || raw === "auto") {
     return raw;
   }
-  return "auto";
+  return resolveAiProvider();
 }
 
 function buildPeriodSummaryPrompt(input: PeriodArticleInput): string {
@@ -59,6 +66,7 @@ function buildPeriodSummaryPrompt(input: PeriodArticleInput): string {
 
 /**
  * Multi-day clinical digest via the same backends as {@link generateGeminiDailyArticle}.
+ * Provider selection uses {@link resolvePeriodAiProvider} (`AI_PROVIDER_PERIOD` falls back to `AI_PROVIDER`).
  */
 export async function generateGeminiPeriodArticle(
   input: PeriodArticleInput,
@@ -70,7 +78,7 @@ export async function generateGeminiPeriodArticle(
     };
   }
 
-  const mode = resolveAiProvider();
+  const mode = resolvePeriodAiProvider();
   const geminiApiKey = process.env.GEMINI_API_KEY?.trim();
   const project = process.env.VERTEX_PROJECT_ID ?? process.env.GOOGLE_CLOUD_PROJECT?.trim();
 
@@ -88,7 +96,10 @@ export async function generateGeminiPeriodArticle(
     mode === "vertex" || (mode === "auto" && Boolean(project) && !geminiApiKey);
 
   if (tryStudio && geminiApiKey) {
-    const model = process.env.GEMINI_MODEL ?? "gemini-2.5-flash";
+    const model =
+      process.env.GEMINI_PERIOD_MODEL?.trim() ||
+      process.env.GEMINI_MODEL?.trim() ||
+      "gemini-2.5-flash";
     const ai = new GoogleGenAI({ apiKey: geminiApiKey });
     const response = await ai.models.generateContent({
       model,

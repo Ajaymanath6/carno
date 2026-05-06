@@ -55,10 +55,10 @@ export function HistoryPeriodSummary({ dayCount }: Props) {
 
       <dialog
         ref={dialogRef}
-        className="fixed left-1/2 top-1/2 z-[60] w-[min(calc(100vw-2rem),40rem)] max-h-[min(calc(100vh-2rem),36rem)] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-brandcolor-strokeweak bg-brandcolor-white p-0 text-brandcolor-text-strong shadow-xl backdrop:bg-brandcolor-text-strong/35"
+        className="fixed left-1/2 top-1/2 z-[60] w-[min(calc(100vw-2rem),44rem)] max-h-[min(calc(100vh-2rem),calc(44rem+20px))] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-brandcolor-strokeweak bg-brandcolor-white p-0 text-brandcolor-text-strong shadow-xl backdrop:bg-brandcolor-text-strong/35"
         aria-labelledby="period-summary-title"
       >
-        <div className="flex max-h-[min(calc(100vh-2rem),36rem)] flex-col">
+        <div className="flex max-h-[min(calc(100vh-2rem),calc(44rem+20px))] flex-col">
           <div className="border-b border-brandcolor-strokeweak px-5 py-4">
             <h2 id="period-summary-title" className="font-serif text-lg font-semibold">
               Clinical period summary

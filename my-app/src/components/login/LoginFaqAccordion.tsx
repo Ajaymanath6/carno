@@ -16,8 +16,8 @@ export function LoginFaqAccordion({ items }: Props) {
   if (list.length === 0) return null;
 
   return (
-    <section className="mt-8 w-full min-w-0">
-      <h2 className="font-serif text-[clamp(1.5rem,5vw,4rem)] font-semibold leading-tight tracking-tight text-brandcolor-text-strong">
+    <section id="faq" className="scroll-mt-28 mt-8 w-full min-w-0">
+      <h2 className="text-center font-serif text-[clamp(1.5rem,5vw,4rem)] font-semibold leading-tight tracking-tight text-brandcolor-text-strong">
         Questions?
       </h2>
       <ul className="mt-3 flex w-full flex-col gap-3">
@@ -30,23 +30,23 @@ export function LoginFaqAccordion({ items }: Props) {
             >
               <button
                 type="button"
-                className="flex w-full items-center justify-between gap-4 px-4 py-4 text-left"
+                className="relative flex w-full items-center gap-3 py-4 pl-4 pr-12 text-left"
                 onClick={() => setOpenQ(open ? null : f.q)}
                 aria-expanded={open}
               >
-                <span className="text-[24px] font-semibold leading-snug text-brandcolor-text-strong">
+                <span className="min-w-0 flex-1 text-left text-[24px] font-semibold leading-snug text-brandcolor-text-strong">
                   {f.q}
                 </span>
                 <CaretDown
                   size={28}
                   weight="bold"
-                  className={`shrink-0 text-brandcolor-stroke-strong transition-transform ${open ? "rotate-180" : ""}`}
+                  className={`absolute right-4 top-1/2 shrink-0 -translate-y-1/2 text-brandcolor-stroke-strong transition-transform ${open ? "rotate-180" : ""}`}
                   aria-hidden
                 />
               </button>
               {open ? (
-                <div className="px-4 pb-4">
-                  <p className="text-[24px] leading-relaxed text-brandcolor-text-weak">
+                <div className="px-4 pb-4 pt-0">
+                  <p className="text-left text-[24px] leading-relaxed text-brandcolor-text-weak">
                     {f.a}
                   </p>
                 </div>

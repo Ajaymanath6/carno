@@ -8,6 +8,7 @@ import {
   buildPeriodSummaryPayloadFromSessions,
   totalMealsInPeriodPayload,
 } from "@/lib/period-summary";
+import { friendlyGeminiQuotaMessage } from "@/lib/gemini-error-message";
 import { generateGeminiPeriodArticle } from "@/lib/vertex-period-summary";
 
 export type PeriodClinicalSummaryResult =
@@ -81,6 +82,9 @@ export async function generatePeriodClinicalSummary(): Promise<PeriodClinicalSum
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error("[generatePeriodClinicalSummary]", e);
-    return { ok: false, error: msg || "Could not generate summary." };
+    return {
+      ok: false,
+      error: friendlyGeminiQuotaMessage(msg || "Could not generate summary."),
+    };
   }
 }

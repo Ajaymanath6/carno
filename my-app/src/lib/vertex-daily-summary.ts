@@ -87,7 +87,8 @@ function mockArticle(input: { payload: DailySummaryPayload }): string {
   );
 }
 
-function resolveAiProvider(): "auto" | "studio" | "vertex" {
+/** Global default for daily summaries and any caller that does not override (see `AI_PROVIDER_PERIOD`). */
+export function resolveAiProvider(): "auto" | "studio" | "vertex" {
   const raw = process.env.AI_PROVIDER?.trim().toLowerCase();
   if (raw === "studio" || raw === "vertex") {
     return raw;

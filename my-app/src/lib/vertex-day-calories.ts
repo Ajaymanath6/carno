@@ -1,6 +1,9 @@
 import { GoogleGenAI } from "@google/genai/node";
 import { z } from "zod";
-import { loadGoogleExternalAccountCredentialJson } from "@/lib/vertex-daily-summary";
+import {
+  loadGoogleExternalAccountCredentialJson,
+  resolveAiProvider,
+} from "@/lib/vertex-daily-summary";
 
 const BatchSchema = z.object({
   days: z.array(
@@ -32,14 +35,6 @@ export type MealCalorieEntryInput = {
   quantity: string | null;
   unit: string | null;
 };
-
-function resolveAiProvider(): "auto" | "studio" | "vertex" {
-  const raw = process.env.AI_PROVIDER?.trim().toLowerCase();
-  if (raw === "studio" || raw === "vertex") {
-    return raw;
-  }
-  return "auto";
-}
 
 function buildMealDescriptionLine(
   m: DayCalorieInput["meals"][0] | Pick<MealCalorieEntryInput, "rawText" | "quantity" | "unit">,
