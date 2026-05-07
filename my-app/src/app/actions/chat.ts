@@ -82,18 +82,34 @@ export async function sendMealMessage(
     };
   }
 
-  const foodNameNormalized = normalizeFoodLabel(text.split(/[.,;]/)[0] ?? text);
   const followUpDueAt = new Date(Date.now() + FOLLOW_UP_MS);
-  const mealThumb = mealThumbPathForNormalizedFood(foodNameNormalized);
   const parts = splitMealMessageIntoEntries(text);
-  const savedFoodLabel = foodNameNormalized.slice(0, 80);
   const savedFoodDisplay =
-    savedFoodLabel.length > 0
-      ? savedFoodLabel.charAt(0).toUpperCase() + savedFoodLabel.slice(1)
-      : savedFoodLabel;
+    parts.length === 1 ?
+      (() => {
+        const foodNameNormalized = normalizeFoodLabel(parts[0] ?? text);
+        const savedFoodLabel = foodNameNormalized.slice(0, 80);
+        return savedFoodLabel.length > 0
+          ? savedFoodLabel.charAt(0).toUpperCase() + savedFoodLabel.slice(1)
+          : savedFoodLabel;
+      })()
+    : `${parts.length} items`;
+
+  const userMessageCreates = parts.map((p) => {
+    const normalized = normalizeFoodLabel(p.split(/[.,;]/)[0] ?? p);
+    const mealThumb = mealThumbPathForNormalizedFood(normalized);
+    return prisma.chatMessage.create({
+      data: {
+        sessionId: day.id,
+        role: MessageRole.USER,
+        body: p,
+        ...(mealThumb != null ? { metadata: { mealThumb } as Prisma.InputJsonValue } : {}),
+      },
+    });
+  });
 
   const foodCreates = parts.map((p) => {
-    const normalized = normalizeFoodLabel(p);
+    const normalized = normalizeFoodLabel(p.split(/[.,;]/)[0] ?? p);
     const portion = parseBasicPortionFromText(p);
     return prisma.foodEntry.create({
       data: {
@@ -107,16 +123,7 @@ export async function sendMealMessage(
   });
 
   await prisma.$transaction([
-    prisma.chatMessage.create({
-      data: {
-        sessionId: day.id,
-        role: MessageRole.USER,
-        body: text,
-        ...(mealThumb != null
-          ? { metadata: { mealThumb } as Prisma.InputJsonValue }
-          : {}),
-      },
-    }),
+    ...userMessageCreates,
     ...foodCreates,
     prisma.chatMessage.create({
       data: {
@@ -129,9 +136,6 @@ export async function sendMealMessage(
             minute: "2-digit",
             timeZone: appUser.timezone,
           })} your time).`,
-        ...(mealThumb != null
-          ? { metadata: { mealThumb } as Prisma.InputJsonValue }
-          : {}),
       },
     }),
   ]);
