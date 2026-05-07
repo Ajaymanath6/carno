@@ -332,10 +332,13 @@ export function ChatClient({
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <div className="min-h-0 flex-1 overflow-y-auto">
             <div className="sticky top-0 z-10 bg-brandcolor-fill/90 px-4 py-2 backdrop-blur-sm">
-              <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-between gap-x-4 gap-y-1">
+              <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-2">
                 <DayDateBadge localDate={localDate} timezone={timezone} />
-                <span className="text-right font-sans text-xs font-medium text-brandcolor-text-weak">
-                  ~{intakeKcal.toLocaleString()} / {needKcal.toLocaleString()} kcal{" "}
+                <span className="ml-auto whitespace-nowrap text-right font-sans text-xs font-semibold text-brandcolor-text-weak">
+                  <span className="font-bold text-brandcolor-text-strong">
+                    ~{intakeKcal.toLocaleString()}
+                  </span>{" "}
+                  / {needKcal.toLocaleString()} kcal{" "}
                   <span className="text-brandcolor-text-strong">
                     ({Math.max(0, needKcal - intakeKcal).toLocaleString()} left)
                   </span>
@@ -818,6 +821,85 @@ function isReactionSavedMetadata(
   );
 }
 
+function isFollowUpPromptMetadata(
+  metadata: Prisma.JsonValue | null,
+): metadata is Prisma.JsonObject & {
+  type: string;
+  foodEntryId?: string;
+  foodEntryIds?: string[];
+} {
+  if (metadata == null || typeof metadata !== "object" || Array.isArray(metadata)) {
+    return false;
+  }
+  const m = metadata as Record<string, unknown>;
+  return m.type === "follow_up_prompt";
+}
+
+function FollowUpPromptBubble({
+  body,
+  metadata,
+}: {
+  body: string;
+  metadata: Record<string, unknown>;
+}) {
+  const router = useRouter();
+  const [deleted, setDeleted] = useState(false);
+  const [deleteState, deleteAction, deletePending] = useActionState(
+    deleteLoggedMealEntries,
+    initialActionState,
+  );
+  const singleId =
+    typeof metadata.foodEntryId === "string" && metadata.foodEntryId.trim().length > 0
+      ? metadata.foodEntryId.trim()
+      : null;
+  const groupedIds = Array.isArray(metadata.foodEntryIds)
+    ? metadata.foodEntryIds
+        .filter((id): id is string => typeof id === "string" && id.trim().length > 0)
+        .map((id) => id.trim())
+    : [];
+  const ids = groupedIds.length > 0 ? groupedIds : singleId ? [singleId] : [];
+
+  useEffect(() => {
+    if (deleteState.ok) {
+      setDeleted(true);
+      router.refresh();
+    }
+  }, [deleteState.ok, router]);
+
+  if (deleted) {
+    return <p className="text-sm font-medium text-brandcolor-text-weak">This meal entry was deleted.</p>;
+  }
+
+  return (
+    <div className="w-full min-w-0 space-y-2">
+      <div className="flex items-start gap-2">
+        <p className="min-w-0 flex-1 whitespace-pre-wrap text-sm leading-relaxed">{body}</p>
+        {ids.length > 0 ? (
+          <form action={deleteAction}>
+            <input type="hidden" name="foodEntryIds" value={ids.join(",")} />
+            <button
+              type="submit"
+              disabled={deletePending}
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-brandcolor-strokeweak bg-brandcolor-white text-brandcolor-text-strong hover:bg-brandcolor-fill disabled:opacity-50"
+              aria-label={deletePending ? "Deleting entry" : "Delete entry"}
+              title="Delete entry"
+            >
+              {deletePending ? (
+                <CircleNotch className="h-4 w-4 animate-spin" weight="bold" aria-hidden />
+              ) : (
+                <Trash className="h-4 w-4" weight="bold" aria-hidden />
+              )}
+            </button>
+          </form>
+        ) : null}
+      </div>
+      {deleteState.error ? (
+        <p className="text-xs font-medium text-brandcolor-primary">{deleteState.error}</p>
+      ) : null}
+    </div>
+  );
+}
+
 function ReactionSavedBubble({
   body,
   metadata,
@@ -1012,6 +1094,11 @@ function AssistantBubbleBody({
       <ReactionSavedBubble body={body} metadata={metadata as Record<string, unknown>} />
     );
   }
+  if (isFollowUpPromptMetadata(metadata)) {
+    return (
+      <FollowUpPromptBubble body={body} metadata={metadata as Record<string, unknown>} />
+    );
+  }
 
   const thumb = mealThumbFromMetadata(metadata);
   return (
@@ -1034,7 +1121,10 @@ function AssistantBubbleBody({
 
 export function DayDateBadge({ localDate, timezone }: { localDate: string; timezone: string }) {
   const weekday = weekdayLongForLocalDateKey(localDate, timezone);
-  const dateLine = formatWeekdayMonthDayForLocalDateKey(localDate, timezone);
+  const dateLine = formatWeekdayMonthDayForLocalDateKey(localDate, timezone).replace(
+    /^[A-Za-z]{3},\s*/,
+    "",
+  );
   return (
     <span className="inline-flex max-w-[min(100%,22rem)] flex-wrap items-center justify-center gap-x-1.5 rounded-full border border-brandcolor-strokeweak bg-brandcolor-fill px-3 py-1 text-center font-sans text-xs font-medium tracking-wide text-brandcolor-text-strong">
       <span className="capitalize">{weekday}</span>

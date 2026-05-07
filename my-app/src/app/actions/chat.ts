@@ -362,7 +362,7 @@ export async function deleteLoggedMealEntries(
       id: { in: ids },
       session: { userId: appUser.id },
     },
-    select: { id: true, sessionId: true },
+    select: { id: true, sessionId: true, rawText: true },
   });
   if (ownedEntries.length === 0) {
     return { error: "Meal entry not found." };
@@ -370,8 +370,31 @@ export async function deleteLoggedMealEntries(
 
   const ownedIds = ownedEntries.map((e) => e.id);
   const sessionIds = Array.from(new Set(ownedEntries.map((e) => e.sessionId)));
+  const rawTexts = Array.from(new Set(ownedEntries.map((e) => e.rawText)));
 
   await prisma.$transaction(async (tx) => {
+    // Remove chat lines that directly correspond to deleted food logs.
+    await tx.chatMessage.deleteMany({
+      where: {
+        sessionId: { in: sessionIds },
+        role: MessageRole.USER,
+        body: { in: rawTexts },
+      },
+    });
+
+    // Remove follow-up / reaction assistant rows tied to the deleted entries.
+    for (const id of ownedIds) {
+      await tx.chatMessage.deleteMany({
+        where: {
+          sessionId: { in: sessionIds },
+          OR: [
+            { metadata: { path: ["foodEntryId"], equals: id } },
+            { metadata: { path: ["foodEntryIds"], array_contains: [id] } },
+          ],
+        },
+      });
+    }
+
     await tx.foodEntry.deleteMany({
       where: { id: { in: ownedIds } },
     });
