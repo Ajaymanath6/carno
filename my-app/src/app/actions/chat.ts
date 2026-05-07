@@ -85,12 +85,26 @@ export async function sendMealMessage(
   const foodNameNormalized = normalizeFoodLabel(text.split(/[.,;]/)[0] ?? text);
   const followUpDueAt = new Date(Date.now() + FOLLOW_UP_MS);
   const mealThumb = mealThumbPathForNormalizedFood(foodNameNormalized);
-  const portion = parseBasicPortionFromText(text);
+  const parts = splitMealMessageIntoEntries(text);
   const savedFoodLabel = foodNameNormalized.slice(0, 80);
   const savedFoodDisplay =
     savedFoodLabel.length > 0
       ? savedFoodLabel.charAt(0).toUpperCase() + savedFoodLabel.slice(1)
       : savedFoodLabel;
+
+  const foodCreates = parts.map((p) => {
+    const normalized = normalizeFoodLabel(p);
+    const portion = parseBasicPortionFromText(p);
+    return prisma.foodEntry.create({
+      data: {
+        sessionId: day.id,
+        rawText: p,
+        foodNameNormalized: normalized,
+        ...(portion ? { quantity: portion.quantity, unit: portion.unit } : {}),
+        followUpDueAt,
+      },
+    });
+  });
 
   await prisma.$transaction([
     prisma.chatMessage.create({
@@ -103,15 +117,7 @@ export async function sendMealMessage(
           : {}),
       },
     }),
-    prisma.foodEntry.create({
-      data: {
-        sessionId: day.id,
-        rawText: text,
-        foodNameNormalized,
-        ...(portion ? { quantity: portion.quantity, unit: portion.unit } : {}),
-        followUpDueAt,
-      },
-    }),
+    ...foodCreates,
     prisma.chatMessage.create({
       data: {
         sessionId: day.id,
@@ -133,6 +139,16 @@ export async function sendMealMessage(
   await processDueFollowUpsForSession(day.id);
   revalidatePath("/chat");
   return { ok: true };
+}
+
+function splitMealMessageIntoEntries(text: string): string[] {
+  const raw = text
+    .split(/\n+/g)
+    .flatMap((line) => line.split(/\s+(?:and|&)\s+|,\s*/gi))
+    .map((s) => s.trim())
+    .filter(Boolean);
+  // If splitting produced nonsense (e.g. empty or only separators), fall back to original.
+  return raw.length > 0 ? raw : [text.trim()];
 }
 
 export async function submitReaction(

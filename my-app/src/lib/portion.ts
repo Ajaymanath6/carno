@@ -35,12 +35,14 @@ export function parseBasicPortionFromText(text: string): ParsedPortion | null {
     return { quantity: egg[1], unit: "eggs" };
   }
 
-  const unit = s.match(/\b(\d+(?:\.\d+)?)\s*(kg|kilograms?|g|grams?|oz|ounces?|lb|lbs|pounds?)\b/i);
+  const unit = s.match(
+    /\b(\d+(?:\.\d+)?)\s*(kg|kilograms?|g|gm|grams?|oz|ounces?|lb|lbs|pounds?)\b/i,
+  );
   if (unit?.[1] && unit[2]) {
     const rawUnit = unit[2].toLowerCase();
     const normalized =
       rawUnit.startsWith("kg") ? "kg"
-      : rawUnit.startsWith("g") ? "g"
+      : rawUnit === "gm" || rawUnit.startsWith("g") ? "g"
       : rawUnit.startsWith("oz") ? "oz"
       : rawUnit === "lb" || rawUnit === "lbs" || rawUnit.startsWith("pound") ? "lb"
       : rawUnit;

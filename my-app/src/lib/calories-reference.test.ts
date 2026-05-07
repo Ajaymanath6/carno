@@ -81,6 +81,10 @@ test("parseBasicPortionFromText parses eggs", () => {
   assert.deepEqual(parseBasicPortionFromText("7 eggs"), { quantity: "7", unit: "eggs" });
 });
 
+test("parseBasicPortionFromText normalizes gm to g", () => {
+  assert.deepEqual(parseBasicPortionFromText("400 gm beef"), { quantity: "400", unit: "g" });
+});
+
 test("parseBasicPortionFromText assumes grams for leading number + food", () => {
   assert.deepEqual(parseBasicPortionFromText("550 beef"), { quantity: "550", unit: "g" });
 });

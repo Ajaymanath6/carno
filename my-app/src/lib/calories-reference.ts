@@ -64,6 +64,7 @@ export function parseGramsFromMeal(input: {
 
   if (qtyNum != null && qtyNum > 0 && unitNorm) {
     if (/^(g|gram|grams)$/.test(unitNorm)) return qtyNum;
+    if (unitNorm === "gm") return qtyNum;
     if (/^(kg|kilogram|kilograms)$/.test(unitNorm)) return qtyNum * 1000;
     if (/^(oz|ounce|ounces)$/.test(unitNorm)) return qtyNum * OZ_TO_G;
     if (/^(lb|lbs|pound|pounds)$/.test(unitNorm)) return qtyNum * LB_TO_G;
