@@ -20,6 +20,9 @@ export function LoginFaqAccordion({ items }: Props) {
       <h2 className="text-center font-serif text-[clamp(1.5rem,5vw,4rem)] font-semibold leading-tight tracking-tight text-brandcolor-text-strong">
         Questions?
       </h2>
+      <p className="mx-auto mt-3 max-w-3xl text-center font-sans text-[16px] leading-relaxed text-brandcolor-text-weak sm:text-[20px]">
+        Starting from thousands of people tracking meals and how they feel—numbers grow every week.
+      </p>
       <ul className="mt-3 flex w-full flex-col gap-3">
         {list.map((f) => {
           const open = openQ === f.q;
