@@ -202,7 +202,7 @@ export default async function ReportsPage({
         <p className="mt-1 text-xs text-brandcolor-text-weak">
           Scales are 1–5 (higher bloating / discomfort = more reported intensity).
         </p>
-        <div className="mt-3 overflow-x-auto rounded-2xl border border-brandcolor-strokeweak">
+        <div className="mt-3 overflow-x-auto rounded-2xl border border-brandcolor-strokeweak bg-brandcolor-white">
           <table className="w-full min-w-[32rem] text-left text-sm">
             <thead className="bg-brandcolor-fill text-xs uppercase text-brandcolor-text-weak">
               <tr>
@@ -214,7 +214,10 @@ export default async function ReportsPage({
             </thead>
             <tbody className="text-brandcolor-text-strong">
               {rankedFoods.map(([name, agg]) => (
-                <tr key={name} className="border-t border-brandcolor-strokeweak">
+                <tr
+                  key={name}
+                  className="border-t border-brandcolor-strokeweak bg-brandcolor-white hover:bg-brandcolor-fill"
+                >
                   <td className="px-3 py-2">{name}</td>
                   <td className="px-3 py-2">{agg.count}</td>
                   <td className="px-3 py-2">
@@ -230,7 +233,7 @@ export default async function ReportsPage({
                 </tr>
               ))}
               {rankedFoods.length === 0 && (
-                <tr>
+                <tr className="border-t border-brandcolor-strokeweak bg-brandcolor-white">
                   <td className="px-3 py-6 text-brandcolor-text-weak" colSpan={4}>
                     No meals in this range yet.
                   </td>
