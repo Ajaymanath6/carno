@@ -1,4 +1,4 @@
-/** Shown when Vertex-backed totals can’t run or when explaining calorie labeling. */
+/** Shown when totals can’t be computed, or to explain labels. */
 export function HistoryCalorieBanner({
   message,
   title = `About “— kcal”`,

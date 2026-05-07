@@ -19,7 +19,7 @@ type Props = {
   timezone: string;
   /** Server-resolved CALORIE_ENGINE — drives loading copy. */
   calorieEngine: CalorieEngine;
-  /** Skip fetch only when Vertex-only mode and Vertex env blocks AI. */
+  /** Skip fetch only when AI is unavailable in Vertex-only mode. */
   skipCalorieFetch: boolean;
 };
 
@@ -135,8 +135,8 @@ export function HistoryDayList({
           </code>
           . Confirm{" "}
           <code className="rounded bg-brandcolor-fill px-1 py-0.5 text-xs">CALORIE_ENGINE</code>{" "}
-          ({calorieEngine}) matches your intent; calculator mode needs grams + food keywords;
-          Vertex mode needs project + credentials per{" "}
+          ({calorieEngine}) matches your intent; calculator mode needs grams + food keywords; AI
+          mode needs credentials per{" "}
           <code className="rounded bg-brandcolor-fill px-1 py-0.5 text-xs">.env.example</code>.
         </p>
       : null}

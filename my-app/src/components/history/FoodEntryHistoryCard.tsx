@@ -13,7 +13,7 @@ type Props = {
   loggedAt: Date;
   timezone: string;
   reactions: ReactionEntry[];
-  /** Calculator or Vertex/Gemini estimate; omit or undefined shows — */
+  /** Calculator or AI estimate; omit or undefined shows — */
   estimatedKcal?: number;
   calorieSource?: "reference" | "vertex";
 };
