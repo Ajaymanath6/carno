@@ -16,8 +16,10 @@ import {
   PaperPlaneRight,
   ShareNetwork,
   Sun,
+  Trash,
 } from "@phosphor-icons/react";
 import {
+  deleteLoggedMealEntries,
   generateDailySummary,
   pollDueFollowUps,
   previewDailySummary,
@@ -823,13 +825,31 @@ function ReactionSavedBubble({
   body: string;
   metadata: Record<string, unknown>;
 }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [deleted, setDeleted] = useState(false);
+  const [deleteState, deleteAction, deletePending] = useActionState(
+    deleteLoggedMealEntries,
+    initialActionState,
+  );
   const shortSummary = String(metadata.shortSummary ?? "");
   const reaction = metadata.reaction as ReactionSnapshot;
   const foodDisplay =
     typeof metadata.foodDisplay === "string" ? metadata.foodDisplay.trim() : "";
   const mealThumbSaved =
     typeof metadata.mealThumb === "string" ? metadata.mealThumb : null;
+  const foodEntryIds = Array.isArray(metadata.foodEntryIds)
+    ? metadata.foodEntryIds
+        .filter((id): id is string => typeof id === "string" && id.trim().length > 0)
+        .map((id) => id.trim())
+    : [];
+
+  useEffect(() => {
+    if (deleteState.ok) {
+      setDeleted(true);
+      router.refresh();
+    }
+  }, [deleteState.ok, router]);
 
   const vsLast =
     reaction.symptomsBetterOrWorse === "better"
@@ -840,26 +860,57 @@ function ReactionSavedBubble({
           ? "Worse"
           : "—";
 
+  if (deleted) {
+    return (
+      <div className="w-full min-w-0 space-y-2">
+        <p className="text-sm font-medium text-brandcolor-text-weak">This meal entry was deleted.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full min-w-0 space-y-2">
       <p className="whitespace-pre-wrap text-sm leading-relaxed">{body}</p>
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center gap-2 rounded-xl border border-brandcolor-strokeweak bg-brandcolor-fill px-3 py-2 text-left transition-colors hover:bg-brandcolor-fill/80"
-        aria-expanded={open}
-      >
-        <span className="min-w-0 flex-1 text-xs font-medium leading-snug text-brandcolor-text-strong">
-          {shortSummary}
-        </span>
-        <CaretDown
-          className={`h-5 w-5 shrink-0 text-brandcolor-stroke-strong transition-transform duration-200 ${
-            open ? "rotate-180" : ""
-          }`}
-          weight="bold"
-          aria-hidden
-        />
-      </button>
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-brandcolor-strokeweak bg-brandcolor-fill px-3 py-2 text-left transition-colors hover:bg-brandcolor-fill/80"
+          aria-expanded={open}
+        >
+          <span className="min-w-0 flex-1 text-xs font-medium leading-snug text-brandcolor-text-strong">
+            {shortSummary}
+          </span>
+          <CaretDown
+            className={`h-5 w-5 shrink-0 text-brandcolor-stroke-strong transition-transform duration-200 ${
+              open ? "rotate-180" : ""
+            }`}
+            weight="bold"
+            aria-hidden
+          />
+        </button>
+        {foodEntryIds.length > 0 ? (
+          <form action={deleteAction}>
+            <input type="hidden" name="foodEntryIds" value={foodEntryIds.join(",")} />
+            <button
+              type="submit"
+              disabled={deletePending}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-brandcolor-strokeweak bg-brandcolor-white text-brandcolor-text-strong hover:bg-brandcolor-fill disabled:opacity-50"
+              aria-label={deletePending ? "Deleting entry" : "Delete entry"}
+              title="Delete entry"
+            >
+              {deletePending ? (
+                <CircleNotch className="h-4 w-4 animate-spin" weight="bold" aria-hidden />
+              ) : (
+                <Trash className="h-4 w-4" weight="bold" aria-hidden />
+              )}
+            </button>
+          </form>
+        ) : null}
+      </div>
+      {deleteState.error ? (
+        <p className="text-xs font-medium text-brandcolor-primary">{deleteState.error}</p>
+      ) : null}
       {open ? (
         <div className="overflow-x-auto rounded-xl border border-brandcolor-strokeweak bg-brandcolor-fill/70">
           <table className="w-full min-w-[17rem] border-collapse text-left text-xs text-brandcolor-text-strong">

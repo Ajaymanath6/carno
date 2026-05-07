@@ -339,6 +339,59 @@ export async function submitReaction(
   return { ok: true };
 }
 
+export async function deleteLoggedMealEntries(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const appUser = await getOrCreateAppUser();
+  if (!appUser) {
+    return { error: "Not signed in" };
+  }
+
+  const idsRaw = String(formData.get("foodEntryIds") ?? "");
+  const ids = idsRaw
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean);
+  if (ids.length === 0) {
+    return { error: "Nothing to delete." };
+  }
+
+  const ownedEntries = await prisma.foodEntry.findMany({
+    where: {
+      id: { in: ids },
+      session: { userId: appUser.id },
+    },
+    select: { id: true, sessionId: true },
+  });
+  if (ownedEntries.length === 0) {
+    return { error: "Meal entry not found." };
+  }
+
+  const ownedIds = ownedEntries.map((e) => e.id);
+  const sessionIds = Array.from(new Set(ownedEntries.map((e) => e.sessionId)));
+
+  await prisma.$transaction(async (tx) => {
+    await tx.foodEntry.deleteMany({
+      where: { id: { in: ownedIds } },
+    });
+    await tx.daySession.updateMany({
+      where: {
+        id: { in: sessionIds },
+        pendingFoodEntryId: { in: ownedIds },
+      },
+      data: {
+        pendingFoodEntryId: null,
+        phase: ConversationPhase.CHAT,
+      },
+    });
+  });
+
+  revalidatePath("/chat");
+  revalidatePath("/history");
+  return { ok: true };
+}
+
 /**
  * In-chat AI summary only: does not persist DailySummary or close the day (so EOD cron still runs).
  */
