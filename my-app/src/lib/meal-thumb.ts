@@ -1,6 +1,7 @@
 import {
   MEAL_QUICK_BROWN_EGGS,
   MEAL_QUICK_CHICKEN,
+  MEAL_QUICK_GHEE,
   MEAL_QUICK_MUTTON,
   MEAL_QUICK_PANEER,
   MEAL_QUICK_RED_MEAT,
@@ -15,6 +16,12 @@ export function mealThumbPathForNormalizedFood(normalized: string): string | nul
   if (!s) {
     return null;
   }
+  if (s.includes("egg")) {
+    return MEAL_QUICK_BROWN_EGGS;
+  }
+  if (s.includes("ghee")) {
+    return MEAL_QUICK_GHEE;
+  }
   if (s.includes("chicken") || s.includes("chiken")) {
     return MEAL_QUICK_CHICKEN;
   }
@@ -26,9 +33,6 @@ export function mealThumbPathForNormalizedFood(normalized: string): string | nul
   }
   if (s.includes("red meat") || s.includes("beef") || s.includes("steak")) {
     return MEAL_QUICK_RED_MEAT;
-  }
-  if (s.includes("egg")) {
-    return MEAL_QUICK_BROWN_EGGS;
   }
   return null;
 }

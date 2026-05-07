@@ -12,6 +12,7 @@ export type ParsedPortion = {
  * - grams / kilograms: `200 g`, `200g`, `0.25 kg`
  * - ounces / pounds: `6 oz`, `1 lb`, `2lbs`
  * - eggs: `7 eggs`, `2 egg`
+ * - tablespoons: `1 tbsp ghee`, `1 tablespoon ghee`
  *
  * Returns the first match (left-to-right). Does not attempt to parse multiple portions.
  */
@@ -36,7 +37,7 @@ export function parseBasicPortionFromText(text: string): ParsedPortion | null {
   }
 
   const unit = s.match(
-    /\b(\d+(?:\.\d+)?)\s*(kg|kilograms?|g|gm|grams?|oz|ounces?|lb|lbs|pounds?)\b/i,
+    /\b(\d+(?:\.\d+)?)\s*(kg|kilograms?|g|gm|grams?|oz|ounces?|lb|lbs|pounds?|tbsp|tablespoons?)\b/i,
   );
   if (unit?.[1] && unit[2]) {
     const rawUnit = unit[2].toLowerCase();
@@ -45,6 +46,7 @@ export function parseBasicPortionFromText(text: string): ParsedPortion | null {
       : rawUnit === "gm" || rawUnit.startsWith("g") ? "g"
       : rawUnit.startsWith("oz") ? "oz"
       : rawUnit === "lb" || rawUnit === "lbs" || rawUnit.startsWith("pound") ? "lb"
+      : rawUnit === "tbsp" || rawUnit.startsWith("tablespoon") ? "tbsp"
       : rawUnit;
     return { quantity: unit[1], unit: normalized };
   }

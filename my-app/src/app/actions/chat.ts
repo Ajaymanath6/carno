@@ -234,7 +234,6 @@ export async function submitReaction(
   };
 
   const shortSummary = formatReactionShortSummary(reactionSnapshot);
-  const mealThumb = mealThumbPathForNormalizedFood(entry.foodNameNormalized);
 
   await prisma.$transaction(async (tx) => {
     const groupedEntries = await tx.foodEntry.findMany({
@@ -257,6 +256,7 @@ export async function submitReaction(
         : [{ id: entry.id, rawText: entry.rawText }];
     const targetEntryIds = targetEntries.map((food) => food.id);
     const foodDisplay = formatMealItems(targetEntries.map((food) => food.rawText));
+    const mealThumb = mealThumbPathForNormalizedFood(foodDisplay);
 
     await tx.reactionEntry.createMany({
       data: targetEntryIds.map((foodEntryId) => ({

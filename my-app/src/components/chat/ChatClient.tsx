@@ -36,6 +36,7 @@ import {
   CARNO_LOGO_AGENT,
   MEAL_QUICK_BROWN_EGGS,
   MEAL_QUICK_CHICKEN,
+  MEAL_QUICK_GHEE,
   MEAL_QUICK_MUTTON,
   MEAL_QUICK_PANEER,
   MEAL_QUICK_RED_MEAT,
@@ -59,6 +60,7 @@ const MEAL_QUICK_PICKS = [
   { label: "Paneer", value: "Paneer", imageSrc: MEAL_QUICK_PANEER },
   { label: "BEEF", value: "BEEF", imageSrc: MEAL_QUICK_RED_MEAT },
   { label: "Brown eggs", value: "Brown eggs", imageSrc: MEAL_QUICK_BROWN_EGGS },
+  { label: "Ghee", value: "Ghee", imageSrc: MEAL_QUICK_GHEE },
 ] as const;
 
 export type ChatMessageListItem = Pick<

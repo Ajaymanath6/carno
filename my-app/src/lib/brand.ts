@@ -16,3 +16,4 @@ export const MEAL_QUICK_MUTTON = "/brand/meal-quick-mutton.png";
 export const MEAL_QUICK_PANEER = "/brand/meal-quick-paneer.png";
 export const MEAL_QUICK_RED_MEAT = "/brand/meal-quick-red-meat.png";
 export const MEAL_QUICK_BROWN_EGGS = "/brand/meal-quick-brown-eggs.png";
+export const MEAL_QUICK_GHEE = "/brand/meal-quick-ghee.png";

@@ -85,6 +85,13 @@ test("parseBasicPortionFromText normalizes gm to g", () => {
   assert.deepEqual(parseBasicPortionFromText("400 gm beef"), { quantity: "400", unit: "g" });
 });
 
+test("parseBasicPortionFromText parses tablespoon", () => {
+  assert.deepEqual(parseBasicPortionFromText("1 tablespoon ghee"), {
+    quantity: "1",
+    unit: "tbsp",
+  });
+});
+
 test("parseBasicPortionFromText assumes grams for leading number + food", () => {
   assert.deepEqual(parseBasicPortionFromText("550 beef"), { quantity: "550", unit: "g" });
 });
@@ -98,5 +105,16 @@ test("estimateMealKcalReference assumes grams for leading number + known food", 
     foodNameNormalized: "beef",
   });
   assert.equal(kcal, Math.round((550 * 250) / 100));
+});
+
+test("estimateMealKcalReference computes ghee tablespoon calories", () => {
+  const kcal = estimateMealKcalReference({
+    id: "5",
+    rawText: "1 tablespoon ghee",
+    quantity: "1",
+    unit: "tbsp",
+    foodNameNormalized: "ghee",
+  });
+  assert.equal(kcal, Math.round((14 * 900) / 100));
 });
 
