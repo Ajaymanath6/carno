@@ -80,6 +80,10 @@ type Props = {
   localDate: string;
   /** Server count of meals today; helps show Summary when chat messages are briefly out of sync. */
   foodEntryCount?: number;
+  /** Calculator total kcal intake for today (unknown meals treated as 0). */
+  intakeKcal: number;
+  /** Fixed adult daily need kcal (e.g. 2500). */
+  needKcal: number;
 };
 
 const initialActionState: ActionState = {};
@@ -128,6 +132,8 @@ export function ChatClient({
   displayName,
   localDate,
   foodEntryCount = 0,
+  intakeKcal,
+  needKcal,
 }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -321,8 +327,16 @@ export function ChatClient({
       {!showOnboarding && (
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <div className="min-h-0 flex-1 overflow-y-auto">
-            <div className="sticky top-0 z-10 flex justify-center bg-brandcolor-fill/90 px-4 py-2 backdrop-blur-sm">
-              <DayDateBadge localDate={localDate} timezone={timezone} />
+            <div className="sticky top-0 z-10 bg-brandcolor-fill/90 px-4 py-2 backdrop-blur-sm">
+              <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-between gap-x-4 gap-y-1">
+                <DayDateBadge localDate={localDate} timezone={timezone} />
+                <span className="text-right font-sans text-xs font-medium text-brandcolor-text-weak">
+                  ~{intakeKcal.toLocaleString()} / {needKcal.toLocaleString()} kcal{" "}
+                  <span className="text-brandcolor-text-strong">
+                    ({Math.max(0, needKcal - intakeKcal).toLocaleString()} left)
+                  </span>
+                </span>
+              </div>
             </div>
             <ul className="mx-auto flex max-w-3xl flex-col gap-3 px-4 pb-4 pt-1">
               {messages.map((m, index) => {

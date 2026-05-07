@@ -10,6 +10,13 @@ import {
 } from "@/lib/prisma-daily-summary-fallback";
 import { HistoryCalorieBanner } from "@/components/history/HistoryCalorieBanner";
 import {
+  calorieEngineUsesReference,
+  calorieEngineUsesVertex,
+  DAILY_KCAL_NEED,
+  estimateMealKcalReference,
+  resolveCalorieEngine,
+} from "@/lib/calories-reference";
+import {
   calorieEstimationUnavailableReason,
   estimateMealCaloriesBatch,
 } from "@/lib/vertex-day-calories";
@@ -58,28 +65,67 @@ export default async function HistoryDayPage({
     notFound();
   }
 
-  let kcalByEntryId = new Map<string, number>();
-  try {
-    kcalByEntryId = await estimateMealCaloriesBatch(
-      day.foodEntries.map((f) => ({
+  const engine = resolveCalorieEngine();
+  const kcalByEntryId = new Map<string, number>();
+  const calorieSourceByEntryId = new Map<string, "reference" | "vertex">();
+  const calorieSetupReason =
+    engine === "vertex" ? calorieEstimationUnavailableReason() : null;
+
+  if (calorieEngineUsesReference(engine)) {
+    for (const f of day.foodEntries) {
+      const k = estimateMealKcalReference({
         id: f.id,
         rawText: f.rawText,
         quantity: f.quantity,
         unit: f.unit,
-      })),
-    );
-  } catch (err) {
-    console.error("[history/[date]] estimateMealCaloriesBatch:", err);
+        foodNameNormalized: f.foodNameNormalized,
+      });
+      if (k != null) {
+        kcalByEntryId.set(f.id, k);
+        calorieSourceByEntryId.set(f.id, "reference");
+      }
+    }
   }
 
-  const calorieSetupReason = calorieEstimationUnavailableReason();
+  const needsVertexMeals =
+    engine === "vertex" ?
+      day.foodEntries
+    : engine === "reference_then_vertex" ?
+      day.foodEntries.filter((f) => !kcalByEntryId.has(f.id))
+    : [];
+
+  if (needsVertexMeals.length > 0 && calorieSetupReason == null) {
+    try {
+      const vertexMap = await estimateMealCaloriesBatch(
+        needsVertexMeals.map((f) => ({
+          id: f.id,
+          rawText: f.rawText,
+          quantity: f.quantity,
+          unit: f.unit,
+        })),
+      );
+      for (const [id, k] of vertexMap) {
+        kcalByEntryId.set(id, k);
+        calorieSourceByEntryId.set(id, "vertex");
+      }
+    } catch (err) {
+      console.error("[history/[date]] estimateMealCaloriesBatch:", err);
+    }
+  }
+
   const anyMealMissingKcal =
     day.foodEntries.length > 0 &&
     day.foodEntries.some((f) => !kcalByEntryId.has(f.id));
+
+  const totalIntakeKcal = Array.from(kcalByEntryId.values()).reduce((a, b) => a + b, 0);
+
   const calorieBannerMessage =
     anyMealMissingKcal ?
-      calorieSetupReason ??
-      "Calorie estimates use Gemini (Google AI Studio or Vertex). This request failed or returned incomplete data — check server logs."
+      engine === "reference" ?
+        "Calculator calories need a portion (g, oz, lb, eggs, ml) and a known food keyword (chicken, beef, egg, …). Expand reference foods in src/data/reference-macros.ts if needed."
+      : calorieSetupReason != null && engine === "vertex" ?
+        calorieSetupReason
+      : "Some meals could not be estimated — check server logs for [history/[date]] or [calorie-kcal]."
     : null;
 
   /** Widen type when DB predates `aiArticle` columns (fallback query omits those keys). */
@@ -106,12 +152,15 @@ export default async function HistoryDayPage({
             >
               ← Back
             </Link>
-            <h1 className="mt-2 font-serif text-xl font-semibold text-brandcolor-text-strong">
-              {formatWeekdayMonthDayForLocalDateKey(day.localDate, user.timezone)}
-            </h1>
-            <p className="mt-1 text-sm text-brandcolor-text-weak">
-              Status: {day.status}
-            </p>
+            <div className="mt-2 flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
+              <h1 className="font-serif text-xl font-semibold text-brandcolor-text-strong">
+                {formatWeekdayMonthDayForLocalDateKey(day.localDate, user.timezone)}
+              </h1>
+              <p className="text-right text-sm text-brandcolor-text-weak">
+                ~{totalIntakeKcal.toLocaleString()} / {DAILY_KCAL_NEED.toLocaleString()} kcal
+              </p>
+            </div>
+            <p className="mt-1 text-sm text-brandcolor-text-weak">Status: {day.status}</p>
           </div>
 
           {day.dailySummary && (
@@ -161,6 +210,7 @@ export default async function HistoryDayPage({
                   timezone={user.timezone}
                   reactions={f.reactions}
                   estimatedKcal={kcalByEntryId.get(f.id)}
+                  calorieSource={calorieSourceByEntryId.get(f.id)}
                 />
               ))}
             </ul>

@@ -122,7 +122,7 @@
     "aiDailySummaryBubble": {
       "metadata": "ChatMessage.metadata.type === daily_ai_summary with greeting + articleText + builtWithAi + optional aiProvider (studio|vertex|mock).",
       "styling": "Phosphor Article + label Summary + optional Built with AI; rounded-xl bg-brandcolor-fill px-4 py-3; greeting font-medium; body whitespace-pre-wrap.",
-      "backends": "Server-only: GEMINI_API_KEY (Google AI Studio) or Vertex WIF; never expose keys to client."
+      "backends": "Server-only: AI_PROVIDER=auto uses Vertex (project + WIF/credentials); GEMINI_API_KEY used only when AI_PROVIDER=studio. Never expose keys to client."
     },
     "sidebarDesktop": {
       "collapsedTop": "Phosphor Sidebar opens rail; hover:bg-brandcolor-fill on control.",

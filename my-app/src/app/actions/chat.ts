@@ -17,6 +17,7 @@ import { timeGreetingLine } from "@/lib/time-greeting";
 import { buildDailySummaryPayload } from "@/lib/summary";
 import { generateGeminiDailyArticle } from "@/lib/vertex-daily-summary";
 import { mealThumbPathForNormalizedFood } from "@/lib/meal-thumb";
+import { parseBasicPortionFromText } from "@/lib/portion";
 import type { ReactionSnapshot } from "@/lib/reaction-summary";
 import { formatReactionShortSummary } from "@/lib/reaction-summary";
 
@@ -84,6 +85,7 @@ export async function sendMealMessage(
   const foodNameNormalized = normalizeFoodLabel(text.split(/[.,;]/)[0] ?? text);
   const followUpDueAt = new Date(Date.now() + FOLLOW_UP_MS);
   const mealThumb = mealThumbPathForNormalizedFood(foodNameNormalized);
+  const portion = parseBasicPortionFromText(text);
   const savedFoodLabel = foodNameNormalized.slice(0, 80);
   const savedFoodDisplay =
     savedFoodLabel.length > 0
@@ -106,6 +108,7 @@ export async function sendMealMessage(
         sessionId: day.id,
         rawText: text,
         foodNameNormalized,
+        ...(portion ? { quantity: portion.quantity, unit: portion.unit } : {}),
         followUpDueAt,
       },
     }),

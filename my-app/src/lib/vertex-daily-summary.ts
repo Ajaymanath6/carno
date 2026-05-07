@@ -83,7 +83,7 @@ function mockArticle(input: { payload: DailySummaryPayload }): string {
   const nRx = input.payload.reactions.length;
   return (
     `Here's a quick snapshot: you logged ${nFood} meal(s) and ${nRx} check-in(s) today. ` +
-    `(VERTEX_DISABLED=true — enable Gemini API key or Vertex for live output.)`
+    `(VERTEX_DISABLED=true — unset it and configure Vertex, or use AI_PROVIDER=studio + GEMINI_API_KEY.)`
   );
 }
 
@@ -96,14 +96,76 @@ export function resolveAiProvider(): "auto" | "studio" | "vertex" {
   return "auto";
 }
 
+/** Resolved GCP project id for Vertex (either env name). */
+export function resolveVertexProjectId(): string | undefined {
+  const p = process.env.VERTEX_PROJECT_ID ?? process.env.GOOGLE_CLOUD_PROJECT;
+  const t = p?.trim();
+  return t || undefined;
+}
+
+/**
+ * Google AI Studio (`GEMINI_API_KEY`) is used only when `AI_PROVIDER=studio`.
+ * With `auto`, the key may remain in `.env` but is ignored for routing.
+ */
+export function aiRoutingUsesStudio(mode: ReturnType<typeof resolveAiProvider>): boolean {
+  return mode === "studio";
+}
+
+/** Vertex when `AI_PROVIDER=vertex` or `auto` and a GCP project id is set. */
+export function aiRoutingUsesVertex(mode: ReturnType<typeof resolveAiProvider>): boolean {
+  const project = resolveVertexProjectId();
+  if (!project) return false;
+  return mode === "vertex" || mode === "auto";
+}
+
+/** Inline WIF JSON string or Secrets Manager secret id is present (paths this app supports). */
+export function vertexWorkloadCredentialEnvConfigured(): boolean {
+  return (
+    Boolean(process.env.GOOGLE_EXTERNAL_ACCOUNT_JSON?.trim()) ||
+    Boolean(process.env.VERTEX_CREDENTIAL_SECRET_ID?.trim())
+  );
+}
+
+/**
+ * When `GOOGLE_EXTERNAL_ACCOUNT_JSON` is non-empty but not valid JSON (common `.env` quoting mistake).
+ */
+export function vertexInlineCredentialJsonInvalidReason(): string | null {
+  const raw = process.env.GOOGLE_EXTERNAL_ACCOUNT_JSON?.trim();
+  if (!raw) return null;
+  try {
+    JSON.parse(raw);
+    return null;
+  } catch {
+    return (
+      "GOOGLE_EXTERNAL_ACCOUNT_JSON is set but is not valid JSON — fix escaping/quoting in .env " +
+      "(use a single-line JSON string or escape inner quotes)."
+    );
+  }
+}
+
+/**
+ * After confirming Vertex project id exists: validates credential env for auto/vertex routing.
+ */
+export function vertexCredentialBlockingReasonAfterProjectSet(): string | null {
+  const badJson = vertexInlineCredentialJsonInvalidReason();
+  if (badJson) return badJson;
+  if (!vertexWorkloadCredentialEnvConfigured()) {
+    return (
+      "Vertex project id is set but workload credentials are missing: set GOOGLE_EXTERNAL_ACCOUNT_JSON " +
+      "(WIF JSON from GCP) or VERTEX_CREDENTIAL_SECRET_ID (+ AWS credentials for Secrets Manager)."
+    );
+  }
+  return null;
+}
+
 /**
  * Generates the daily summary article using **one** backend:
  *
  * 1. `VERTEX_DISABLED=true` → mock text (no API calls).
- * 2. `AI_PROVIDER=studio` or (`auto` + `GEMINI_API_KEY`) → Google AI Studio (Gemini Developer API).
- * 3. `AI_PROVIDER=vertex` or (`auto` + Vertex env + credentials) → Vertex AI.
+ * 2. `AI_PROVIDER=studio` + `GEMINI_API_KEY` → Google AI Studio (Developer API).
+ * 3. `AI_PROVIDER=vertex` or `AI_PROVIDER=auto` + Vertex project + credentials → Vertex AI.
  *
- * Precedence when `AI_PROVIDER=auto`: Studio API key wins over Vertex if both are configured.
+ * When `AI_PROVIDER=auto`, calls go to **Vertex only**; `GEMINI_API_KEY` is not used (set `AI_PROVIDER=studio` to use it).
  */
 export async function generateGeminiDailyArticle(input: ArticleInput): Promise<GenerateGeminiDailyArticleResult> {
   if (process.env.VERTEX_DISABLED === "true") {
@@ -115,7 +177,7 @@ export async function generateGeminiDailyArticle(input: ArticleInput): Promise<G
 
   const mode = resolveAiProvider();
   const geminiApiKey = process.env.GEMINI_API_KEY?.trim();
-  const project = process.env.VERTEX_PROJECT_ID ?? process.env.GOOGLE_CLOUD_PROJECT?.trim();
+  const project = resolveVertexProjectId();
 
   if (mode === "studio" && !geminiApiKey) {
     throw new Error("AI_PROVIDER=studio requires GEMINI_API_KEY (Google AI Studio).");
@@ -123,12 +185,23 @@ export async function generateGeminiDailyArticle(input: ArticleInput): Promise<G
   if (mode === "vertex" && !project) {
     throw new Error("AI_PROVIDER=vertex requires VERTEX_PROJECT_ID or GOOGLE_CLOUD_PROJECT.");
   }
+  if (mode === "auto" && !project) {
+    throw new Error(
+      "AI_PROVIDER=auto uses Vertex only. Set VERTEX_PROJECT_ID or GOOGLE_CLOUD_PROJECT plus credentials (GEMINI_API_KEY is ignored unless AI_PROVIDER=studio).",
+    );
+  }
+
+  if ((mode === "auto" || mode === "vertex") && project) {
+    const credErr = vertexCredentialBlockingReasonAfterProjectSet();
+    if (credErr) {
+      throw new Error(credErr);
+    }
+  }
 
   const prompt = buildDailySummaryPrompt(input);
 
-  const tryStudio = mode === "studio" || (mode === "auto" && Boolean(geminiApiKey));
-  const tryVertex =
-    mode === "vertex" || (mode === "auto" && Boolean(project) && !geminiApiKey);
+  const tryStudio = aiRoutingUsesStudio(mode) && Boolean(geminiApiKey);
+  const tryVertex = aiRoutingUsesVertex(mode);
 
   if (tryStudio && geminiApiKey) {
     const model = process.env.GEMINI_MODEL ?? "gemini-2.5-flash";
@@ -178,7 +251,7 @@ export async function generateGeminiDailyArticle(input: ArticleInput): Promise<G
   }
 
   throw new Error(
-    "No AI backend configured: set GEMINI_API_KEY (Google AI Studio), or Vertex project + GOOGLE_EXTERNAL_ACCOUNT_JSON / AWS Secrets Manager credential_json.",
+    "No AI backend configured for this AI_PROVIDER: use Vertex (project + GOOGLE_EXTERNAL_ACCOUNT_JSON or VERTEX_CREDENTIAL_SECRET_ID), or set AI_PROVIDER=studio with GEMINI_API_KEY.",
   );
 }
 

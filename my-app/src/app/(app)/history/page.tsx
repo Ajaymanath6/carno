@@ -10,6 +10,10 @@ import { redirect } from "next/navigation";
 import { HistoryPeriodSummary } from "@/components/history/HistoryPeriodSummary";
 import { HistoryCalorieBanner } from "@/components/history/HistoryCalorieBanner";
 import { HistoryDayList } from "@/components/history/HistoryDayList";
+import {
+  calorieEngineUsesVertex,
+  resolveCalorieEngine,
+} from "@/lib/calories-reference";
 import { calorieEstimationUnavailableReason } from "@/lib/vertex-day-calories";
 
 export const maxDuration = 60;
@@ -46,7 +50,10 @@ export default async function HistoryPage() {
     });
   }
 
-  const calorieSetupReason = calorieEstimationUnavailableReason();
+  const calorieEngine = resolveCalorieEngine();
+  const vertexUnavailable =
+    calorieEngine === "vertex" ? calorieEstimationUnavailableReason() : null;
+  const skipCalorieFetch = calorieEngine === "vertex" && Boolean(vertexUnavailable);
 
   const rows = days.map((d) => ({
     id: d.id,
@@ -68,8 +75,8 @@ export default async function HistoryPage() {
               Recent days (newest first). Closed days include a saved summary.
             </p>
           </div>
-          {calorieSetupReason ?
-            <HistoryCalorieBanner message={calorieSetupReason} />
+          {calorieEngine === "vertex" && vertexUnavailable ?
+            <HistoryCalorieBanner message={vertexUnavailable} />
           : null}
           {days.length === 0 ?
             <p className="text-sm text-brandcolor-text-weak">
@@ -83,7 +90,8 @@ export default async function HistoryPage() {
               <HistoryDayList
                 rows={rows}
                 timezone={user.timezone}
-                skipCalorieFetch={Boolean(calorieSetupReason)}
+                calorieEngine={calorieEngine}
+                skipCalorieFetch={skipCalorieFetch}
               />
               <div className="pt-1">
                 <HistoryPeriodSummary dayCount={days.length} />

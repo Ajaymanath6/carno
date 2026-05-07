@@ -1,8 +1,12 @@
 import { GoogleGenAI } from "@google/genai/node";
 import { z } from "zod";
 import {
+  aiRoutingUsesStudio,
+  aiRoutingUsesVertex,
   loadGoogleExternalAccountCredentialJson,
   resolveAiProvider,
+  resolveVertexProjectId,
+  vertexCredentialBlockingReasonAfterProjectSet,
 } from "@/lib/vertex-daily-summary";
 
 const BatchSchema = z.object({
@@ -51,31 +55,30 @@ export function calorieEstimationUnavailableReason(): string | null {
   const vertexDisabled = process.env.VERTEX_DISABLED === "true";
   const mode = resolveAiProvider();
   const geminiApiKey = process.env.GEMINI_API_KEY?.trim();
-  const project = process.env.VERTEX_PROJECT_ID ?? process.env.GOOGLE_CLOUD_PROJECT?.trim();
+  const project = resolveVertexProjectId();
 
-  const tryStudio = mode === "studio" || (mode === "auto" && Boolean(geminiApiKey));
-  const tryVertex =
-    mode === "vertex" || (mode === "auto" && Boolean(project) && !geminiApiKey);
-
-  /** Daily summaries respect VERTEX_DISABLED mock mode; calories can still use Studio (API key), not Vertex. */
+  /** VERTEX_DISABLED blocks Vertex; explicit AI_PROVIDER=studio can still hit Google AI Studio for calories. */
   if (vertexDisabled) {
-    if (tryStudio && geminiApiKey) return null;
+    if (mode === "studio" && geminiApiKey) return null;
     if (mode === "studio") {
-      return "VERTEX_DISABLED=true: add GEMINI_API_KEY (Google AI Studio) so calorie estimates can run.";
+      return "VERTEX_DISABLED=true: set GEMINI_API_KEY for AI_PROVIDER=studio calorie estimates.";
     }
-    return "VERTEX_DISABLED=true blocks Vertex for calories. Add GEMINI_API_KEY for Studio estimates, or unset VERTEX_DISABLED and configure Vertex.";
+    return "VERTEX_DISABLED=true blocks Vertex. AI_PROVIDER=auto uses Vertex only — unset VERTEX_DISABLED or set AI_PROVIDER=studio.";
   }
-
-  if (tryStudio && geminiApiKey) return null;
-  if (tryVertex && project) return null;
 
   if (mode === "studio") {
-    return "AI_PROVIDER=studio requires GEMINI_API_KEY.";
+    if (!geminiApiKey) return "AI_PROVIDER=studio requires GEMINI_API_KEY.";
+    return null;
   }
-  if (mode === "vertex") {
-    return "AI_PROVIDER=vertex requires VERTEX_PROJECT_ID or GOOGLE_CLOUD_PROJECT.";
+
+  if (!project) {
+    if (mode === "vertex") {
+      return "AI_PROVIDER=vertex requires VERTEX_PROJECT_ID or GOOGLE_CLOUD_PROJECT.";
+    }
+    return "AI_PROVIDER=auto uses Vertex only: set VERTEX_PROJECT_ID or GOOGLE_CLOUD_PROJECT (+ credentials). GEMINI_API_KEY is unused unless AI_PROVIDER=studio.";
   }
-  return "No AI backend for calories: set GEMINI_API_KEY (Google AI Studio), or Vertex project + credentials.";
+
+  return vertexCredentialBlockingReasonAfterProjectSet();
 }
 
 function buildBatchPrompt(chunk: DayCalorieInput[]): string {
@@ -141,11 +144,10 @@ async function generateContentText(prompt: string): Promise<string> {
   const vertexDisabled = process.env.VERTEX_DISABLED === "true";
   const mode = resolveAiProvider();
   const geminiApiKey = process.env.GEMINI_API_KEY?.trim();
-  const project = process.env.VERTEX_PROJECT_ID ?? process.env.GOOGLE_CLOUD_PROJECT?.trim();
+  const project = resolveVertexProjectId();
 
-  const tryStudio = mode === "studio" || (mode === "auto" && Boolean(geminiApiKey));
-  const tryVertex =
-    mode === "vertex" || (mode === "auto" && Boolean(project) && !geminiApiKey);
+  const tryStudio = aiRoutingUsesStudio(mode) && Boolean(geminiApiKey);
+  const tryVertex = aiRoutingUsesVertex(mode);
 
   if (tryStudio && geminiApiKey) {
     const model = process.env.GEMINI_MODEL ?? "gemini-2.5-flash";
@@ -163,7 +165,7 @@ async function generateContentText(prompt: string): Promise<string> {
 
   if (vertexDisabled && tryVertex && project) {
     throw new Error(
-      "VERTEX_DISABLED=true: calorie batch cannot use Vertex. Set GEMINI_API_KEY for Google AI Studio, or unset VERTEX_DISABLED.",
+      "VERTEX_DISABLED=true: calorie batch cannot use Vertex. Unset VERTEX_DISABLED or use AI_PROVIDER=studio with GEMINI_API_KEY.",
     );
   }
 
@@ -195,7 +197,7 @@ async function generateContentText(prompt: string): Promise<string> {
   }
 
   throw new Error(
-    "No AI backend configured for calorie estimates (GEMINI_API_KEY or Vertex).",
+    "No AI backend configured for calorie estimates: Vertex (project + credentials) when AI_PROVIDER=auto|vertex, or AI_PROVIDER=studio with GEMINI_API_KEY.",
   );
 }
 

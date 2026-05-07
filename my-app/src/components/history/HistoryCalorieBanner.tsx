@@ -1,11 +1,17 @@
-/** Shown when logged meals exist but AI calorie totals could not be filled (env or API). */
-export function HistoryCalorieBanner({ message }: { message: string }) {
+/** Shown when Vertex-backed totals can’t run or when explaining calorie labeling. */
+export function HistoryCalorieBanner({
+  message,
+  title = `About “— kcal”`,
+}: {
+  message: string;
+  title?: string;
+}) {
   return (
     <div
       role="status"
       className="rounded-2xl border border-brandcolor-strokeweak bg-brandcolor-fill px-4 py-3 text-sm"
     >
-      <p className="font-medium text-brandcolor-text-strong">About “— kcal”</p>
+      <p className="font-medium text-brandcolor-text-strong">{title}</p>
       <p className="mt-1 leading-relaxed text-brandcolor-text-weak">{message}</p>
     </div>
   );

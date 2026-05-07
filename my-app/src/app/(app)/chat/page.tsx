@@ -6,6 +6,7 @@ import { getOrCreateAppUser } from "@/lib/user";
 import { getOrCreateDaySession } from "@/lib/session";
 import { processDueFollowUpsForSession } from "@/lib/followups";
 import { ChatClient } from "@/components/chat/ChatClient";
+import { DAILY_KCAL_NEED, estimateMealKcalReference } from "@/lib/calories-reference";
 
 /** Always personalised server data (messages, meal count); avoids CDN caching a stale shell without the Summary badge. */
 export const dynamic = "force-dynamic";
@@ -49,6 +50,28 @@ export default async function ChatPage() {
     where: { sessionId: refreshed.id },
   });
 
+  const foodEntries = await prisma.foodEntry.findMany({
+    where: { sessionId: refreshed.id },
+    select: {
+      id: true,
+      rawText: true,
+      quantity: true,
+      unit: true,
+      foodNameNormalized: true,
+    },
+    orderBy: { loggedAt: "asc" },
+  });
+  const intakeKcal = foodEntries.reduce((sum, e) => {
+    const k = estimateMealKcalReference({
+      id: e.id,
+      rawText: e.rawText,
+      quantity: e.quantity,
+      unit: e.unit,
+      foodNameNormalized: e.foodNameNormalized,
+    });
+    return sum + (k ?? 0);
+  }, 0);
+
   const displayName = displayNameFromUser({
     name: user.name,
     email: user.email,
@@ -73,6 +96,8 @@ export default async function ChatPage() {
           displayName={displayName}
           localDate={refreshed.localDate}
           foodEntryCount={foodEntryCount}
+          intakeKcal={intakeKcal}
+          needKcal={DAILY_KCAL_NEED}
         />
       </Suspense>
     </main>

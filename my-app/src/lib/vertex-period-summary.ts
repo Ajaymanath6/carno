@@ -1,8 +1,12 @@
 import { GoogleGenAI } from "@google/genai/node";
 import type { PeriodSummaryPayload } from "@/lib/period-summary";
 import {
+  aiRoutingUsesStudio,
+  aiRoutingUsesVertex,
   loadGoogleExternalAccountCredentialJson,
   resolveAiProvider,
+  resolveVertexProjectId,
+  vertexCredentialBlockingReasonAfterProjectSet,
 } from "@/lib/vertex-daily-summary";
 
 export type GeminiPeriodArticleProvider = "mock" | "studio" | "vertex";
@@ -26,13 +30,13 @@ function mockPeriodArticle(input: PeriodArticleInput): string {
   const meals = input.payload.days.reduce((a, d) => a + d.summary.foods.length, 0);
   return (
     `Clinical-style period snapshot (${n} day(s), ${meals} meal log(s), ${input.dateRangeLabel}). ` +
-    `(VERTEX_DISABLED=true — enable GEMINI_API_KEY or Vertex for a full narrative.)`
+    `(VERTEX_DISABLED=true — unset it for Vertex, or use AI_PROVIDER_PERIOD=studio + GEMINI_API_KEY.)`
   );
 }
 
 /**
- * Period clinical summary backend: optional `AI_PROVIDER_PERIOD` overrides `AI_PROVIDER`
- * so multi-day digests can target Vertex while daily summaries stay on Studio (or vice versa).
+ * Period clinical summary backend: optional `AI_PROVIDER_PERIOD` overrides `AI_PROVIDER`.
+ * Routing matches daily summaries: `auto` uses Vertex only (GEMINI_API_KEY ignored unless `studio`).
  */
 function resolvePeriodAiProvider(): "auto" | "studio" | "vertex" {
   const raw = process.env.AI_PROVIDER_PERIOD?.trim().toLowerCase();
@@ -80,22 +84,33 @@ export async function generateGeminiPeriodArticle(
 
   const mode = resolvePeriodAiProvider();
   const geminiApiKey = process.env.GEMINI_API_KEY?.trim();
-  const project = process.env.VERTEX_PROJECT_ID ?? process.env.GOOGLE_CLOUD_PROJECT?.trim();
+  const project = resolveVertexProjectId();
 
   if (mode === "studio" && !geminiApiKey) {
     throw new Error("AI_PROVIDER=studio requires GEMINI_API_KEY (Google AI Studio).");
   }
   if (mode === "vertex" && !project) {
     throw new Error(
-      "Period summaries use Vertex (AI_PROVIDER_PERIOD=vertex) but VERTEX_PROJECT_ID / GOOGLE_CLOUD_PROJECT is empty. Set one of those, or use AI_PROVIDER_PERIOD=auto or studio.",
+      "AI_PROVIDER_PERIOD=vertex requires VERTEX_PROJECT_ID or GOOGLE_CLOUD_PROJECT (or use AI_PROVIDER_PERIOD=studio with GEMINI_API_KEY).",
     );
+  }
+  if (mode === "auto" && !project) {
+    throw new Error(
+      "AI_PROVIDER_PERIOD / AI_PROVIDER=auto uses Vertex only. Set VERTEX_PROJECT_ID or GOOGLE_CLOUD_PROJECT (+ credentials). GEMINI_API_KEY is ignored unless AI_PROVIDER_PERIOD=studio.",
+    );
+  }
+
+  if ((mode === "auto" || mode === "vertex") && project) {
+    const credErr = vertexCredentialBlockingReasonAfterProjectSet();
+    if (credErr) {
+      throw new Error(credErr);
+    }
   }
 
   const prompt = buildPeriodSummaryPrompt(input);
 
-  const tryStudio = mode === "studio" || (mode === "auto" && Boolean(geminiApiKey));
-  const tryVertex =
-    mode === "vertex" || (mode === "auto" && Boolean(project) && !geminiApiKey);
+  const tryStudio = aiRoutingUsesStudio(mode) && Boolean(geminiApiKey);
+  const tryVertex = aiRoutingUsesVertex(mode);
 
   if (tryStudio && geminiApiKey) {
     const model =
@@ -146,6 +161,6 @@ export async function generateGeminiPeriodArticle(
   }
 
   throw new Error(
-    "No AI backend configured: set GEMINI_API_KEY (Google AI Studio), or Vertex project + GOOGLE_EXTERNAL_ACCOUNT_JSON / AWS Secrets Manager credential_json.",
+    "No AI backend configured for this provider mode: Vertex (project + credentials), or AI_PROVIDER_PERIOD=studio with GEMINI_API_KEY.",
   );
 }
