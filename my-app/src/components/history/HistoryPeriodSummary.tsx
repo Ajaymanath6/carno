@@ -1,7 +1,10 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Trash } from "@phosphor-icons/react";
 import {
+  deleteAllHistory,
   generatePeriodClinicalSummary,
   type PeriodClinicalSummaryResult,
 } from "@/app/actions/period-summary";
@@ -11,9 +14,12 @@ type Props = {
 };
 
 export function HistoryPeriodSummary({ dayCount }: Props) {
+  const router = useRouter();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [pending, setPending] = useState(false);
+  const [deletePending, setDeletePending] = useState(false);
   const [result, setResult] = useState<PeriodClinicalSummaryResult | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   if (dayCount <= 0) {
     return null;
@@ -40,9 +46,32 @@ export function HistoryPeriodSummary({ dayCount }: Props) {
     void runSummary();
   }
 
+  async function onDeleteHistory() {
+    if (deletePending) {
+      return;
+    }
+    const ok = window.confirm("Delete all history? This removes all logged days, meals, and reactions.");
+    if (!ok) {
+      return;
+    }
+    setDeletePending(true);
+    setDeleteError(null);
+    try {
+      const out = await deleteAllHistory();
+      if (!out.ok) {
+        setDeleteError(out.error);
+        return;
+      }
+      dialogRef.current?.close();
+      router.refresh();
+    } finally {
+      setDeletePending(false);
+    }
+  }
+
   return (
     <>
-      <div className="flex w-full justify-start">
+      <div className="flex w-full items-center justify-between gap-3">
         <button
           type="button"
           onClick={openAndRun}
@@ -51,7 +80,19 @@ export function HistoryPeriodSummary({ dayCount }: Props) {
         >
           {pending ? "Generating…" : `Clinical summary · last ${dayCount} day${dayCount === 1 ? "" : "s"}`}
         </button>
+        <button
+          type="button"
+          onClick={() => void onDeleteHistory()}
+          disabled={deletePending}
+          className="inline-flex items-center gap-1 text-sm font-semibold text-brandcolor-primary hover:underline disabled:opacity-50"
+        >
+          <Trash className="h-4 w-4" weight="bold" aria-hidden />
+          {deletePending ? "Deleting…" : "Delete history"}
+        </button>
       </div>
+      {deleteError ? (
+        <p className="mt-2 text-xs font-medium text-brandcolor-primary">{deleteError}</p>
+      ) : null}
 
       <dialog
         ref={dialogRef}

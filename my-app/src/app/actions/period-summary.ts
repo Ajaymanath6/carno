@@ -88,3 +88,18 @@ export async function generatePeriodClinicalSummary(): Promise<PeriodClinicalSum
     };
   }
 }
+
+export type DeleteAllHistoryResult = { ok: true } | { ok: false; error: string };
+
+export async function deleteAllHistory(): Promise<DeleteAllHistoryResult> {
+  const appUser = await getOrCreateAppUser();
+  if (!appUser) {
+    return { ok: false, error: "Not signed in." };
+  }
+
+  await prisma.daySession.deleteMany({
+    where: { userId: appUser.id },
+  });
+
+  return { ok: true };
+}
