@@ -28,8 +28,19 @@ export type ActionState = { error?: string; ok?: boolean };
 
 function formatMealItems(items: string[]): string {
   const cleaned = items.map((item) => item.trim()).filter(Boolean);
-  const joined = cleaned.join(" and ");
+  const joined = cleaned.join(" ");
   return joined.length <= 500 ? joined : `${joined.slice(0, 497)}...`;
+}
+
+function splitInlineMealItems(line: string): string[] {
+  const s = line.trim();
+  if (!s) {
+    return [];
+  }
+  const parts = s.split(
+    /\s+(?=\d+(?:\.\d+)?\s+(?:spoons?|tbsp|tablespoons?|eggs?|egg|ghee|beef|steak|chicken|chiken|mutton|paneer|lamb|pork|fish|salmon|tuna|shrimp|butter|cream)\b)/gi,
+  );
+  return parts.map((p) => p.trim()).filter(Boolean);
 }
 
 /** Maps DB connectivity failures to a safe user message (avoids crashing the UI when Neon is unreachable). */
@@ -152,11 +163,11 @@ export async function sendMealMessage(
 }
 
 function splitMealMessageIntoEntries(text: string): string[] {
-  const raw = text
+  const base = text
     .split(/\n+/g)
     .flatMap((line) => line.split(/\s+(?:and|&)\s+|,\s*/gi))
-    .map((s) => s.trim())
-    .filter(Boolean);
+    .flatMap((segment) => splitInlineMealItems(segment));
+  const raw = base.map((s) => s.trim()).filter(Boolean);
   // If splitting produced nonsense (e.g. empty or only separators), fall back to original.
   return raw.length > 0 ? raw : [text.trim()];
 }

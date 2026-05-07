@@ -22,10 +22,9 @@ export function NewDayChatDialog({ dialogRef }: Props) {
 
   useEffect(() => {
     if (resetState.ok) {
-      dialogRef.current?.close();
       router.refresh();
     }
-  }, [resetState.ok, dialogRef, router]);
+  }, [resetState.ok, router]);
 
   function closeDialog() {
     dialogRef.current?.close();
@@ -48,6 +47,11 @@ export function NewDayChatDialog({ dialogRef }: Props) {
       {resetState.error != null && (
         <p className="mt-3 text-sm font-medium text-brandcolor-primary" role="alert">
           {resetState.error}
+        </p>
+      )}
+      {resetState.ok && (
+        <p className="mt-3 text-sm font-medium text-green-700" role="status">
+          Started fresh for today. You can close this modal and continue logging.
         </p>
       )}
       <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">

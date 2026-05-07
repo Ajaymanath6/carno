@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 
 function compactMealLabel(parts: string[]): string {
   const cleaned = parts.map((p) => p.trim()).filter(Boolean);
-  const joined = cleaned.join(" and ");
+  const joined = cleaned.join(" ");
   return joined.length <= 500 ? joined : `${joined.slice(0, 497)}...`;
 }
 
