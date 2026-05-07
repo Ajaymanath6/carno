@@ -1,0 +1,15 @@
+Potential secrets found (do not commit real values):
+
+- my-app/.env contains:
+  - DATABASE_URL / DIRECT_URL (database credentials)
+  - CLERK_SECRET_KEY
+  - NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY (public but still environment config)
+  - GEMINI_API_KEY
+  - AUTH_SECRET / NEXTAUTH_URL (auth config)
+  - AWS_SHARED_CREDENTIALS_FILE path (may point to credential material)
+
+Recommended actions:
+- Ensure `my-app/.env` is gitignored and never committed.
+- Rotate any exposed keys (CLERK_SECRET_KEY, GEMINI_API_KEY, DB password) if they were ever shared.
+- Prefer local `.env` + Vercel/hosting env vars for deployment secrets.
+

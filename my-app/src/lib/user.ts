@@ -35,7 +35,15 @@ export async function getOrCreateAppUser(): Promise<User | null> {
     return null;
   }
 
-  let profile = await currentUser();
+  let profile = null as Awaited<ReturnType<typeof currentUser>> | null;
+  try {
+    profile = await currentUser();
+  } catch (e) {
+    // `currentUser()` can throw ClerkAPIResponseError during RSC render if Clerk
+    // can't complete the backend fetch (misconfig, transient network, etc).
+    console.error("[getOrCreateAppUser] currentUser() failed:", e);
+    profile = null;
+  }
   if (!profile) {
     try {
       const client = await clerkClient();
