@@ -8,7 +8,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getOrCreateAppUser } from "@/lib/user";
 import { getOrCreateDaySession } from "@/lib/session";
-import { displayFoodTitleFromLog, normalizeFoodLabel } from "@/lib/text";
+import { normalizeFoodLabel } from "@/lib/text";
 import { processDueFollowUpsForSession } from "@/lib/followups";
 import { MessageRole, ConversationPhase, Prisma, SessionStatus } from "@prisma/client";
 import { formatWeekdayMonthDayForLocalDateKey, shiftLocalDateKey } from "@/lib/date";
@@ -25,6 +25,12 @@ import { formatReactionShortSummary } from "@/lib/reaction-summary";
 const FOLLOW_UP_MS = 60 * 1000;
 
 export type ActionState = { error?: string; ok?: boolean };
+
+function formatMealItems(items: string[]): string {
+  const cleaned = items.map((item) => item.trim()).filter(Boolean);
+  const joined = cleaned.join(" and ");
+  return joined.length <= 500 ? joined : `${joined.slice(0, 497)}...`;
+}
 
 /** Maps DB connectivity failures to a safe user message (avoids crashing the UI when Neon is unreachable). */
 function prismaDatabaseUnavailableMessage(error: unknown): string | null {
@@ -229,12 +235,32 @@ export async function submitReaction(
 
   const shortSummary = formatReactionShortSummary(reactionSnapshot);
   const mealThumb = mealThumbPathForNormalizedFood(entry.foodNameNormalized);
-  const foodDisplay = displayFoodTitleFromLog(entry.rawText, entry.foodNameNormalized);
 
   await prisma.$transaction(async (tx) => {
-    await tx.reactionEntry.create({
-      data: {
-        foodEntryId: entry.id,
+    const groupedEntries = await tx.foodEntry.findMany({
+      where: {
+        sessionId: entry.sessionId,
+        followUpDueAt: entry.followUpDueAt,
+        followUpPromptSentAt: { not: null },
+        followUpCompletedAt: null,
+      },
+      orderBy: { loggedAt: "asc" },
+      select: {
+        id: true,
+        rawText: true,
+      },
+    });
+
+    const targetEntries =
+      groupedEntries.length > 0
+        ? groupedEntries
+        : [{ id: entry.id, rawText: entry.rawText }];
+    const targetEntryIds = targetEntries.map((food) => food.id);
+    const foodDisplay = formatMealItems(targetEntries.map((food) => food.rawText));
+
+    await tx.reactionEntry.createMany({
+      data: targetEntryIds.map((foodEntryId) => ({
+        foodEntryId,
         energyLevel: reactionSnapshot.energyLevel,
         bloating: reactionSnapshot.bloating,
         gas: reactionSnapshot.gas,
@@ -244,11 +270,11 @@ export async function submitReaction(
         ateYesterdaySame: reactionSnapshot.ateYesterdaySame,
         feltDifferentNotes: reactionSnapshot.feltDifferentNotes,
         symptomsBetterOrWorse: reactionSnapshot.symptomsBetterOrWorse,
-      },
+      })),
     });
 
-    await tx.foodEntry.update({
-      where: { id: entry.id },
+    await tx.foodEntry.updateMany({
+      where: { id: { in: targetEntryIds } },
       data: { followUpCompletedAt: new Date() },
     });
 
@@ -282,6 +308,7 @@ export async function submitReaction(
           shortSummary,
           reaction: reactionSnapshot,
           foodDisplay,
+          foodEntryIds: targetEntryIds,
           ...(mealThumb != null ? { mealThumb } : {}),
         } as Prisma.InputJsonValue,
       },

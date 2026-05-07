@@ -26,8 +26,9 @@ function nameFromClerkLike(profile: {
 /**
  * Maps Clerk identity to our Prisma User row (creates on first sign-in).
  *
- * Uses `currentUser()` when available; falls back to `users.getUser(userId)` because
- * `currentUser()` is often null on the first RSC render after OAuth redirect (production).
+ * Prefer `users.getUser(userId)` once `auth()` yields a Clerk id. It is more
+ * stable in RSC render paths than `currentUser()`, which may throw in dev/SSR
+ * when Clerk backend fetch fails transiently.
  */
 export async function getOrCreateAppUser(): Promise<User | null> {
   const { userId } = await auth();
@@ -37,21 +38,28 @@ export async function getOrCreateAppUser(): Promise<User | null> {
 
   let profile = null as Awaited<ReturnType<typeof currentUser>> | null;
   try {
-    profile = await currentUser();
+    const client = await clerkClient();
+    profile = await client.users.getUser(userId);
   } catch (e) {
-    // `currentUser()` can throw ClerkAPIResponseError during RSC render if Clerk
-    // can't complete the backend fetch (misconfig, transient network, etc).
-    console.error("[getOrCreateAppUser] currentUser() failed:", e);
-    profile = null;
+    const message = e instanceof Error ? e.message : "";
+    console.warn(
+      `[getOrCreateAppUser] users.getUser failed for ${userId}${message ? `: ${message}` : ""}`,
+    );
   }
+
   if (!profile) {
     try {
-      const client = await clerkClient();
-      profile = await client.users.getUser(userId);
+      profile = await currentUser();
     } catch (e) {
-      console.error("[getOrCreateAppUser] clerkClient.users.getUser failed:", e);
+      const message = e instanceof Error ? e.message : "";
+      console.warn(
+        `[getOrCreateAppUser] currentUser fallback failed for ${userId}${message ? `: ${message}` : ""}`,
+      );
       return null;
     }
+  }
+  if (!profile) {
+    return null;
   }
 
   const email = emailFromClerkLike(profile);
