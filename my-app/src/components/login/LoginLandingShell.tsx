@@ -119,11 +119,11 @@ export function LoginLandingShell({ faqs }: Props) {
         <div className="relative mx-auto grid w-full max-w-5xl grid-cols-1 gap-8 px-4 pb-10 pt-24 lg:gap-10 lg:pb-16 lg:pt-28">
           <section className="flex min-w-0 flex-col justify-start">
             <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2 lg:gap-10">
-              <div className="min-w-0 text-left">
+              <div className="order-2 min-w-0 text-left lg:order-1">
                 <h1 className="text-left font-serif text-[clamp(1.5rem,5vw,4rem)] font-semibold leading-tight tracking-tight text-brandcolor-text-strong">
                   A calmer way to learn what food does to you.
                 </h1>
-                <p className="mt-4 text-left font-sans text-[24px] leading-relaxed text-brandcolor-text-weak">
+                <p className="mt-4 text-left font-sans text-[16px] leading-relaxed text-brandcolor-text-weak sm:text-[26px]">
                   Log meals and reactions in seconds—share clinician-ready summaries when you need them.
                   <br />
                   Quick logs first; richer detail only when it helps. Patterns by day or rolled up across days.
@@ -131,11 +131,11 @@ export function LoginLandingShell({ faqs }: Props) {
                   Your diary for clarity, not perfection—notes you own.
                 </p>
                 <LoginHeroCTAs />
-                <p className="mt-3 text-left font-sans text-[24px] leading-relaxed text-brandcolor-text-weak">
+                <p className="mt-3 text-left font-sans text-[16px] leading-relaxed text-brandcolor-text-weak sm:text-[26px]">
                   No judgement. Just data you can use.
                 </p>
               </div>
-              <div className="flex justify-center lg:justify-end">
+              <div className="order-1 flex justify-center lg:order-2 lg:justify-end">
                 <div className="w-full max-w-xl rounded-2xl bg-brandcolor-fill">
                   <Image
                     src={LOGIN_HERO_LOG_LEARN}
