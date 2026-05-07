@@ -8,7 +8,11 @@ import {
   dailySummarySelectWithoutAi,
   isAiSummaryColumnsMissingError,
 } from "@/lib/prisma-daily-summary-fallback";
-import { estimateMealCaloriesBatch } from "@/lib/vertex-day-calories";
+import { HistoryCalorieBanner } from "@/components/history/HistoryCalorieBanner";
+import {
+  calorieEstimationUnavailableReason,
+  estimateMealCaloriesBatch,
+} from "@/lib/vertex-day-calories";
 import { redirect, notFound } from "next/navigation";
 
 export default async function HistoryDayPage({
@@ -65,6 +69,16 @@ export default async function HistoryDayPage({
   } catch (err) {
     console.error("[history/[date]] estimateMealCaloriesBatch:", err);
   }
+
+  const calorieSetupReason = calorieEstimationUnavailableReason();
+  const anyMealMissingKcal =
+    day.foodEntries.length > 0 &&
+    day.foodEntries.some((f) => !kcalByEntryId.has(f.id));
+  const calorieBannerMessage =
+    anyMealMissingKcal ?
+      calorieSetupReason ??
+      "Calorie estimates use Gemini (Google AI Studio or Vertex). This request failed or returned incomplete data — check server logs."
+    : null;
 
   /** Widen type when DB predates `aiArticle` columns (fallback query omits those keys). */
   const summaryView = day.dailySummary as
@@ -128,6 +142,10 @@ export default async function HistoryDayPage({
               </pre>
             </section>
           )}
+
+          {calorieBannerMessage ?
+            <HistoryCalorieBanner message={calorieBannerMessage} />
+          : null}
 
           <section>
             <h2 className="font-medium text-brandcolor-text-strong">Meals & reactions</h2>

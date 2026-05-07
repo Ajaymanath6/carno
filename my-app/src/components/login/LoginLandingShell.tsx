@@ -21,7 +21,7 @@ import { LOGIN_HERO_HOW_IT_WORKS, LOGIN_HERO_LOG_LEARN } from "@/lib/brand";
 function LoginHeroCTAs() {
   const { openAuth } = useLoginAuth();
   const btnClass =
-    "inline-flex min-h-12 items-center justify-center rounded-full px-6 py-3 font-sans text-[24px] font-semibold leading-snug";
+    "inline-flex min-h-12 items-center justify-center rounded-full px-6 py-3 font-sans text-[16px] font-semibold leading-snug sm:text-[26px]";
   return (
     <div className="mt-6 flex w-full flex-col items-start gap-3 sm:flex-row sm:items-center">
       <button

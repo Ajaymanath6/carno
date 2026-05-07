@@ -86,7 +86,9 @@ export async function generateGeminiPeriodArticle(
     throw new Error("AI_PROVIDER=studio requires GEMINI_API_KEY (Google AI Studio).");
   }
   if (mode === "vertex" && !project) {
-    throw new Error("AI_PROVIDER=vertex requires VERTEX_PROJECT_ID or GOOGLE_CLOUD_PROJECT.");
+    throw new Error(
+      "Period summaries use Vertex (AI_PROVIDER_PERIOD=vertex) but VERTEX_PROJECT_ID / GOOGLE_CLOUD_PROJECT is empty. Set one of those, or use AI_PROVIDER_PERIOD=auto or studio.",
+    );
   }
 
   const prompt = buildPeriodSummaryPrompt(input);

@@ -43,11 +43,12 @@ function MobileDrawerLink({
   return (
     <Link
       href={href}
+      prefetch
       title={linkTitle ?? label}
       onClick={onNavigate}
-      className={`flex items-center gap-3 rounded-xl px-3 py-3 text-base font-medium ${
+      className={`flex items-center gap-3 rounded-xl px-3 py-3 text-base font-medium transition-colors ${
         active
-          ? "border border-brandcolor-strokeweak bg-brandcolor-white text-brandcolor-primary"
+          ? "bg-brandcolor-fill text-brandcolor-primary"
           : "text-brandcolor-text-strong hover:bg-brandcolor-fill"
       }`}
     >
@@ -182,10 +183,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <Link
                   key={href}
                   href={href}
+                  prefetch
                   title={tip}
-                  className={`flex items-center rounded-xl py-2.5 text-sm font-medium hover:bg-brandcolor-white ${
+                  className={`flex items-center rounded-xl py-2.5 text-sm font-medium transition-colors hover:bg-brandcolor-white ${
                     sidebarExpanded ? "gap-3 px-3" : "justify-center px-0"
-                  } ${active ? "text-brandcolor-primary" : "text-brandcolor-text-strong"}`}
+                  } ${active ? "bg-brandcolor-white text-brandcolor-primary" : "text-brandcolor-text-strong"}`}
                 >
                   <Icon
                     className={`shrink-0 ${active ? "text-brandcolor-primary" : "text-brandcolor-stroke-strong"}`}

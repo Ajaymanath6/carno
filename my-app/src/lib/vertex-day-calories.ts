@@ -48,9 +48,7 @@ function buildMealDescriptionLine(
  * Mirrors routing in {@link generateContentText}.
  */
 export function calorieEstimationUnavailableReason(): string | null {
-  if (process.env.VERTEX_DISABLED === "true") {
-    return "VERTEX_DISABLED=true (calorie estimates skipped).";
-  }
+  const vertexDisabled = process.env.VERTEX_DISABLED === "true";
   const mode = resolveAiProvider();
   const geminiApiKey = process.env.GEMINI_API_KEY?.trim();
   const project = process.env.VERTEX_PROJECT_ID ?? process.env.GOOGLE_CLOUD_PROJECT?.trim();
@@ -58,6 +56,15 @@ export function calorieEstimationUnavailableReason(): string | null {
   const tryStudio = mode === "studio" || (mode === "auto" && Boolean(geminiApiKey));
   const tryVertex =
     mode === "vertex" || (mode === "auto" && Boolean(project) && !geminiApiKey);
+
+  /** Daily summaries respect VERTEX_DISABLED mock mode; calories can still use Studio (API key), not Vertex. */
+  if (vertexDisabled) {
+    if (tryStudio && geminiApiKey) return null;
+    if (mode === "studio") {
+      return "VERTEX_DISABLED=true: add GEMINI_API_KEY (Google AI Studio) so calorie estimates can run.";
+    }
+    return "VERTEX_DISABLED=true blocks Vertex for calories. Add GEMINI_API_KEY for Studio estimates, or unset VERTEX_DISABLED and configure Vertex.";
+  }
 
   if (tryStudio && geminiApiKey) return null;
   if (tryVertex && project) return null;
@@ -68,7 +75,7 @@ export function calorieEstimationUnavailableReason(): string | null {
   if (mode === "vertex") {
     return "AI_PROVIDER=vertex requires VERTEX_PROJECT_ID or GOOGLE_CLOUD_PROJECT.";
   }
-  return "No AI backend for calories: set GEMINI_API_KEY (Studio), or Vertex project + credentials.";
+  return "No AI backend for calories: set GEMINI_API_KEY (Google AI Studio), or Vertex project + credentials.";
 }
 
 function buildBatchPrompt(chunk: DayCalorieInput[]): string {
@@ -131,6 +138,7 @@ function buildMealLevelBatchPrompt(chunk: MealCalorieEntryInput[]): string {
 }
 
 async function generateContentText(prompt: string): Promise<string> {
+  const vertexDisabled = process.env.VERTEX_DISABLED === "true";
   const mode = resolveAiProvider();
   const geminiApiKey = process.env.GEMINI_API_KEY?.trim();
   const project = process.env.VERTEX_PROJECT_ID ?? process.env.GOOGLE_CLOUD_PROJECT?.trim();
@@ -151,6 +159,12 @@ async function generateContentText(prompt: string): Promise<string> {
       throw new Error("Gemini (Studio) returned empty text for calorie batch.");
     }
     return out;
+  }
+
+  if (vertexDisabled && tryVertex && project) {
+    throw new Error(
+      "VERTEX_DISABLED=true: calorie batch cannot use Vertex. Set GEMINI_API_KEY for Google AI Studio, or unset VERTEX_DISABLED.",
+    );
   }
 
   if (tryVertex && project) {
@@ -224,6 +238,20 @@ export async function estimateDayCaloriesBatch(
     }
   }
 
+  const stillMissing = needsModel.filter((d) => !out.has(d.localDate));
+  for (const d of stillMissing) {
+    try {
+      const prompt = buildBatchPrompt([d]);
+      const text = await generateContentText(prompt);
+      const parsed = parseBatchJson(text);
+      for (const row of parsed.days) {
+        out.set(row.localDate, Math.max(0, Math.round(row.totalKcal)));
+      }
+    } catch (e) {
+      console.error("[calorie-kcal] single-day retry failed:", d.localDate, e);
+    }
+  }
+
   return out;
 }
 
@@ -253,6 +281,20 @@ export async function estimateMealCaloriesBatch(
     const parsed = parseMealBatchJson(text);
     for (const row of parsed.meals) {
       out.set(row.id, Math.max(0, Math.round(row.kcal)));
+    }
+  }
+
+  const mealsStillMissing = nonEmpty.filter((e) => !out.has(e.id));
+  for (const e of mealsStillMissing) {
+    try {
+      const prompt = buildMealLevelBatchPrompt([e]);
+      const text = await generateContentText(prompt);
+      const parsed = parseMealBatchJson(text);
+      for (const row of parsed.meals) {
+        out.set(row.id, Math.max(0, Math.round(row.kcal)));
+      }
+    } catch (err) {
+      console.error("[calorie-kcal] single-meal retry failed:", e.id, err);
     }
   }
 

@@ -9,7 +9,11 @@ import {
 } from "@/lib/prisma-daily-summary-fallback";
 import { redirect } from "next/navigation";
 import { HistoryPeriodSummary } from "@/components/history/HistoryPeriodSummary";
-import { estimateDayCaloriesBatch } from "@/lib/vertex-day-calories";
+import { HistoryCalorieBanner } from "@/components/history/HistoryCalorieBanner";
+import {
+  calorieEstimationUnavailableReason,
+  estimateDayCaloriesBatch,
+} from "@/lib/vertex-day-calories";
 
 const foodEntryCalorieSelect = {
   rawText: true,
@@ -61,6 +65,16 @@ export default async function HistoryPage() {
     console.error("[history] estimateDayCaloriesBatch:", err);
   }
 
+  const calorieSetupReason = calorieEstimationUnavailableReason();
+  const anyDayMissingKcal = days.some(
+    (d) => d.foodEntries.length > 0 && !kcalByDate.has(d.localDate),
+  );
+  const calorieBannerMessage =
+    anyDayMissingKcal ?
+      calorieSetupReason ??
+      "Calorie estimates use Gemini (Google AI Studio or Vertex). This request failed or returned incomplete data — check server logs."
+    : null;
+
   return (
     <main className="flex min-h-0 w-full flex-1 flex-col overflow-hidden">
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
@@ -73,6 +87,9 @@ export default async function HistoryPage() {
               Recent days (newest first). Closed days include a saved summary.
             </p>
           </div>
+          {calorieBannerMessage ?
+            <HistoryCalorieBanner message={calorieBannerMessage} />
+          : null}
           <ul className="flex flex-col gap-2">
             {days.map((d) => {
               const kcal = kcalByDate.get(d.localDate);
