@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { formatWeekdayMonthDayForLocalDateKey } from "@/lib/date";
 import { getOrCreateAppUser } from "@/lib/user";
 import {
   dailySummarySelectFull,
@@ -10,16 +9,10 @@ import {
 import { redirect } from "next/navigation";
 import { HistoryPeriodSummary } from "@/components/history/HistoryPeriodSummary";
 import { HistoryCalorieBanner } from "@/components/history/HistoryCalorieBanner";
-import {
-  calorieEstimationUnavailableReason,
-  estimateDayCaloriesBatch,
-} from "@/lib/vertex-day-calories";
+import { HistoryDayList } from "@/components/history/HistoryDayList";
+import { calorieEstimationUnavailableReason } from "@/lib/vertex-day-calories";
 
-const foodEntryCalorieSelect = {
-  rawText: true,
-  quantity: true,
-  unit: true,
-} as const;
+export const maxDuration = 60;
 
 export default async function HistoryPage() {
   const user = await getOrCreateAppUser();
@@ -34,7 +27,9 @@ export default async function HistoryPage() {
       orderBy: { localDate: "desc" },
       include: {
         dailySummary: { select: dailySummarySelectFull },
-        foodEntries: { select: foodEntryCalorieSelect },
+        foodEntries: {
+          select: { id: true },
+        },
       },
     });
   } catch (e) {
@@ -44,36 +39,22 @@ export default async function HistoryPage() {
       orderBy: { localDate: "desc" },
       include: {
         dailySummary: { select: dailySummarySelectWithoutAi },
-        foodEntries: { select: foodEntryCalorieSelect },
+        foodEntries: {
+          select: { id: true },
+        },
       },
     });
   }
 
-  let kcalByDate = new Map<string, number>();
-  try {
-    kcalByDate = await estimateDayCaloriesBatch(
-      days.map((d) => ({
-        localDate: d.localDate,
-        meals: d.foodEntries.map((e) => ({
-          rawText: e.rawText,
-          quantity: e.quantity,
-          unit: e.unit,
-        })),
-      })),
-    );
-  } catch (err) {
-    console.error("[history] estimateDayCaloriesBatch:", err);
-  }
-
   const calorieSetupReason = calorieEstimationUnavailableReason();
-  const anyDayMissingKcal = days.some(
-    (d) => d.foodEntries.length > 0 && !kcalByDate.has(d.localDate),
-  );
-  const calorieBannerMessage =
-    anyDayMissingKcal ?
-      calorieSetupReason ??
-      "Calorie estimates use Gemini (Google AI Studio or Vertex). This request failed or returned incomplete data — check server logs."
-    : null;
+
+  const rows = days.map((d) => ({
+    id: d.id,
+    localDate: d.localDate,
+    status: d.status,
+    mealCount: d.foodEntries.length,
+    hasSummary: Boolean(d.dailySummary),
+  }));
 
   return (
     <main className="flex min-h-0 w-full flex-1 flex-col overflow-hidden">
@@ -87,42 +68,10 @@ export default async function HistoryPage() {
               Recent days (newest first). Closed days include a saved summary.
             </p>
           </div>
-          {calorieBannerMessage ?
-            <HistoryCalorieBanner message={calorieBannerMessage} />
+          {calorieSetupReason ?
+            <HistoryCalorieBanner message={calorieSetupReason} />
           : null}
-          <ul className="flex flex-col gap-2">
-            {days.map((d) => {
-              const kcal = kcalByDate.get(d.localDate);
-              const kcalSuffix =
-                kcal !== undefined ?
-                  ` · ~${kcal.toLocaleString()} kcal`
-                : ` · — kcal`;
-              return (
-                <li key={d.id}>
-                  <Link
-                    href={`/history/${d.localDate}`}
-                    className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-2xl border border-brandcolor-strokeweak bg-brandcolor-white px-4 py-3 text-sm text-brandcolor-text-strong hover:bg-brandcolor-fill"
-                  >
-                    <span className="font-medium">
-                      {formatWeekdayMonthDayForLocalDateKey(d.localDate, user.timezone)}
-                    </span>
-                    <span className="text-right text-brandcolor-text-weak">
-                      {d.status === "CLOSED" ? "Closed" : "Active"} · {d.foodEntries.length}{" "}
-                      meal(s)
-                      {kcalSuffix}
-                      {d.dailySummary ? " · summary" : ""}
-                    </span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-          {days.length > 0 && (
-            <div className="pt-1">
-              <HistoryPeriodSummary dayCount={days.length} />
-            </div>
-          )}
-          {days.length === 0 && (
+          {days.length === 0 ?
             <p className="text-sm text-brandcolor-text-weak">
               No days yet. Start logging from{" "}
               <Link className="text-brandcolor-primary hover:underline" href="/chat">
@@ -130,7 +79,17 @@ export default async function HistoryPage() {
               </Link>
               .
             </p>
-          )}
+          : <>
+              <HistoryDayList
+                rows={rows}
+                timezone={user.timezone}
+                skipCalorieFetch={Boolean(calorieSetupReason)}
+              />
+              <div className="pt-1">
+                <HistoryPeriodSummary dayCount={days.length} />
+              </div>
+            </>
+          }
         </div>
       </div>
     </main>

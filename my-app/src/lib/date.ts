@@ -2,12 +2,27 @@
 export const EOD_PANEL_START_HOUR = 22;
 
 /**
+ * Valid IANA zone, or `"UTC"` if missing / invalid (Intl throws RangeError otherwise — common production footgun).
+ */
+export function resolveSafeIanaTimeZone(timeZone: string): string {
+  const tz = typeof timeZone === "string" ? timeZone.trim() : "";
+  if (!tz) return "UTC";
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: tz }).format(new Date());
+    return tz;
+  } catch {
+    return "UTC";
+  }
+}
+
+/**
  * Local wall-clock hour (0–23) for `date` in IANA `timeZone`.
  * Used for UI that should follow the user's saved timezone (e.g. evening panels).
  */
 export function getLocalHourInTimeZone(timeZone: string, date: Date = new Date()): number {
+  const tz = resolveSafeIanaTimeZone(timeZone);
   const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone,
+    timeZone: tz,
     hour: "numeric",
     hour12: false,
   }).formatToParts(date);
@@ -25,8 +40,9 @@ export function getLocalHourInTimeZone(timeZone: string, date: Date = new Date()
 
 /** Calendar date key YYYY-MM-DD in the user's IANA timezone. */
 export function getLocalDateKey(timeZone: string, date: Date = new Date()): string {
+  const tz = resolveSafeIanaTimeZone(timeZone);
   return new Intl.DateTimeFormat("en-CA", {
-    timeZone,
+    timeZone: tz,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
@@ -38,20 +54,22 @@ export function getLocalDateKey(timeZone: string, date: Date = new Date()): stri
  * Uses the same UTC-noon anchor as {@link shiftLocalDateKey} for stable civil dates.
  */
 export function weekdayLongForLocalDateKey(dateKey: string, timeZone: string): string {
+  const tz = resolveSafeIanaTimeZone(timeZone);
   const [y, m, d] = dateKey.split("-").map(Number);
   const utc = Date.UTC(y, (m ?? 1) - 1, d ?? 1, 12, 0, 0);
   return new Intl.DateTimeFormat("en-US", {
-    timeZone,
+    timeZone: tz,
     weekday: "long",
   }).format(new Date(utc));
 }
 
 /** Human-readable calendar line, e.g. `Mon, Apr 27` for a `YYYY-MM-DD` key in `timeZone`. */
 export function formatWeekdayMonthDayForLocalDateKey(dateKey: string, timeZone: string): string {
+  const tz = resolveSafeIanaTimeZone(timeZone);
   const [y, m, d] = dateKey.split("-").map(Number);
   const utc = Date.UTC(y, (m ?? 1) - 1, d ?? 1, 12, 0, 0);
   return new Intl.DateTimeFormat("en-US", {
-    timeZone,
+    timeZone: tz,
     weekday: "short",
     month: "short",
     day: "numeric",
@@ -64,19 +82,21 @@ export function formatPeriodDateRangeLabel(
   lastKey: string | undefined,
   timeZone: string,
 ): string {
+  const tz = resolveSafeIanaTimeZone(timeZone);
   if (!firstKey?.trim() || !lastKey?.trim()) {
     return "";
   }
   if (firstKey === lastKey) {
-    return formatWeekdayMonthDayForLocalDateKey(firstKey, timeZone);
+    return formatWeekdayMonthDayForLocalDateKey(firstKey, tz);
   }
-  return `${formatWeekdayMonthDayForLocalDateKey(firstKey, timeZone)} – ${formatWeekdayMonthDayForLocalDateKey(lastKey, timeZone)}`;
+  return `${formatWeekdayMonthDayForLocalDateKey(firstKey, tz)} – ${formatWeekdayMonthDayForLocalDateKey(lastKey, tz)}`;
 }
 
 /** Friendly log line in user TZ, e.g. `Mon, Apr 27, 7:07 AM`. */
 export function formatLogTimestamp(loggedAt: Date, timeZone: string): string {
+  const tz = resolveSafeIanaTimeZone(timeZone);
   return new Intl.DateTimeFormat("en-US", {
-    timeZone,
+    timeZone: tz,
     weekday: "short",
     month: "short",
     day: "numeric",

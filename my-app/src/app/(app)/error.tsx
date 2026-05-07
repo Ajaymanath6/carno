@@ -18,19 +18,31 @@ export default function AppRouteError({
         <strong className="text-brandcolor-text-strong">
           Project → Deployments → [failed deployment] → Logs / Functions
         </strong>{" "}
-        and confirm{" "}
+        and confirm env vars:{" "}
         <code className="rounded bg-brandcolor-fill px-1 py-0.5 text-xs text-brandcolor-text-strong">
           DATABASE_URL
         </code>
-        ,{" "}
+        , Clerk{" "}
+        <code className="rounded bg-brandcolor-fill px-1 py-0.5 text-xs text-brandcolor-text-strong">
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+        </code>{" "}
+        /{" "}
+        <code className="rounded bg-brandcolor-fill px-1 py-0.5 text-xs text-brandcolor-text-strong">
+          CLERK_SECRET_KEY
+        </code>
+        , and (if used){" "}
+        <code className="rounded bg-brandcolor-fill px-1 py-0.5 text-xs text-brandcolor-text-strong">
+          GEMINI_API_KEY
+        </code>
+        . Legacy Auth.js keys{" "}
         <code className="rounded bg-brandcolor-fill px-1 py-0.5 text-xs text-brandcolor-text-strong">
           AUTH_SECRET
         </code>
-        , and{" "}
+        ,{" "}
         <code className="rounded bg-brandcolor-fill px-1 py-0.5 text-xs text-brandcolor-text-strong">
           NEXTAUTH_URL
         </code>{" "}
-        match your production URL.
+        apply only if your app still uses NextAuth.
       </p>
       {error.digest != null && (
         <p className="font-mono text-xs text-brandcolor-text-weak">Digest: {error.digest}</p>

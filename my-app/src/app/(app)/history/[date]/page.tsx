@@ -15,6 +15,8 @@ import {
 } from "@/lib/vertex-day-calories";
 import { redirect, notFound } from "next/navigation";
 
+export const maxDuration = 60;
+
 export default async function HistoryDayPage({
   params,
 }: {
