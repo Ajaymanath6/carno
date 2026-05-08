@@ -69,7 +69,7 @@ export function parseGramsFromMeal(input: {
     if (/^(kg|kilogram|kilograms)$/.test(unitNorm)) return qtyNum * 1000;
     if (/^(oz|ounce|ounces)$/.test(unitNorm)) return qtyNum * OZ_TO_G;
     if (/^(lb|lbs|pound|pounds)$/.test(unitNorm)) return qtyNum * LB_TO_G;
-    if (/^(tbsp|tablespoon|tablespoons)$/.test(unitNorm)) return qtyNum * TBSP_TO_G;
+    if (/^(tbsp|tablespoon|tablespoons|spoon|spoons)$/.test(unitNorm)) return qtyNum * TBSP_TO_G;
     if (/^(ml|milliliters?)$/.test(unitNorm)) return qtyNum;
     if (/^(l|liter|liters|litre|litres)$/.test(unitNorm)) return qtyNum * 1000;
     if (/^(egg|eggs)$/.test(unitNorm)) {
@@ -115,7 +115,7 @@ export function parseGramsFromMeal(input: {
   }
 
   const massMatch = text.match(
-    /\b(\d+(?:\.\d+)?)\s*(g|grams?|kg|oz|lbs?|lb|ml|mL|tbsp|tablespoons?)\b/i,
+    /\b(\d+(?:\.\d+)?)\s*(g|grams?|kg|oz|lbs?|lb|ml|mL|tbsp|tablespoons?|spoons?)\b/i,
   );
   if (massMatch) {
     const n = parseFloatLoose(massMatch[1]);
@@ -124,7 +124,7 @@ export function parseGramsFromMeal(input: {
       if (u === "kg") return n * 1000;
       if (u === "oz") return n * OZ_TO_G;
       if (u === "lb" || u === "lbs") return n * LB_TO_G;
-      if (u === "tbsp" || u.startsWith("tablespoon")) return n * TBSP_TO_G;
+      if (u === "tbsp" || u.startsWith("tablespoon") || u.startsWith("spoon")) return n * TBSP_TO_G;
       if (u === "ml") return n;
       return n;
     }

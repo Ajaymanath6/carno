@@ -100,6 +100,13 @@ test("parseBasicPortionFromText parses tablespoon", () => {
   });
 });
 
+test("parseBasicPortionFromText parses spoon as tablespoon", () => {
+  assert.deepEqual(parseBasicPortionFromText("3 spoon ghee"), {
+    quantity: "3",
+    unit: "tbsp",
+  });
+});
+
 test("parseBasicPortionFromText assumes grams for leading number + food", () => {
   assert.deepEqual(parseBasicPortionFromText("550 beef"), { quantity: "550", unit: "g" });
 });
@@ -124,6 +131,17 @@ test("estimateMealKcalReference computes ghee tablespoon calories", () => {
     foodNameNormalized: "ghee",
   });
   assert.equal(kcal, Math.round((14 * 900) / 100));
+});
+
+test("estimateMealKcalReference computes ghee spoon calories", () => {
+  const kcal = estimateMealKcalReference({
+    id: "7",
+    rawText: "3 spoon ghee",
+    quantity: "3",
+    unit: "tbsp",
+    foodNameNormalized: "ghee",
+  });
+  assert.equal(kcal, Math.round((42 * 900) / 100));
 });
 
 test("estimateMealKcalReference computes apples by piece count", () => {

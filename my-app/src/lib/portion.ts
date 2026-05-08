@@ -52,7 +52,7 @@ export function parseBasicPortionFromText(text: string): ParsedPortion | null {
   }
 
   const unit = s.match(
-    /\b(\d+(?:\.\d+)?)\s*(kg|kilograms?|g|gm|grams?|oz|ounces?|lb|lbs|pounds?|tbsp|tablespoons?)\b/i,
+    /\b(\d+(?:\.\d+)?)\s*(kg|kilograms?|g|gm|grams?|oz|ounces?|lb|lbs|pounds?|tbsp|tablespoons?|spoons?)\b/i,
   );
   if (unit?.[1] && unit[2]) {
     const rawUnit = unit[2].toLowerCase();
@@ -61,7 +61,7 @@ export function parseBasicPortionFromText(text: string): ParsedPortion | null {
       : rawUnit === "gm" || rawUnit.startsWith("g") ? "g"
       : rawUnit.startsWith("oz") ? "oz"
       : rawUnit === "lb" || rawUnit === "lbs" || rawUnit.startsWith("pound") ? "lb"
-      : rawUnit === "tbsp" || rawUnit.startsWith("tablespoon") ? "tbsp"
+      : rawUnit === "tbsp" || rawUnit.startsWith("tablespoon") || rawUnit.startsWith("spoon") ? "tbsp"
       : rawUnit;
     return { quantity: unit[1], unit: normalized };
   }
