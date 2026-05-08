@@ -1,7 +1,11 @@
 import {
+  MEAL_QUICK_APPLE,
+  MEAL_QUICK_BANANA,
   MEAL_QUICK_BROWN_EGGS,
   MEAL_QUICK_CHICKEN,
+  MEAL_QUICK_CUCUMBER,
   MEAL_QUICK_GHEE,
+  MEAL_QUICK_MANGO,
   MEAL_QUICK_MUTTON,
   MEAL_QUICK_PANEER,
   MEAL_QUICK_RED_MEAT,
@@ -21,6 +25,18 @@ export function mealThumbPathForNormalizedFood(normalized: string): string | nul
   }
   if (s.includes("egg")) {
     return MEAL_QUICK_BROWN_EGGS;
+  }
+  if (s.includes("banana")) {
+    return MEAL_QUICK_BANANA;
+  }
+  if (s.includes("apple")) {
+    return MEAL_QUICK_APPLE;
+  }
+  if (s.includes("mango")) {
+    return MEAL_QUICK_MANGO;
+  }
+  if (s.includes("cucumber")) {
+    return MEAL_QUICK_CUCUMBER;
   }
   if (s.includes("chicken") || s.includes("chiken")) {
     return MEAL_QUICK_CHICKEN;

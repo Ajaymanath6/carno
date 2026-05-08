@@ -38,7 +38,7 @@ function splitInlineMealItems(line: string): string[] {
     return [];
   }
   const parts = s.split(
-    /\s+(?=\d+(?:\.\d+)?\s+(?:spoons?|tbsp|tablespoons?|eggs?|egg|ghee|beef|steak|chicken|chiken|mutton|paneer|lamb|pork|fish|salmon|tuna|shrimp|butter|cream)\b)/gi,
+    /\s+(?=\d+(?:\.\d+)?\s+(?:spoons?|tbsp|tablespoons?|eggs?|egg|ghee|beef|steak|chicken|chiken|mutton|paneer|lamb|pork|fish|salmon|tuna|shrimp|butter|cream|apple(?:s)?|banana(?:s)?|mango(?:es|s)?|cucumber(?:s)?)\b)/gi,
   );
   return parts.map((p) => p.trim()).filter(Boolean);
 }

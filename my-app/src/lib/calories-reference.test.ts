@@ -21,6 +21,10 @@ test("parseGramsFromMeal parses eggs from raw text", () => {
   assert.equal(parseGramsFromMeal({ rawText: "Had 7 eggs", quantity: null, unit: null }), 350);
 });
 
+test("parseGramsFromMeal parses piece count for apples", () => {
+  assert.equal(parseGramsFromMeal({ rawText: "4 apples", quantity: null, unit: null }), 728);
+});
+
 test("parseGramsFromMeal parses inline mass in raw text", () => {
   assert.equal(
     parseGramsFromMeal({ rawText: "Chicken breast 150g", quantity: null, unit: null }),
@@ -81,6 +85,10 @@ test("parseBasicPortionFromText parses eggs", () => {
   assert.deepEqual(parseBasicPortionFromText("7 eggs"), { quantity: "7", unit: "eggs" });
 });
 
+test("parseBasicPortionFromText parses fruit piece count", () => {
+  assert.deepEqual(parseBasicPortionFromText("4 apple"), { quantity: "4", unit: "apple" });
+});
+
 test("parseBasicPortionFromText normalizes gm to g", () => {
   assert.deepEqual(parseBasicPortionFromText("400 gm beef"), { quantity: "400", unit: "g" });
 });
@@ -116,5 +124,16 @@ test("estimateMealKcalReference computes ghee tablespoon calories", () => {
     foodNameNormalized: "ghee",
   });
   assert.equal(kcal, Math.round((14 * 900) / 100));
+});
+
+test("estimateMealKcalReference computes apples by piece count", () => {
+  const kcal = estimateMealKcalReference({
+    id: "6",
+    rawText: "4 apple",
+    quantity: "4",
+    unit: "apple",
+    foodNameNormalized: "apple",
+  });
+  assert.equal(kcal, Math.round((728 * 52) / 100));
 });
 

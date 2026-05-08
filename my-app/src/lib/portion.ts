@@ -35,6 +35,21 @@ export function parseBasicPortionFromText(text: string): ParsedPortion | null {
   if (egg?.[1]) {
     return { quantity: egg[1], unit: "eggs" };
   }
+  const pieces = s.match(
+    /\b(\d+(?:\.\d+)?)\s*(apples?|bananas?|mango(?:es|s)?|cucumbers?)\b/i,
+  );
+  if (pieces?.[1] && pieces[2]) {
+    const raw = pieces[2].toLowerCase();
+    const unit =
+      raw.startsWith("apple")
+        ? "apple"
+        : raw.startsWith("banana")
+          ? "banana"
+          : raw.startsWith("mango")
+            ? "mango"
+            : "cucumber";
+    return { quantity: pieces[1], unit };
+  }
 
   const unit = s.match(
     /\b(\d+(?:\.\d+)?)\s*(kg|kilograms?|g|gm|grams?|oz|ounces?|lb|lbs|pounds?|tbsp|tablespoons?)\b/i,

@@ -35,10 +35,14 @@ import {
 } from "@/lib/date";
 import { salutationForTimezone } from "@/lib/time-greeting";
 import {
+  MEAL_QUICK_APPLE,
+  MEAL_QUICK_BANANA,
   CARNO_LOGO_AGENT,
   MEAL_QUICK_BROWN_EGGS,
   MEAL_QUICK_CHICKEN,
+  MEAL_QUICK_CUCUMBER,
   MEAL_QUICK_GHEE,
+  MEAL_QUICK_MANGO,
   MEAL_QUICK_MUTTON,
   MEAL_QUICK_PANEER,
   MEAL_QUICK_RED_MEAT,
@@ -63,6 +67,10 @@ const MEAL_QUICK_PICKS = [
   { label: "BEEF", value: "BEEF", imageSrc: MEAL_QUICK_RED_MEAT },
   { label: "Brown eggs", value: "Brown eggs", imageSrc: MEAL_QUICK_BROWN_EGGS },
   { label: "Ghee", value: "Ghee", imageSrc: MEAL_QUICK_GHEE },
+  { label: "Apple", value: "Apple", imageSrc: MEAL_QUICK_APPLE },
+  { label: "Banana", value: "Banana", imageSrc: MEAL_QUICK_BANANA },
+  { label: "Mango", value: "Mango", imageSrc: MEAL_QUICK_MANGO },
+  { label: "Cucumber", value: "Cucumber", imageSrc: MEAL_QUICK_CUCUMBER },
 ] as const;
 
 export type ChatMessageListItem = Pick<

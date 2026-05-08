@@ -8,6 +8,8 @@ export type ReferenceFoodMeta = {
   kcalPer100g: number;
   /** When quantity is counted as eggs without explicit grams */
   gramsPerEgg?: number;
+  /** When quantity is counted as food pieces without explicit grams */
+  gramsPerPiece?: number;
 };
 
 export const REFERENCE_FOODS = {
@@ -25,6 +27,10 @@ export const REFERENCE_FOODS = {
   tuna: { kcalPer100g: 130 },
   shrimp: { kcalPer100g: 99 },
   egg: { kcalPer100g: 143, gramsPerEgg: 50 },
+  apple: { kcalPer100g: 52, gramsPerPiece: 182 },
+  banana: { kcalPer100g: 89, gramsPerPiece: 118 },
+  mango: { kcalPer100g: 60, gramsPerPiece: 200 },
+  cucumber: { kcalPer100g: 15, gramsPerPiece: 200 },
   paneer: { kcalPer100g: 265 },
   cheese: { kcalPer100g: 350 },
   butter: { kcalPer100g: 717 },
@@ -61,6 +67,15 @@ export const REFERENCE_ALIASES: ReadonlyArray<{ alias: string; id: ReferenceFood
   { alias: "fish", id: "fish" },
   { alias: "eggs", id: "egg" },
   { alias: "egg", id: "egg" },
+  { alias: "apples", id: "apple" },
+  { alias: "apple", id: "apple" },
+  { alias: "bananas", id: "banana" },
+  { alias: "banana", id: "banana" },
+  { alias: "mangoes", id: "mango" },
+  { alias: "mangos", id: "mango" },
+  { alias: "mango", id: "mango" },
+  { alias: "cucumbers", id: "cucumber" },
+  { alias: "cucumber", id: "cucumber" },
   { alias: "paneer", id: "paneer" },
   { alias: "cheese", id: "cheese" },
   { alias: "butter", id: "butter" },

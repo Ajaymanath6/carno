@@ -76,6 +76,13 @@ export function parseGramsFromMeal(input: {
       const perEgg = REFERENCE_FOODS.egg.gramsPerEgg ?? 50;
       return qtyNum * perEgg;
     }
+    if (/^(apple|banana|mango|cucumber)$/.test(unitNorm)) {
+      const foodId = unitNorm as "apple" | "banana" | "mango" | "cucumber";
+      const perPiece = REFERENCE_FOODS[foodId].gramsPerPiece ?? 0;
+      if (perPiece > 0) {
+        return qtyNum * perPiece;
+      }
+    }
   }
 
   const text = `${input.rawText} ${qtyStr} ${unitNorm}`.trim();
@@ -85,6 +92,25 @@ export function parseGramsFromMeal(input: {
     if (n != null && n > 0) {
       const perEgg = REFERENCE_FOODS.egg.gramsPerEgg ?? 50;
       return n * perEgg;
+    }
+  }
+  const pieceMatch = text.match(
+    /\b(\d+(?:\.\d+)?)\s*(apples?|bananas?|mango(?:es|s)?|cucumbers?)\b/i,
+  );
+  if (pieceMatch) {
+    const n = parseFloatLoose(pieceMatch[1]);
+    const unitRaw = pieceMatch[2].toLowerCase();
+    const foodId =
+      unitRaw.startsWith("apple")
+        ? "apple"
+        : unitRaw.startsWith("banana")
+          ? "banana"
+          : unitRaw.startsWith("mango")
+            ? "mango"
+            : "cucumber";
+    const perPiece = REFERENCE_FOODS[foodId].gramsPerPiece ?? 0;
+    if (n != null && n > 0 && perPiece > 0) {
+      return n * perPiece;
     }
   }
 
