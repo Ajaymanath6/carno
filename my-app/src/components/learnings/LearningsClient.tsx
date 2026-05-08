@@ -23,6 +23,8 @@ const LEARNINGS_VIDEO_URLS = [
   "https://www.youtube.com/watch?v=CkhT088b9x8",
   "https://www.youtube.com/watch?v=PLlGPsZ0Tr0&t=4s",
   "https://www.youtube.com/watch?v=7NrHHt7P26s",
+  "https://www.youtube.com/watch?v=U5ZRzqZQcBc",
+  "https://www.youtube.com/watch?v=3FFV0w55k2I",
 ] as const;
 
 type Props = {
@@ -218,7 +220,7 @@ export function LearningsClient({ localDate, timezone, displayName }: Props) {
                       key={url}
                       type="button"
                       onClick={() => setActiveVideoUrl(url)}
-                      className="group flex min-h-[4.75rem] items-center gap-3 rounded-xl border border-brandcolor-strokeweak bg-brandcolor-fill p-2 text-left hover:bg-brandcolor-white"
+                      className="group flex min-h-[4.75rem] cursor-pointer items-center gap-3 rounded-xl border border-brandcolor-strokeweak bg-brandcolor-fill p-2 text-left hover:bg-brandcolor-white"
                     >
                       <span className="relative inline-flex h-16 w-24 shrink-0 overflow-hidden rounded-lg bg-brandcolor-white">
                         {thumbnailSrc ? (
