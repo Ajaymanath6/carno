@@ -19,7 +19,11 @@ import { salutationForTimezone } from "@/lib/time-greeting";
 
 const INQUIRY_PLACEHOLDER =
   "Ask about carnivore nutrition, fat, plants, cholesterol…";
-const LEARNINGS_VIDEO_URLS = ["https://www.youtube.com/watch?v=CkhT088b9x8"] as const;
+const LEARNINGS_VIDEO_URLS = [
+  "https://www.youtube.com/watch?v=CkhT088b9x8",
+  "https://www.youtube.com/watch?v=PLlGPsZ0Tr0&t=4s",
+  "https://www.youtube.com/watch?v=7NrHHt7P26s",
+] as const;
 
 type Props = {
   localDate: string;
