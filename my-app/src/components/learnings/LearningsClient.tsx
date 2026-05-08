@@ -1,8 +1,10 @@
 "use client";
 
 import type { KeyboardEvent } from "react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { ArrowsOut, PlayCircle, X } from "@phosphor-icons/react";
 import { WhyCarnivoresArticle } from "@/components/content/WhyCarnivoresArticle";
 import { NarrativeHealingArticle } from "@/components/healing/NarrativeHealingArticle";
 import { LearningsInquiryComposer } from "@/components/learnings/LearningsInquiryComposer";
@@ -17,6 +19,7 @@ import { salutationForTimezone } from "@/lib/time-greeting";
 
 const INQUIRY_PLACEHOLDER =
   "Ask about carnivore nutrition, fat, plants, cholesterol…";
+const LEARNINGS_VIDEO_URLS = ["https://www.youtube.com/watch?v=CkhT088b9x8"] as const;
 
 type Props = {
   localDate: string;
@@ -37,9 +40,41 @@ export function LearningsClient({ localDate, timezone, displayName }: Props) {
   const inquiryRef = useRef<HTMLTextAreaElement>(null);
   const [inquiryDraft, setInquiryDraft] = useState("");
   const [articleId, setArticleId] = useState<LearningsArticleId>(null);
+  const [videoTitles, setVideoTitles] = useState<Record<string, string>>({});
+  const [activeVideoUrl, setActiveVideoUrl] = useState<string | null>(null);
 
   const salutation = salutationForTimezone(timezone);
   const sendDisabled = !inquiryDraft.trim();
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const entries = await Promise.all(
+        LEARNINGS_VIDEO_URLS.map(async (url) => {
+          try {
+            const res = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`);
+            if (!res.ok) {
+              return [url, "YouTube video"] as const;
+            }
+            const data = (await res.json()) as { title?: string };
+            return [url, data.title?.trim() || "YouTube video"] as const;
+          } catch {
+            return [url, "YouTube video"] as const;
+          }
+        }),
+      );
+      if (!cancelled) {
+        setVideoTitles(Object.fromEntries(entries));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const activeVideoId = activeVideoUrl ? youtubeVideoIdFromUrl(activeVideoUrl) : null;
+  const activeVideoEmbedSrc =
+    activeVideoId ? `https://www.youtube.com/embed/${activeVideoId}?autoplay=1&rel=0` : null;
 
   function onInquiryKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -164,6 +199,49 @@ export function LearningsClient({ localDate, timezone, displayName }: Props) {
                 })}
               </div>
             </div>
+            <div className="mt-5 w-full max-w-2xl rounded-2xl border border-brandcolor-strokeweak bg-brandcolor-white p-3">
+              <p className="px-1 pb-2 text-left text-sm font-semibold text-brandcolor-text-strong">
+                Videos
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {LEARNINGS_VIDEO_URLS.map((url) => {
+                  const videoId = youtubeVideoIdFromUrl(url);
+                  const title = videoTitles[url] || "YouTube video";
+                  const thumbnailSrc =
+                    videoId != null ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : "";
+                  return (
+                    <button
+                      key={url}
+                      type="button"
+                      onClick={() => setActiveVideoUrl(url)}
+                      className="group flex min-h-[4.75rem] items-center gap-3 rounded-xl border border-brandcolor-strokeweak bg-brandcolor-fill p-2 text-left hover:bg-brandcolor-white"
+                    >
+                      <span className="relative inline-flex h-16 w-24 shrink-0 overflow-hidden rounded-lg bg-brandcolor-white">
+                        {thumbnailSrc ? (
+                          <Image
+                            src={thumbnailSrc}
+                            alt={title}
+                            fill
+                            unoptimized
+                            className="object-cover"
+                          />
+                        ) : null}
+                        <span className="absolute inset-0 flex items-center justify-center">
+                          <PlayCircle
+                            className="h-8 w-8 text-brandcolor-white drop-shadow"
+                            weight="fill"
+                            aria-hidden
+                          />
+                        </span>
+                      </span>
+                      <span className="line-clamp-2 text-sm font-medium text-brandcolor-text-strong">
+                        {title}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         )}
         <LearningsInquiryComposer
@@ -178,6 +256,63 @@ export function LearningsClient({ localDate, timezone, displayName }: Props) {
           srLabel="Ask about carnivore nutrition"
         />
       </div>
+      {activeVideoUrl && activeVideoEmbedSrc ? (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-brandcolor-text-strong/35 p-4">
+          <div className="w-full max-w-3xl rounded-2xl border border-brandcolor-strokeweak bg-brandcolor-white shadow-xl">
+            <div className="flex items-center justify-between border-b border-brandcolor-strokeweak px-4 py-3">
+              <p className="line-clamp-1 text-sm font-semibold text-brandcolor-text-strong">
+                {videoTitles[activeVideoUrl] || "YouTube video"}
+              </p>
+              <div className="flex items-center gap-2">
+                <a
+                  href={activeVideoUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 rounded-full border border-brandcolor-strokeweak px-3 py-1.5 text-xs font-semibold text-brandcolor-text-strong hover:bg-brandcolor-fill"
+                >
+                  <ArrowsOut className="h-3.5 w-3.5" weight="bold" aria-hidden />
+                  Expand
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setActiveVideoUrl(null)}
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-brandcolor-strokeweak text-brandcolor-text-strong hover:bg-brandcolor-fill"
+                  aria-label="Close video"
+                >
+                  <X className="h-4 w-4" weight="bold" aria-hidden />
+                </button>
+              </div>
+            </div>
+            <div className="aspect-video w-full">
+              <iframe
+                title={videoTitles[activeVideoUrl] || "YouTube video"}
+                src={activeVideoEmbedSrc}
+                className="h-full w-full rounded-b-2xl"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allowFullScreen
+              />
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
+}
+
+function youtubeVideoIdFromUrl(url: string): string | null {
+  try {
+    const u = new URL(url);
+    if (u.hostname.includes("youtu.be")) {
+      const id = u.pathname.replace(/^\/+/, "").trim();
+      return id || null;
+    }
+    if (u.hostname.includes("youtube.com")) {
+      const id = u.searchParams.get("v")?.trim() || "";
+      return id || null;
+    }
+    return null;
+  } catch {
+    return null;
+  }
 }
